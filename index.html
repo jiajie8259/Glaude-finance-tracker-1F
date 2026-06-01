@@ -751,17 +751,21 @@ async function fetchRecords(filters = {}) {
   if (window._demoMode) {
     let data = [...window._demoData];
     if (filters.type)  data = data.filter(r => r.type  === filters.type);
-    if (filters.year)  data = data.filter(r => new Date(r.date).getFullYear()  === +filters.year);
-    if (filters.month) data = data.filter(r => new Date(r.date).getMonth() + 1 === +filters.month);
-    return data.sort((a,b) => b.date.localeCompare(a.date));
+    if (filters.year)  data = data.filter(r => +r.year  === +filters.year);
+    if (filters.month) data = data.filter(r => +r.month === +filters.month);
+    return data.sort((a,b) => (b.date||'').localeCompare(a.date||''));
   }
-  const { collection, getDocs, query, where, orderBy } = fbFns;
-  let constraints = [orderBy('date', 'desc')];
-  if (filters.type)  constraints.unshift(where('type',  '==', filters.type));
-  if (filters.year)  constraints.unshift(where('year',  '==', +filters.year));
-  if (filters.month) constraints.unshift(where('month', '==', +filters.month));
+  // Firestore：兩個相等條件（==）不需要複合索引，可以安全同時傳
+  const { collection, getDocs, query, where } = fbFns;
+  const constraints = [];
+  if (filters.type)  constraints.push(where('type', '==', filters.type));
+  if (filters.year)  constraints.push(where('year', '==', +filters.year));
   const snap = await getDocs(query(collection(db, 'records'), ...constraints));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  let data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // 前端補篩月份 + 排序
+  if (filters.month) data = data.filter(r => +r.month === +filters.month);
+  data.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  return data;
 }
 
 async function deleteRecord(id) {
@@ -786,6 +790,16 @@ function switchEntryTab(tab) {
   });
 }
 
+function sortExcelTable(tbody) {
+  const rows = [...tbody.querySelectorAll('tr')];
+  rows.sort((a, b) => {
+    const da = a.querySelector('.cell-date')?.value || '';
+    const db_ = b.querySelector('.cell-date')?.value || '';
+    return da.localeCompare(db_);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
 function addExcelRow(tbodyId) {
   const type = tbodyId.replace('-tbody','');
   const tbody = document.getElementById(tbodyId);
@@ -796,14 +810,14 @@ function addExcelRow(tbodyId) {
 
   if (type === 'pharma-income') {
     tr.innerHTML = `
-      <td><input type="date" value="${today}" class="cell-date"></td>
+      <td><input type="date" value="${today}" class="cell-date" onchange="sortExcelTable(this.closest('tbody'))"></td>
       <td><input type="number" placeholder="0" class="cell-amount" min="0"></td>
       <td><input type="text" placeholder="備註" class="cell-note"></td>
       <td>${paymentSelect()}</td>
       <td><div class="row-actions"><button class="btn btn-danger btn-sm" onclick="removeRow(this)" style="padding:3px 8px">✕</button></div></td>`;
   } else if (type === 'pharma-expense') {
     tr.innerHTML = `
-      <td><input type="date" value="${today}" class="cell-date"></td>
+      <td><input type="date" value="${today}" class="cell-date" onchange="sortExcelTable(this.closest('tbody'))"></td>
       <td><input type="number" placeholder="0" class="cell-amount" min="0"></td>
       <td>${catSelect(PHARMA_EXP_CATS, 'cell-cat')}</td>
       <td><input type="text" placeholder="備註" class="cell-note"></td>
@@ -812,7 +826,7 @@ function addExcelRow(tbodyId) {
   } else {
     // family-expense – multi-cat
     tr.innerHTML = `
-      <td><input type="date" value="${today}" class="cell-date"></td>
+      <td><input type="date" value="${today}" class="cell-date" onchange="sortExcelTable(this.closest('tbody'))"></td>
       <td><input type="number" placeholder="0" class="cell-amount" min="0"></td>
       <td><button class="btn btn-ghost btn-sm cell-cat-btn" onclick="openCatModal(this)" style="width:100%;font-size:12px;white-space:nowrap">選擇類別 ▾</button><input type="hidden" class="cell-cats" value=""></td>
       <td><input type="text" placeholder="備註" class="cell-note"></td>
