@@ -21,11 +21,20 @@
   };
   // ─────────────────────────────────────────────────────────────────
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-  window._db = db;
-  window._fbFns = { collection, addDoc, getDocs, query, where, orderBy, deleteDoc, doc, updateDoc, Timestamp };
-  window.dispatchEvent(new Event("firebase-ready"));
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+    window._db = db;
+    window._fbFns = { collection, addDoc, getDocs, query, where, orderBy, deleteDoc, doc, updateDoc, Timestamp };
+    // 用 _firebaseReady flag 避免事件時序問題
+    window._firebaseReady = true;
+    // 若主程式已在等待，立刻通知；否則 flag 本身就夠了
+    window.dispatchEvent(new Event("firebase-ready"));
+  } catch(e) {
+    console.error("Firebase init error:", e);
+    window._firebaseInitError = e.message;
+    window.dispatchEvent(new Event("firebase-ready"));
+  }
 </script>
 
 <!-- jsPDF for PDF export -->
@@ -284,7 +293,7 @@ select option{background:var(--card)}
 <header class="topbar">
   <span class="topbar-title" id="topbar-title">儀表板</span>
   <div class="topbar-right">
-    <div class="sync-status" id="sync-status">
+    <div class="sync-status" id="sync-status" style="cursor:pointer" onclick="showDiagnostic()" title="點擊查看連線診斷">
       <span class="dot" id="sync-dot"></span>
       <span id="sync-text">連線中…</span>
     </div>
@@ -615,6 +624,19 @@ select option{background:var(--card)}
 <!-- ── TOAST ── -->
 <div id="toast"></div>
 
+<!-- ── DIAGNOSTIC MODAL ── -->
+<div class="overlay" id="diag-modal">
+  <div class="modal" style="max-width:500px">
+    <button class="modal-close" onclick="document.getElementById('diag-modal').classList.remove('open')">✕</button>
+    <div class="modal-title">🔍 Firebase 連線診斷</div>
+    <div id="diag-content" style="font-size:13px;line-height:2;font-family:'DM Mono',monospace"></div>
+    <div style="margin-top:20px">
+      <button class="btn btn-primary btn-sm" onclick="runDiagnosticWrite()">🧪 測試寫入一筆資料</button>
+      <span id="diag-write-result" style="margin-left:12px;font-size:12px"></span>
+    </div>
+  </div>
+</div>
+
 <!-- ── CATEGORY MODAL ── -->
 <div class="overlay" id="cat-modal">
   <div class="modal" style="max-width:480px">
@@ -652,20 +674,44 @@ let activeCatCells = [];   // currently checked cats
 // ══════════════════════════════════════════════════════
 // FIREBASE INIT
 // ══════════════════════════════════════════════════════
-window.addEventListener('firebase-ready', () => {
-  db = window._db;
-  fbFns = window._fbFns;
-  document.getElementById('sync-dot').classList.remove('offline');
-  document.getElementById('sync-text').textContent = '已連線';
-  init();
-});
-// Fallback if Firebase not configured (demo mode)
-setTimeout(() => {
-  if (!db) {
+function onFirebaseReady() {
+  if (window._firebaseInitError) {
+    // Firebase config 有誤，切換離線示範模式
+    console.warn("Firebase error, switching to demo mode:", window._firebaseInitError);
+    document.getElementById('sync-dot').classList.add('offline');
+    document.getElementById('sync-text').textContent = '設定錯誤（示範模式）';
+    window._demoMode = true;
+    window._demoData = [];
+  } else if (window._db && window._fbFns) {
+    db = window._db;
+    fbFns = window._fbFns;
+    document.getElementById('sync-dot').classList.remove('offline');
+    document.getElementById('sync-text').textContent = '已連線';
+  } else {
+    // Firebase SDK 未初始化，切換示範模式
     document.getElementById('sync-dot').classList.add('offline');
     document.getElementById('sync-text').textContent = '離線（示範模式）';
     window._demoMode = true;
     window._demoData = [];
+  }
+  if (!window._appInited) { window._appInited = true; init(); }
+}
+
+// 若 module script 比此 listener 更早執行完（常見於快取），直接呼叫
+if (window._firebaseReady || window._firebaseInitError) {
+  onFirebaseReady();
+} else {
+  window.addEventListener('firebase-ready', onFirebaseReady);
+}
+
+// 安全 fallback：3 秒後若仍未初始化，啟動示範模式
+setTimeout(() => {
+  if (!window._appInited) {
+    document.getElementById('sync-dot').classList.add('offline');
+    document.getElementById('sync-text').textContent = '連線逾時（示範模式）';
+    window._demoMode = true;
+    window._demoData = [];
+    window._appInited = true;
     init();
   }
 }, 3000);
@@ -740,6 +786,7 @@ async function saveRecord(record) {
     window._demoData.push(record);
     return record;
   }
+  if (!db || !fbFns) throw new Error('Firestore 尚未初始化，請確認 Firebase 設定');
   const { collection, addDoc, Timestamp } = fbFns;
   record.createdAt = Timestamp.now();
   const ref = await addDoc(collection(db, 'records'), record);
@@ -874,11 +921,12 @@ async function saveExcelRows(type) {
     }
 
     try { await saveRecord(record); saved++; }
-    catch(e) { console.error(e); errors++; }
+    catch(e) { console.error('saveRecord error:', e); errors++; }
   }
 
   if (saved)  toast(`✅ 已儲存 ${saved} 筆記錄`, 'success');
-  if (errors) toast(`❌ ${errors} 筆儲存失敗`, 'error');
+  if (errors) toast(`❌ ${errors} 筆儲存失敗，請確認 Firebase 設定是否正確`, 'error');
+  if (!saved && !errors) toast('⚠️ 請至少填寫一列日期與金額', 'error');
 
   // Clear saved rows
   tbody.innerHTML = '';
@@ -1755,6 +1803,43 @@ function normalizeDate(raw) {
     return d.toISOString().slice(0,10);
   }
   return '';
+}
+
+// ══════════════════════════════════════════════════════
+// DIAGNOSTIC
+// ══════════════════════════════════════════════════════
+function showDiagnostic() {
+  const lines = [
+    ['Firebase Ready Flag', window._firebaseReady ? '✅ true' : '❌ false'],
+    ['db 物件',             window._db            ? '✅ 已取得' : '❌ undefined'],
+    ['fbFns 物件',          window._fbFns         ? '✅ 已取得' : '❌ undefined'],
+    ['app db 變數',         db                    ? '✅ 已賦值' : '❌ undefined'],
+    ['app fbFns 變數',      fbFns                 ? '✅ 已賦值' : '❌ undefined'],
+    ['運作模式',            window._demoMode      ? '⚠️ 示範模式（資料不會寫入 Firestore）' : '🟢 Firestore 模式'],
+    ['初始化錯誤',          window._firebaseInitError || '無'],
+  ];
+  document.getElementById('diag-content').innerHTML =
+    lines.map(([k,v]) => `<div style="display:flex;gap:12px"><span style="color:var(--muted);width:140px">${k}</span><span>${v}</span></div>`).join('');
+  document.getElementById('diag-write-result').textContent = '';
+  document.getElementById('diag-modal').classList.add('open');
+}
+
+async function runDiagnosticWrite() {
+  const resultEl = document.getElementById('diag-write-result');
+  resultEl.textContent = '寫入中…';
+  try {
+    const rec = await saveRecord({
+      type:'_diagnostic', date:'2000-01-01', year:2000, month:1,
+      amount:0, note:'diagnostic test', payment:'現金'
+    });
+    // 立刻刪除測試資料
+    if (rec.id && !window._demoMode) await deleteRecord(rec.id);
+    resultEl.style.color = 'var(--income)';
+    resultEl.textContent = '✅ 寫入成功！Firestore 正常運作';
+  } catch(e) {
+    resultEl.style.color = 'var(--expense)';
+    resultEl.textContent = '❌ 失敗：' + e.message;
+  }
 }
 
 // ── WIRE UP step transitions that need JS ────────────
