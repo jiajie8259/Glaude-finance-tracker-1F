@@ -297,7 +297,7 @@ select option{background:var(--card)}
       <span class="dot" id="sync-dot"></span>
       <span id="sync-text">連線中…</span>
     </div>
-    <button class="btn btn-primary btn-sm" onclick="navigate('entry')">
+    <button class="btn btn-primary btn-sm" onclick="topbarAdd()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
       新增
     </button>
@@ -762,6 +762,27 @@ function populatePeriodSelectors() {
 // ══════════════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════════════
+function topbarAdd() {
+  // If already on entry page, just pulse the tab bar to draw attention
+  if (document.getElementById('page-entry').classList.contains('active')) {
+    const tabs = document.querySelector('#page-entry .tabs');
+    if (tabs) {
+      tabs.style.outline = '2px solid var(--accent)';
+      tabs.style.transition = 'outline .3s';
+      setTimeout(() => { tabs.style.outline = ''; }, 1000);
+    }
+    // Also add a new row to the currently active tab
+    const activeTab = document.querySelector('#page-entry .tab.active');
+    if (activeTab) {
+      const tabMap = { '💊 藥局收入':'pharma-income-tbody', '💸 藥局支出':'pharma-expense-tbody', '🏠 家庭支出':'family-expense-tbody' };
+      const tbodyId = tabMap[activeTab.textContent.trim()];
+      if (tbodyId) { addExcelRow(tbodyId); toast('已加入一列', 'success'); }
+    }
+    return;
+  }
+  navigate('entry');
+}
+
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -894,14 +915,24 @@ function removeRow(btn) {
 }
 
 async function saveExcelRows(type) {
+  // Find the save button and set loading state
+  const saveBtn = document.querySelector(`#et-${type} .btn-primary`);
+  const origHTML = saveBtn ? saveBtn.innerHTML : '';
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<div class="spinner"></div> 儲存中…'; }
+
   const tbody = document.getElementById(type + '-tbody');
   const rows = [...tbody.querySelectorAll('tr')];
-  let saved = 0, errors = 0;
+  let saved = 0, errors = 0, skipped = 0;
+  const errorMsgs = [];
 
   for (const row of rows) {
     const date   = row.querySelector('.cell-date')?.value;
-    const amount = parseFloat(row.querySelector('.cell-amount')?.value || 0);
-    if (!date || !amount) continue;
+    const amtRaw = row.querySelector('.cell-amount')?.value;
+    const amount = parseFloat(amtRaw || 0);
+
+    if (!date && !amtRaw) { skipped++; continue; }  // truly empty row
+    if (!date)  { toast('❌ 有一列缺少日期，已略過', 'error'); skipped++; continue; }
+    if (!amount || amount <= 0) { toast('❌ 有一列金額為空或零，已略過', 'error'); skipped++; continue; }
 
     const d = new Date(date);
     const record = {
@@ -920,18 +951,40 @@ async function saveExcelRows(type) {
       record.categories = cats ? cats.split(',') : [];
     }
 
-    try { await saveRecord(record); saved++; }
-    catch(e) { console.error('saveRecord error:', e); errors++; }
+    try {
+      await saveRecord(record);
+      // Visual feedback: flash the row green
+      [...row.cells].forEach(td => { td.style.background='rgba(52,211,153,.15)'; });
+      setTimeout(() => [...row.cells].forEach(td => { td.style.background=''; }), 1000);
+      saved++;
+    } catch(e) {
+      console.error('saveRecord error:', e);
+      errorMsgs.push(e.message);
+      // Flash row red
+      [...row.cells].forEach(td => { td.style.background='rgba(248,113,113,.15)'; });
+      errors++;
+    }
   }
 
-  if (saved)  toast(`✅ 已儲存 ${saved} 筆記錄`, 'success');
-  if (errors) toast(`❌ ${errors} 筆儲存失敗，請確認 Firebase 設定是否正確`, 'error');
-  if (!saved && !errors) toast('⚠️ 請至少填寫一列日期與金額', 'error');
+  // Restore button
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = origHTML; }
 
-  // Clear saved rows
-  tbody.innerHTML = '';
-  addExcelRow(type + '-tbody');
-  addExcelRow(type + '-tbody');
+  // Summary feedback
+  if (saved > 0 && errors === 0) {
+    toast(`✅ 成功儲存 ${saved} 筆記錄到 Firestore`, 'success');
+    // Clear rows after short delay so user sees the green flash
+    setTimeout(() => {
+      tbody.innerHTML = '';
+      addExcelRow(type + '-tbody');
+      addExcelRow(type + '-tbody');
+    }, 800);
+  } else if (saved > 0 && errors > 0) {
+    toast(`⚠️ ${saved} 筆成功，${errors} 筆失敗`, 'error');
+  } else if (errors > 0) {
+    toast(`❌ 儲存失敗：${errorMsgs[0] || '請確認 Firebase 設定'}`, 'error');
+  } else if (skipped === rows.length) {
+    toast('⚠️ 請先填寫日期與金額後再儲存', 'error');
+  }
 }
 
 // ══════════════════════════════════════════════════════
