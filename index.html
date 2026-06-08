@@ -807,10 +807,24 @@ async function saveRecord(record) {
     window._demoData.push(record);
     return record;
   }
-  if (!db || !fbFns) throw new Error('Firestore 尚未初始化，請確認 Firebase 設定');
+  if (!db || !fbFns) throw new Error('Firestore 尚未初始化，請確認 Firebase 設定是否填入');
   const { collection, addDoc, Timestamp } = fbFns;
   record.createdAt = Timestamp.now();
-  const ref = await addDoc(collection(db, 'records'), record);
+
+  // 加 8 秒 timeout，避免 Firestore rules 拒絕時卡住沒回應
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(
+      'Firestore 連線逾時（8秒）。
+
+可能原因：
+① Firebase Security Rules 拒絕寫入
+② projectId 填錯
+
+請至 Firebase Console → Firestore → Rules，確認規則允許 write。'
+    )), 8000)
+  );
+  const write = addDoc(collection(db, 'records'), record);
+  const ref = await Promise.race([write, timeout]);
   record.id = ref.id;
   return record;
 }
