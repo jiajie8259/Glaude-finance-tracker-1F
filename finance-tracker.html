@@ -721,7 +721,7 @@ select option{background:var(--card)}
 // ── ② 圖片辨識（OCR）功能：請填入您部署的 Cloudflare Worker 網址 ──
 // Worker 內部呼叫「免費」的 Google Gemini API，不需信用卡、不會產生費用
 // 部署說明請見對話中提供的 ocr-worker.js 範例檔
-const OCR_WORKER_URL = "finance-ocr-proxy.jiajie8259.workers.dev";
+const OCR_WORKER_URL = "https://YOUR_WORKER.YOUR_SUBDOMAIN.workers.dev";
 // ─────────────────────────────────────────────────────────────────
 
 const FAMILY_CATS = [
@@ -2098,26 +2098,50 @@ async function runOcrRecognition() {
       throw new Error('尚未設定 OCR_WORKER_URL，請參考部署說明設定您的 Cloudflare Worker 網址');
     }
 
-    const response = await fetch(OCR_WORKER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        imageBase64: ocrState.imageBase64,
-        mediaType: ocrState.imageMediaType,
-        prompt: prompt
-      })
-    });
+    // 加 25 秒 timeout，避免 Worker 沒回應、CORS 被擋、或網路問題時卡住沒反應
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+    let response;
+    try {
+      response = await fetch(OCR_WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: ocrState.imageBase64,
+          mediaType: ocrState.imageMediaType,
+          prompt: prompt
+        }),
+        signal: controller.signal,
+      });
+    } catch (fetchErr) {
+      if (fetchErr.name === 'AbortError') {
+        throw new Error('連線逾時（25秒無回應）。可能原因：①Worker 網址錯誤或尚未部署成功　②CORS 被擋（瀏覽器開發者工具 Console 通常會顯示紅字錯誤，可截圖給我）　③網路問題。');
+      }
+      // TypeError: Failed to fetch 通常就是 CORS 或網址錯誤
+      throw new Error('無法連線到 Worker：' + fetchErr.message + '（請確認 OCR_WORKER_URL 網址正確，且 Worker 已成功部署）');
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       const errText = await response.text().catch(()=>'');
-      throw new Error(`Worker 回應錯誤（${response.status}）：${errText.slice(0,200) || '請檢查 Worker 部署與設定'}`);
+      throw new Error(`Worker 回應錯誤（${response.status}）：${errText.slice(0,300) || '請檢查 Worker 部署與環境變數設定'}`);
     }
     const data = await response.json();
+    if (data.error) {
+      throw new Error('Worker/Gemini 錯誤：' + data.error + (data.detail ? '　詳細：' + JSON.stringify(data.detail).slice(0,200) : ''));
+    }
     const textBlock = data.content?.find(c => c.type === 'text');
-    if (!textBlock) throw new Error('未取得辨識結果，請確認 Worker 是否正確轉送 Claude API 回應');
+    if (!textBlock) throw new Error('未取得辨識結果，回應內容：' + JSON.stringify(data).slice(0,300));
 
     let jsonStr = textBlock.text.trim().replace(/^```json\s*|^```\s*|```$/g, '').trim();
-    const parsed = JSON.parse(jsonStr);
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      throw new Error('AI 回傳的內容不是有效 JSON，無法解析。原始回應：' + jsonStr.slice(0,300));
+    }
 
     ocrState.results = (parsed.items || []).map(it => {
       const mm = String(parsed.month || 1).padStart(2,'0');
