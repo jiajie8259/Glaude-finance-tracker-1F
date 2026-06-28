@@ -56,7 +56,7 @@
   --danger:    #D9684F;
   --warn:      #D9A23B;
   --text:      #4A3F35;
-  --muted:     #A6957F;
+  --muted:     #8C7A63;
   --income:    #6B9080;
   --expense:   #D97757;
   --pharmacy:  #B08968;
@@ -65,7 +65,7 @@
   --shadow-lg: 0 10px 32px rgba(180,140,90,.16);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:20px;line-height:1.5;
   background-image: radial-gradient(circle at 1px 1px, rgba(217,119,87,.05) 1px, transparent 0);
   background-size: 22px 22px;
 }
@@ -73,117 +73,117 @@ a{color:var(--accent);text-decoration:none}
 
 /* ── LAYOUT ── */
 .shell{display:flex;min-height:100vh}
-.sidebar{width:226px;background:var(--surface);border-right:2px dashed var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
-.main{margin-left:226px;flex:1;display:flex;flex-direction:column;min-height:100vh}
-.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
-.content{padding:28px;flex:1}
+.sidebar{width:250px;background:var(--surface);border-right:2px dashed var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.main{margin-left:250px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:68px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.content{padding:22px 28px;flex:1}
 
 /* ── SIDEBAR：藥袋標籤造型 ── */
-.logo{padding:24px 20px 16px;border-bottom:2px dashed var(--border);position:relative}
-.logo h1{font-family:'Fredoka',sans-serif;font-size:17px;font-weight:600;color:var(--accent);line-height:1.5}
-.logo span{font-size:11px;color:var(--muted);letter-spacing:.04em}
-.nav{flex:1;padding:14px 12px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;color:var(--muted);font-size:13px;transition:.18s;border-radius:12px;margin-bottom:3px;position:relative}
+.logo{padding:20px 18px 16px;border-bottom:2px dashed var(--border);position:relative}
+.logo h1{font-family:'Fredoka',sans-serif;font-size:23px;font-weight:600;color:var(--accent);line-height:1.4}
+.logo span{font-size:17px;color:var(--muted);letter-spacing:.04em}
+.nav{flex:1;padding:10px 10px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:15px 14px;cursor:pointer;color:var(--muted);font-size:18px;font-weight:600;transition:.18s;border-radius:13px;margin-bottom:3px;position:relative}
 .nav-item:hover{color:var(--text);background:rgba(217,119,87,.07)}
 .nav-item.active{color:#fff;background:var(--accent);box-shadow:var(--shadow)}
 .nav-item.active svg{stroke:#fff}
-.nav-item svg{width:16px;height:16px;flex-shrink:0}
-.nav-section{padding:16px 14px 6px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;opacity:.7}
+.nav-item svg{width:21px;height:21px;flex-shrink:0}
+.nav-section{padding:14px 14px 6px;font-size:16px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;opacity:.75}
 
 /* ── TOPBAR ── */
-.topbar-title{font-family:'Fredoka',sans-serif;font-size:16px;font-weight:600;color:var(--text)}
-.topbar-right{display:flex;align-items:center;gap:12px}
-.sync-status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--accent2)}
+.topbar-title{font-family:'Fredoka',sans-serif;font-size:22px;font-weight:600;color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.sync-status{font-size:16px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent2)}
 .dot.offline{background:var(--danger)}
 
 /* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 17px;border-radius:20px;border:none;cursor:pointer;font-size:13px;font-family:inherit;font-weight:600;transition:.18s}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:13px 24px;border-radius:22px;border:none;cursor:pointer;font-size:18px;font-family:inherit;font-weight:700;transition:.18s}
 .btn-primary{background:var(--accent);color:#fff;box-shadow:0 3px 0 #B85A3D}
 .btn-primary:hover{background:#C76847;transform:translateY(1px);box-shadow:0 2px 0 #B85A3D}
 .btn-ghost{background:var(--card);color:var(--muted);border:1.5px solid var(--border)}
 .btn-ghost:hover{color:var(--text);border-color:var(--accent);background:rgba(217,119,87,.05)}
 .btn-danger{background:#FBE9E3;color:var(--danger);border:1.5px solid #F3CDBE}
 .btn-success{background:#E7F0E9;color:var(--income);border:1.5px solid #CBE0D1}
-.btn-sm{padding:6px 13px;font-size:12px;border-radius:16px}
+.btn-sm{padding:10px 18px;font-size:16px;border-radius:18px}
 
 /* ── CARDS ── */
-.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
-.card-title{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.04em;margin-bottom:8px}
-.card-value{font-family:'Space Mono',monospace;font-size:25px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
+.card-title{font-size:16px;color:var(--muted);font-weight:700;letter-spacing:.03em;margin-bottom:9px}
+.card-value{font-family:'Space Mono',monospace;font-size:36px;font-weight:700}
 .card-value.income{color:var(--income)}
 .card-value.expense{color:var(--expense)}
 .card-value.pharmacy{color:var(--pharmacy)}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:22px}
 
 /* ── TABLE ── */
-.table-wrap{overflow-x:auto;border-radius:16px;border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow)}
-table{width:100%;border-collapse:collapse;font-size:13px}
+.table-wrap{overflow-x:auto;border-radius:18px;border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:19px}
 thead{background:var(--surface)}
-th{padding:12px 14px;text-align:left;font-weight:700;color:var(--muted);font-size:11px;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--border)}
-td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+th{padding:16px 20px;text-align:left;font-weight:700;color:var(--muted);font-size:15px;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:16px 20px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(217,119,87,.035)}
-.badge{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700}
+.badge{display:inline-flex;align-items:center;padding:6px 16px;border-radius:20px;font-size:15px;font-weight:700}
 .badge-income{background:#E7F0E9;color:var(--income)}
 .badge-expense{background:#FBE9E3;color:var(--expense)}
 .badge-pharmacy{background:#F1E7DC;color:var(--pharmacy)}
 .badge-family{background:#FBEDD9;color:var(--family)}
 
 /* ── EXCEL TABLE (quick entry) ── */
-.excel-table{width:100%;border-collapse:collapse;font-size:13px}
-.excel-table th{background:var(--surface);padding:9px 10px;border:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);text-align:center}
+.excel-table{width:100%;border-collapse:collapse;font-size:19px}
+.excel-table th{background:var(--surface);padding:13px 10px;border:1px solid var(--border);font-size:15px;font-weight:700;color:var(--muted);text-align:center}
 .excel-table td{border:1px solid var(--border);padding:2px;background:var(--card)}
-.excel-table input,.excel-table select{width:100%;background:transparent;border:none;color:var(--text);padding:8px 9px;font-size:13px;font-family:inherit;outline:none;border-radius:8px}
+.excel-table input,.excel-table select{width:100%;background:transparent;border:none;color:var(--text);padding:14px 12px;font-size:19px;font-family:inherit;outline:none;border-radius:8px}
 .excel-table input:focus,.excel-table select:focus{background:rgba(217,119,87,.08)}
-.excel-table select option{background:var(--card);color:var(--text)}
+.excel-table select option{background:var(--card);color:var(--text);font-size:18px}
 .excel-table tr:hover td{background:rgba(217,119,87,.025)}
 .row-actions{display:flex;gap:4px;justify-content:center}
 
 /* ── FORMS ── */
-.form-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px}
-.form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px}
-label{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-input,select,textarea{background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);padding:9px 13px;font-size:13px;font-family:inherit;transition:.15s;outline:none}
+.form-row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.form-group{display:flex;flex-direction:column;gap:6px;flex:1;min-width:150px}
+label{font-size:15px;color:var(--muted);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+input,select,textarea{background:var(--card);border:1.5px solid var(--border);border-radius:11px;color:var(--text);padding:13px 16px;font-size:18px;font-family:inherit;transition:.15s;outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(217,119,87,.13)}
 select option{background:var(--card)}
 
 /* ── CHECKBOX GROUP（藥丸貼紙感） ── */
-.checkbox-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-.checkbox-label{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;cursor:pointer;font-size:12px;transition:.15s;font-weight:500}
+.checkbox-group{display:flex;flex-wrap:wrap;gap:10px;margin-top:5px}
+.checkbox-label{display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:22px;padding:11px 19px;cursor:pointer;font-size:17px;transition:.15s;font-weight:500}
 .checkbox-label:hover{border-color:var(--accent)}
-.checkbox-label input[type=checkbox]{accent-color:var(--accent);width:13px;height:13px}
+.checkbox-label input[type=checkbox]{accent-color:var(--accent);width:19px;height:19px}
 .checkbox-label.checked{border-color:var(--accent);background:rgba(217,119,87,.12);color:var(--accent);font-weight:700}
 
 /* ── TABS ── */
-.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:5px}
-.tab{padding:8px 19px;border-radius:14px;cursor:pointer;font-size:13px;color:var(--muted);transition:.18s;border:none;background:transparent;font-family:inherit;font-weight:600}
+.tabs{display:flex;gap:5px;margin-bottom:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px}
+.tab{padding:13px 26px;border-radius:16px;cursor:pointer;font-size:18px;color:var(--muted);transition:.18s;border:none;background:transparent;font-family:inherit;font-weight:700}
 .tab:hover{color:var(--text)}
 .tab.active{background:var(--accent);color:#fff;box-shadow:var(--shadow)}
 
 /* ── CHART-LIKE BARS ── */
-.bar-chart{margin-top:10px}
-.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;font-size:12px}
-.bar-label{width:100px;text-align:right;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-track{flex:1;background:var(--surface);border-radius:8px;height:16px;overflow:hidden;border:1px solid var(--border)}
-.bar-fill{height:100%;border-radius:8px;transition:.5s}
-.bar-val{width:90px;font-family:'Space Mono',monospace;font-size:12px;text-align:right;font-weight:700}
+.bar-chart{margin-top:8px}
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;font-size:17px}
+.bar-label{width:120px;text-align:right;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;background:var(--surface);border-radius:9px;height:21px;overflow:hidden;border:1px solid var(--border)}
+.bar-fill{height:100%;border-radius:9px;transition:.5s}
+.bar-val{width:108px;font-family:'Space Mono',monospace;font-size:17px;text-align:right;font-weight:700}
 
 /* ── MONTH / YEAR SELECTORS ── */
-.period-selector{display:flex;align-items:center;gap:8px;margin-bottom:20px}
-.period-selector select{width:auto;padding:7px 12px;font-size:13px}
+.period-selector{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.period-selector select{width:auto;padding:11px 16px;font-size:18px}
 
 /* ── MODAL ── */
 .overlay{display:none;position:fixed;inset:0;background:rgba(74,63,53,.35);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
 .overlay.open{display:flex}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:30px;width:min(95vw,720px);max-height:90vh;overflow-y:auto;position:relative;box-shadow:var(--shadow-lg)}
-.modal-title{font-family:'Fredoka',sans-serif;font-size:17px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:8px;color:var(--text)}
-.modal-close{position:absolute;top:18px;right:18px;background:var(--surface);border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.15s}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:30px;width:min(95vw,760px);max-height:90vh;overflow-y:auto;position:relative;box-shadow:var(--shadow-lg)}
+.modal-title{font-family:'Fredoka',sans-serif;font-size:23px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:9px;color:var(--text)}
+.modal-close{position:absolute;top:20px;right:20px;background:var(--surface);border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:.15s}
 .modal-close:hover{background:var(--border);color:var(--text)}
 
 /* ── TOAST ── */
 #toast{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px}
-.toast-item{background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:13px 19px;font-size:13px;display:flex;align-items:center;gap:8px;animation:slideIn .25s ease;box-shadow:var(--shadow-lg);font-weight:600}
+.toast-item{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:16px 22px;font-size:17px;display:flex;align-items:center;gap:9px;animation:slideIn .25s ease;box-shadow:var(--shadow-lg);font-weight:600}
 .toast-item.success{border-color:#CBE0D1;color:var(--income);background:#F3F8F4}
 .toast-item.error{border-color:#F3CDBE;color:var(--expense);background:#FDF3EF}
 @keyframes slideIn{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
@@ -191,68 +191,68 @@ select option{background:var(--card)}
 /* ── UTILITIES ── */
 .flex{display:flex}.items-center{align-items:center}.justify-between{justify-content:space-between}
 .gap-8{gap:8px}.gap-12{gap:12px}.gap-16{gap:16px}
-.mb-8{margin-bottom:8px}.mb-16{margin-bottom:16px}.mb-20{margin-bottom:20px}.mb-24{margin-bottom:24px}
+.mb-8{margin-bottom:8px}.mb-16{margin-bottom:14px}.mb-20{margin-bottom:16px}.mb-24{margin-bottom:18px}
 .text-right{text-align:right}.text-center{text-align:center}
 .mono{font-family:'Space Mono',monospace}
 .text-income{color:var(--income)}.text-expense{color:var(--expense)}.text-pharmacy{color:var(--pharmacy)}.text-family{color:var(--family)}
-.spinner{display:inline-block;width:16px;height:16px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+.spinner{display:inline-block;width:20px;height:20px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
-.empty-state svg{width:40px;height:40px;margin-bottom:12px;opacity:.4}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.section-title{font-family:'Fredoka',sans-serif;font-size:16px;font-weight:600;color:var(--text)}
-.divider{height:1px;background:var(--border);margin:20px 0;border-top:2px dashed var(--border);background:none}
+.empty-state{text-align:center;padding:36px 20px;color:var(--muted);font-size:18px}
+.empty-state svg{width:44px;height:44px;margin-bottom:12px;opacity:.4}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-family:'Fredoka',sans-serif;font-size:22px;font-weight:600;color:var(--text)}
+.divider{margin:14px 0;border-top:2px dashed var(--border)}
 .amount-pos{color:var(--income)}.amount-neg{color:var(--expense)}
 .page{display:none}.page.active{display:block}
 
 /* ── IMPORT STEPS ── */
-.imp-step{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:16px;cursor:pointer;opacity:.45;transition:.2s;font-size:13px;font-weight:600}
+.imp-step{display:flex;align-items:center;gap:9px;padding:10px 18px;border-radius:18px;cursor:pointer;opacity:.45;transition:.2s;font-size:17px;font-weight:600}
 .imp-step.active{opacity:1;background:rgba(217,119,87,.1)}
 .imp-step.done{opacity:.75}
-.step-num{width:24px;height:24px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;color:var(--card)}
+.step-num{width:30px;height:30px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;color:var(--card)}
 .imp-step.active .step-num{background:var(--accent);color:#fff}
 .imp-step.done .step-num{background:var(--accent2);color:#fff}
-.step-label{white-space:nowrap;font-size:12px}
-.step-arrow{color:var(--border);font-size:18px;padding:0 2px}
+.step-label{white-space:nowrap;font-size:16px}
+.step-arrow{color:var(--border);font-size:22px;padding:0 2px}
 
 /* ── IMPORT TYPE CARDS ── */
-.imp-type-card{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:24px 20px;cursor:pointer;transition:.18s;text-align:center;box-shadow:var(--shadow)}
+.imp-type-card{background:var(--card);border:2px solid var(--border);border-radius:20px;padding:24px 20px;cursor:pointer;transition:.18s;text-align:center;box-shadow:var(--shadow)}
 .imp-type-card:hover{border-color:var(--accent);background:rgba(217,119,87,.04);transform:translateY(-2px)}
 .imp-type-card.selected{border-color:var(--accent);background:rgba(217,119,87,.08)}
 
 /* ── DROP ZONE ── */
-#csv-dropzone{border:2.5px dashed var(--border);border-radius:18px;padding:40px;text-align:center;cursor:pointer;transition:.2s;background:var(--surface)}
+#csv-dropzone{border:2.5px dashed var(--border);border-radius:20px;padding:38px;text-align:center;cursor:pointer;transition:.2s;background:var(--surface)}
 #csv-dropzone:hover,#csv-dropzone.drag-over{border-color:var(--accent);background:rgba(217,119,87,.05)}
 
 /* ── MAPPING UI ── */
-.mapping-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.mapping-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);font-size:17px}
 .mapping-row:last-child{border-bottom:none}
-.mapping-field{width:160px;font-weight:700;color:var(--text)}
-.mapping-arrow{color:var(--muted);font-size:16px}
-.mapping-select{flex:1;padding:7px 10px;font-size:13px}
-.mapping-sample{flex:1;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mapping-field{width:180px;font-weight:700;color:var(--text)}
+.mapping-arrow{color:var(--muted);font-size:19px}
+.mapping-select{flex:1;padding:10px 13px;font-size:17px}
+.mapping-sample{flex:1;font-size:15px;color:var(--muted);font-family:'Space Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ── PREVIEW TABLE ── */
-.status-ok  { color:var(--income);font-size:14px }
-.status-warn{ color:var(--warn);font-size:14px }
-.status-err { color:var(--expense);font-size:14px }
+.status-ok  { color:var(--income);font-size:18px }
+.status-warn{ color:var(--warn);font-size:18px }
+.status-err { color:var(--expense);font-size:18px }
 .preview-row-warn td{ background:rgba(217,162,59,.06) }
 .preview-row-err  td{ background:rgba(217,104,79,.06) }
 
 /* ── OCR DROPZONE (reuse csv-dropzone pattern) ── */
-#ocr-dropzone{border:2.5px dashed var(--border);border-radius:18px;padding:40px;text-align:center;cursor:pointer;transition:.2s;outline:none;background:var(--surface)}
+#ocr-dropzone{border:2.5px dashed var(--border);border-radius:20px;padding:38px;text-align:center;cursor:pointer;transition:.2s;outline:none;background:var(--surface)}
 #ocr-dropzone:hover,#ocr-dropzone.drag-over,#ocr-dropzone:focus{border-color:var(--accent);background:rgba(217,119,87,.05)}
 #ocr-result-table .cell-cat-unknown{border:1.5px solid var(--warn) !important;border-radius:8px}
 
 /* ── 簽名元素：藥袋標籤角落圓點裝飾 ── */
 .logo::before{
-  content:"";position:absolute;top:24px;right:18px;width:8px;height:8px;border-radius:50%;
-  background:var(--accent2);box-shadow:14px 0 0 var(--accent), 28px 0 0 var(--warn);opacity:.55;
+  content:"";position:absolute;top:20px;right:20px;width:9px;height:9px;border-radius:50%;
+  background:var(--accent2);box-shadow:16px 0 0 var(--accent), 32px 0 0 var(--warn);opacity:.55;
 }
 
 @media(max-width:700px){
-  .sidebar{width:200px}
-  .main{margin-left:200px}
+  .sidebar{width:210px}
+  .main{margin-left:210px}
   .stats-grid{grid-template-columns:1fr 1fr}
   .form-row{flex-direction:column}
 }
@@ -417,7 +417,7 @@ select option{background:var(--card)}
         <tbody id="family-expense-tbody"></tbody>
       </table>
     </div>
-    <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+    <div style="margin-top:10px;font-size:17px;color:var(--muted)">
       💡 點選「類別」欄位可選取多個類別；支援家用支出、爸爸支出、醫療、稅務等 10 種類別。
     </div>
   </div>
@@ -428,14 +428,14 @@ select option{background:var(--card)}
   <div class="section-header">
     <span class="section-title">所有記錄</span>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <select id="rec-type" onchange="loadRecords()" style="padding:6px 10px;font-size:13px">
+      <select id="rec-type" onchange="loadRecords()" style="padding:6px 10px;font-size:16px">
         <option value="">全部類型</option>
         <option value="pharma-income">藥局收入</option>
         <option value="pharma-expense">藥局支出</option>
         <option value="family-expense">家庭支出</option>
       </select>
-      <select id="rec-month" onchange="loadRecords()" style="padding:6px 10px;font-size:13px"></select>
-      <select id="rec-year"  onchange="loadRecords()" style="padding:6px 10px;font-size:13px"></select>
+      <select id="rec-month" onchange="loadRecords()" style="padding:6px 10px;font-size:16px"></select>
+      <select id="rec-year"  onchange="loadRecords()" style="padding:6px 10px;font-size:16px"></select>
     </div>
   </div>
   <div class="table-wrap">
@@ -512,7 +512,7 @@ select option{background:var(--card)}
   <!-- Step 1: Choose type -->
   <div id="imp-panel-1">
     <div class="card mb-20" style="background:rgba(217,119,87,.06);border-color:rgba(217,119,87,.3)">
-      <div style="font-size:13px;color:var(--muted);line-height:1.8">
+      <div style="font-size:16px;color:var(--muted);line-height:1.8">
         📋 <strong style="color:var(--text)">匯入步驟說明：</strong><br>
         ① 在 Google Sheets 開啟您的舊資料頁籤<br>
         ② 點選上方選單「檔案 → 下載 → 逗號分隔值 (.csv)」<br>
@@ -525,17 +525,17 @@ select option{background:var(--card)}
       <div class="imp-type-card" onclick="selectImportType('family-expense')" id="itc-family-expense">
         <div style="font-size:28px;margin-bottom:8px">🏠</div>
         <div style="font-weight:700;margin-bottom:4px">家庭支出</div>
-        <div style="font-size:12px;color:var(--muted)">欄位：日期、支出項目（類別）、金額、備註</div>
+        <div style="font-size:17px;color:var(--muted)">欄位：日期、支出項目（類別）、金額、備註</div>
       </div>
       <div class="imp-type-card" onclick="selectImportType('pharma-income')" id="itc-pharma-income">
         <div style="font-size:28px;margin-bottom:8px">💊</div>
         <div style="font-weight:700;margin-bottom:4px">藥局收入</div>
-        <div style="font-size:12px;color:var(--muted)">欄位：日期、金額、備註</div>
+        <div style="font-size:17px;color:var(--muted)">欄位：日期、金額、備註</div>
       </div>
       <div class="imp-type-card" onclick="selectImportType('pharma-expense')" id="itc-pharma-expense">
         <div style="font-size:28px;margin-bottom:8px">💸</div>
         <div style="font-weight:700;margin-bottom:4px">藥局支出</div>
-        <div style="font-size:12px;color:var(--muted)">欄位：日期、類別、金額、備註</div>
+        <div style="font-size:17px;color:var(--muted)">欄位：日期、類別、金額、備註</div>
       </div>
     </div>
     <div style="margin-top:24px;display:flex;justify-content:flex-end">
@@ -549,7 +549,7 @@ select option{background:var(--card)}
       <div class="card-title mb-16" id="imp-type-label">上傳 CSV 檔案</div>
 
       <!-- Google Sheet format guide -->
-      <div id="imp-format-guide" style="margin-bottom:20px;padding:14px;background:var(--surface);border-radius:8px;font-size:12px;color:var(--muted);line-height:2"></div>
+      <div id="imp-format-guide" style="margin-bottom:20px;padding:14px;background:var(--surface);border-radius:8px;font-size:17px;color:var(--muted);line-height:2"></div>
 
       <!-- Drop zone -->
       <div id="csv-dropzone" onclick="document.getElementById('csv-file-input').click()"
@@ -558,8 +558,8 @@ select option{background:var(--card)}
            ondrop="handleCsvDrop(event)">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:12px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         <div style="font-weight:600;margin-bottom:4px">點擊選擇或拖曳 CSV 檔案至此</div>
-        <div style="font-size:12px;color:var(--muted)">支援 .csv 格式，由 Google Sheets 匯出</div>
-        <div id="csv-file-name" style="margin-top:10px;font-size:12px;color:var(--accent2)"></div>
+        <div style="font-size:17px;color:var(--muted)">支援 .csv 格式，由 Google Sheets 匯出</div>
+        <div id="csv-file-name" style="margin-top:10px;font-size:17px;color:var(--accent2)"></div>
       </div>
       <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="handleCsvFile(this.files[0])">
     </div>
@@ -573,7 +573,7 @@ select option{background:var(--card)}
   <div id="imp-panel-3" style="display:none">
     <div class="card mb-20">
       <div class="card-title mb-16">欄位對應設定</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:16px">
+      <div style="font-size:17px;color:var(--muted);margin-bottom:16px">
         系統已自動偵測您的 CSV 欄位，請確認或調整對應關係：
       </div>
       <div id="col-mapping-ui"></div>
@@ -589,8 +589,8 @@ select option{background:var(--card)}
     <div class="section-header">
       <span class="section-title">匯入預覽</span>
       <div style="display:flex;align-items:center;gap:10px">
-        <span id="preview-count" style="font-size:13px;color:var(--muted)"></span>
-        <span id="preview-skip"  style="font-size:12px;color:var(--warn)"></span>
+        <span id="preview-count" style="font-size:16px;color:var(--muted)"></span>
+        <span id="preview-skip"  style="font-size:17px;color:var(--warn)"></span>
       </div>
     </div>
 
@@ -614,7 +614,7 @@ select option{background:var(--card)}
     <div style="display:flex;justify-content:space-between;align-items:center">
       <button class="btn btn-ghost" onclick="goImportStep(3)">← 上一步</button>
       <div style="display:flex;gap:10px;align-items:center">
-        <span id="import-selected-count" style="font-size:13px;color:var(--muted)"></span>
+        <span id="import-selected-count" style="font-size:16px;color:var(--muted)"></span>
         <button class="btn btn-primary" onclick="runImport()" id="btn-run-import">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           寫入 Firestore
@@ -660,7 +660,7 @@ select option{background:var(--card)}
            ondrop="handleOcrDrop(event)">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:12px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <div style="font-weight:600;margin-bottom:4px">點擊選擇圖片、拖曳，或直接 <kbd style="background:var(--surface);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">Ctrl+V</kbd> 貼上</div>
-        <div style="font-size:12px;color:var(--muted)">支援手寫記帳照片，系統會自動辨識日期與金額</div>
+        <div style="font-size:17px;color:var(--muted)">支援手寫記帳照片，系統會自動辨識日期與金額</div>
       </div>
       <input type="file" id="ocr-file-input" accept="image/*" style="display:none" onchange="handleOcrFile(this.files[0])">
       <div id="ocr-preview-wrap" style="display:none;margin-top:16px;text-align:center">
@@ -676,13 +676,13 @@ select option{background:var(--card)}
     <div id="ocr-stage-loading" style="display:none;text-align:center;padding:50px 20px">
       <div class="spinner" style="width:32px;height:32px;border-width:3px;margin-bottom:16px"></div>
       <div style="font-weight:600">辨識中，請稍候…</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px">正在分析圖片中的日期與金額</div>
+      <div style="font-size:17px;color:var(--muted);margin-top:6px">正在分析圖片中的日期與金額</div>
     </div>
 
     <!-- Stage 3: result preview -->
     <div id="ocr-stage-result" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <span style="font-size:13px;color:var(--muted)" id="ocr-result-count"></span>
+        <span style="font-size:16px;color:var(--muted)" id="ocr-result-count"></span>
         <div style="display:flex;gap:8px">
           <button class="btn btn-ghost btn-sm" onclick="ocrAddManualRow()">＋ 手動加一列</button>
         </div>
@@ -706,10 +706,10 @@ select option{background:var(--card)}
   <div class="modal" style="max-width:500px">
     <button class="modal-close" onclick="document.getElementById('diag-modal').classList.remove('open')">✕</button>
     <div class="modal-title">🔍 Firebase 連線診斷</div>
-    <div id="diag-content" style="font-size:13px;line-height:2;font-family:'DM Mono',monospace"></div>
+    <div id="diag-content" style="font-size:16px;line-height:2;font-family:'DM Mono',monospace"></div>
     <div style="margin-top:20px">
       <button class="btn btn-primary btn-sm" onclick="runDiagnosticWrite()">🧪 測試寫入一筆資料</button>
-      <span id="diag-write-result" style="margin-left:12px;font-size:12px"></span>
+      <span id="diag-write-result" style="margin-left:12px;font-size:17px"></span>
     </div>
   </div>
 </div>
@@ -987,7 +987,7 @@ function addExcelRow(tbodyId) {
     tr.innerHTML = `
       <td><input type="date" value="${today}" class="cell-date" onchange="sortExcelTable(this.closest('tbody'))"></td>
       <td><input type="number" placeholder="0" class="cell-amount" min="0"></td>
-      <td><button class="btn btn-ghost btn-sm cell-cat-btn" onclick="openCatModal(this)" style="width:100%;font-size:12px;white-space:nowrap">選擇類別 ▾</button><input type="hidden" class="cell-cats" value=""></td>
+      <td><button class="btn btn-ghost btn-sm cell-cat-btn" onclick="openCatModal(this)" style="width:100%;font-size:17px;white-space:nowrap">選擇類別 ▾</button><input type="hidden" class="cell-cats" value=""></td>
       <td><input type="text" placeholder="備註" class="cell-note"></td>
       <td>${paymentSelect()}</td>
       <td><div class="row-actions"><button class="btn btn-danger btn-sm" onclick="removeRow(this)" style="padding:3px 8px">✕</button></div></td>`;
@@ -1144,10 +1144,10 @@ async function loadRecords() {
     return `<tr>
       <td class="mono">${r.date}</td>
       <td><span class="badge badge-${typeBadge}">${typeLabel}</span></td>
-      <td style="font-size:12px;max-width:160px">${cats}</td>
+      <td style="font-size:17px;max-width:160px">${cats}</td>
       <td class="mono ${amtClass}">${r.type==='pharma-income'?'+':'−'}${fmt(r.amount)}</td>
       <td>${r.payment||'–'}</td>
-      <td style="color:var(--muted);font-size:12px">${r.note||'–'}</td>
+      <td style="color:var(--muted);font-size:17px">${r.note||'–'}</td>
       <td><button class="btn btn-danger btn-sm" onclick="confirmDelete('${r.id}')">刪除</button></td>
     </tr>`;
   }).join('');
@@ -1189,7 +1189,7 @@ async function loadDashboard() {
   const maxCat = Math.max(1, ...Object.values(catTotals));
   const bars = document.getElementById('dash-family-bars');
   if (!Object.keys(catTotals).length) {
-    bars.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:12px 0">本月無家庭支出</div>';
+    bars.innerHTML = '<div style="color:var(--muted);font-size:17px;padding:12px 0">本月無家庭支出</div>';
   } else {
     bars.innerHTML = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([cat,val]) => `
       <div class="bar-row">
@@ -1203,13 +1203,13 @@ async function loadDashboard() {
   const all = [...pi,...pe,...fe].sort((a,b) => b.date.localeCompare(a.date)).slice(0,8);
   const recent = document.getElementById('dash-recent');
   if (!all.length) {
-    recent.innerHTML = '<div style="color:var(--muted);font-size:12px">無記錄</div>';
+    recent.innerHTML = '<div style="color:var(--muted);font-size:17px">無記錄</div>';
   } else {
     recent.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px">' +
       all.map(r => {
         const isIncome = r.type === 'pharma-income';
         const col = isIncome ? 'var(--income)' : 'var(--expense)';
-        return `<div style="display:flex;justify-content:space-between;font-size:12px;border-bottom:1px solid var(--border);padding-bottom:6px">
+        return `<div style="display:flex;justify-content:space-between;font-size:17px;border-bottom:1px solid var(--border);padding-bottom:6px">
           <span style="color:var(--muted)">${r.date}</span>
           <span style="color:${col};font-family:'DM Mono',monospace">${isIncome?'+':'-'}${fmt(r.amount)}</span>
         </div>`;
@@ -1254,7 +1254,7 @@ async function loadMonthly() {
                 <div class="bar-track"><div class="bar-fill" style="width:${v/Math.max(1,...Object.values(catTotals))*100}%;background:var(--family)"></div></div>
                 <div class="bar-val text-family">${fmt(v)}</div>
               </div>`).join('') + '</div>'
-          : '<div style="color:var(--muted);font-size:12px">無資料</div>'}
+          : '<div style="color:var(--muted);font-size:17px">無資料</div>'}
       </div>
       <div class="card">
         <div class="card-title">藥局收支比</div>
@@ -1286,7 +1286,7 @@ function barRow(label, val, total, color) {
 }
 
 function recordTable(records, type) {
-  if (!records.length) return '<div style="color:var(--muted);font-size:12px;margin-bottom:12px">無記錄</div>';
+  if (!records.length) return '<div style="color:var(--muted);font-size:17px;margin-bottom:12px">無記錄</div>';
   const isIncome = type === 'pharma-income';
   const isFamily = type === 'family-expense';
   return `<div class="table-wrap mb-16"><table>
@@ -1294,9 +1294,9 @@ function recordTable(records, type) {
     <tbody>${records.map(r => `<tr>
       <td class="mono">${r.date}</td>
       <td class="mono ${isIncome?'amount-pos':'amount-neg'}">${isIncome?'+':'-'}${fmt(r.amount)}</td>
-      <td style="font-size:12px">${isFamily ? (r.categories||[]).join('、')||'–' : r.category||'–'}</td>
+      <td style="font-size:17px">${isFamily ? (r.categories||[]).join('、')||'–' : r.category||'–'}</td>
       <td>${r.payment||'–'}</td>
-      <td style="color:var(--muted);font-size:12px">${r.note||'–'}</td>
+      <td style="color:var(--muted);font-size:17px">${r.note||'–'}</td>
     </tr>`).join('')}</tbody>
   </table></div>`;
 }
@@ -1346,12 +1346,12 @@ async function loadYearly() {
               <div class="bar-track" style="height:12px"><div class="bar-fill" style="width:${r.pi/maxBar*100}%;background:var(--income)"></div></div>
               <div class="bar-track" style="height:12px"><div class="bar-fill" style="width:${(r.pe+r.fe)/maxBar*100}%;background:var(--expense)"></div></div>
             </div>
-            <div style="width:110px;text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:${r.net>=0?'var(--income)':'var(--expense)'}">
+            <div style="width:110px;text-align:right;font-family:'DM Mono',monospace;font-size:16px;color:${r.net>=0?'var(--income)':'var(--expense)'}">
               ${r.net>=0?'+':'-'}${fmt(Math.abs(r.net))}
             </div>
           </div>`).join('')}
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px">■ <span style="color:var(--income)">收入</span>　■ <span style="color:var(--expense)">支出合計</span></div>
+      <div style="font-size:16px;color:var(--muted);margin-top:6px">■ <span style="color:var(--income)">收入</span>　■ <span style="color:var(--expense)">支出合計</span></div>
     </div>
     <div class="table-wrap">
       <table>
@@ -1422,7 +1422,7 @@ async function loadPharmacy() {
               <div class="bar-label">${c}</div>
               <div class="bar-track"><div class="bar-fill" style="width:${v/maxCat*100}%;background:var(--pharmacy)"></div></div>
               <div class="bar-val" style="color:var(--pharmacy)">${fmt(v)}</div>
-            </div>`).join('') || '<div style="color:var(--muted);font-size:12px">無資料</div>'}
+            </div>`).join('') || '<div style="color:var(--muted);font-size:17px">無資料</div>'}
         </div>
       </div>
       <div class="card">
@@ -1433,7 +1433,7 @@ async function loadPharmacy() {
               <div class="bar-label" style="width:32px">${r.m}月</div>
               <div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,r.gross/Math.max(1,...monthly.map(x=>x.gross))*100)}%;background:var(--accent2)"></div></div>
               <div class="bar-val" style="color:var(--accent2)">${r.margin}%</div>
-            </div>`).join('') || '<div style="color:var(--muted);font-size:12px">無資料</div>'}
+            </div>`).join('') || '<div style="color:var(--muted);font-size:17px">無資料</div>'}
         </div>
       </div>
     </div>
@@ -1730,8 +1730,8 @@ function buildMappingUI() {
   // Show first 3 sample rows
   const sampleHtml = `
     <div style="margin-bottom:16px;padding:12px;background:var(--surface);border-radius:8px;overflow-x:auto">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:.06em">CSV 前三列預覽</div>
-      <table style="font-size:11px;font-family:'DM Mono',monospace;border-collapse:collapse;white-space:nowrap">
+      <div style="font-size:16px;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:.06em">CSV 前三列預覽</div>
+      <table style="font-size:16px;font-family:'DM Mono',monospace;border-collapse:collapse;white-space:nowrap">
         <thead><tr>${imp.csvHeaders.map((h,i)=>`<th style="padding:4px 10px;border:1px solid var(--border);color:var(--accent)">[${i}] ${h}</th>`).join('')}</tr></thead>
         <tbody>${imp.csvRows.slice(0,3).map(row=>`<tr>${row.map(c=>`<td style="padding:3px 10px;border:1px solid var(--border);color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis">${c||'–'}</td>`).join('')}</tr>`).join('')}</tbody>
       </table>
@@ -1857,11 +1857,11 @@ function renderPreviewTable(mode) {
       <td style="text-align:center"><input type="checkbox" ${r.selected?'checked':''} ${r.status==='err'?'disabled':''}
         onchange="togglePreviewRow(${r.rowIdx},this.checked)" style="accent-color:var(--accent)"></td>
       <td class="status-${r.status}" title="${msg}">${statusIcon}</td>
-      <td class="mono" style="font-size:12px">${r.date || '<span style=color:var(--expense)>' + r.rawDate + '</span>'}</td>
-      <td style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${catLabel}</td>
+      <td class="mono" style="font-size:17px">${r.date || '<span style=color:var(--expense)>' + r.rawDate + '</span>'}</td>
+      <td style="font-size:17px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${catLabel}</td>
       <td class="mono ${r.status==='err'?'amount-neg':'amount-pos'}">${isNaN(r.amount)?r.rawDate||'–':fmt(r.amount)}</td>
-      <td style="font-size:12px;color:var(--muted)">${r.note||'–'}</td>
-      <td style="font-size:12px">${r.payment}</td>
+      <td style="font-size:17px;color:var(--muted)">${r.note||'–'}</td>
+      <td style="font-size:17px">${r.payment}</td>
     </tr>`;
   }).join('');
 }
