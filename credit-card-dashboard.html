@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>刷卡雷達｜我的信用卡優惠儀表板</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1E29;
+    --panel:#16283A;
+    --panel-2:#1D3348;
+    --paper:#EDE6D6;
+    --gold:#C9973F;
+    --gold-soft:#E7C888;
+    --teal:#4EA491;
+    --red:#C1543C;
+    --line: rgba(237,230,214,0.14);
+    --line-strong: rgba(237,230,214,0.28);
+    --radius: 18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #1B3145 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #1A2E40 0%, transparent 55%),
+      var(--ink);
+    color:var(--paper);
+    font-family:'Noto Sans TC', sans-serif;
+    line-height:1.6;
+    padding: 0 0 80px;
+  }
+  .mono{ font-family:'Roboto Mono', monospace; }
+  .serif{ font-family:'Noto Serif TC', serif; }
+
+  /* ---------- Header ---------- */
+  header{
+    max-width:1080px;
+    margin:0 auto;
+    padding: 52px 24px 28px;
+  }
+  .eyebrow{
+    font-family:'Roboto Mono', monospace;
+    font-size:12px;
+    letter-spacing:.18em;
+    color:var(--gold-soft);
+    text-transform:uppercase;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px;height:1px;
+    background:var(--gold-soft);
+    display:inline-block;
+  }
+  h1{
+    font-family:'Noto Serif TC', serif;
+    font-weight:900;
+    font-size: clamp(30px, 5vw, 46px);
+    margin: 14px 0 10px;
+    letter-spacing:.01em;
+  }
+  h1 span{ color:var(--gold); }
+  .sub{
+    color:rgba(237,230,214,0.72);
+    font-size:15px;
+    max-width:640px;
+  }
+  .meta-row{
+    margin-top:22px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .meta-pill{
+    border:1px solid var(--line-strong);
+    border-radius:999px;
+    padding:6px 14px;
+    font-size:12.5px;
+    font-family:'Roboto Mono', monospace;
+    color:rgba(237,230,214,0.85);
+    background:rgba(237,230,214,0.03);
+  }
+  .meta-pill b{ color:var(--gold-soft); font-weight:700; }
+
+  main{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  /* ---------- Section shell ---------- */
+  section{ margin-top:52px; }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:18px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;
+  }
+  .section-title{
+    font-family:'Noto Serif TC', serif;
+    font-weight:700;
+    font-size:22px;
+  }
+  .section-note{
+    font-size:12.5px;
+    color:rgba(237,230,214,0.55);
+    font-family:'Roboto Mono', monospace;
+  }
+
+  /* ---------- Category picker ---------- */
+  .chip-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .chip{
+    border:1px solid var(--line-strong);
+    background:rgba(237,230,214,0.03);
+    color:var(--paper);
+    font-family:'Noto Sans TC', sans-serif;
+    font-size:14px;
+    padding:10px 16px;
+    border-radius:999px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .chip:hover{ border-color:var(--gold); color:var(--gold-soft); }
+  .chip.active{
+    background:var(--gold);
+    border-color:var(--gold);
+    color:#1B1206;
+    font-weight:700;
+  }
+
+  /* ---------- Result / winner stamp ---------- */
+  .result{
+    margin-top:26px;
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:16px;
+  }
+  .winner-wrap{
+    display:flex;
+    gap:22px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .stamp{
+    position:relative;
+    flex: 0 0 auto;
+  }
+  .stamp-ring{
+    width:96px; height:96px;
+    border-radius:50%;
+    border:2px dashed var(--gold);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transform: rotate(-8deg);
+    background: rgba(201,151,63,0.07);
+  }
+  .stamp-ring .pct{
+    font-family:'Roboto Mono', monospace;
+    font-weight:700;
+    font-size:22px;
+    color:var(--gold-soft);
+    text-align:center;
+    line-height:1.1;
+  }
+  .stamp-ring .pct small{ display:block; font-size:9px; letter-spacing:.08em; color:rgba(237,230,214,0.6); }
+  .winner-info{ flex:1; min-width:220px; }
+  .winner-label{
+    font-family:'Roboto Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:.14em;
+    color:var(--teal);
+    text-transform:uppercase;
+  }
+  .winner-name{
+    font-family:'Noto Serif TC', serif;
+    font-weight:700;
+    font-size:26px;
+    margin:4px 0 6px;
+  }
+  .winner-note{ font-size:14px; color:rgba(237,230,214,0.78); }
+  .winner-cap{ font-size:12.5px; color:rgba(237,230,214,0.5); margin-top:6px; font-family:'Roboto Mono', monospace; }
+
+  .alt-list{
+    display:grid;
+    gap:10px;
+  }
+  .alt-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 16px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:rgba(237,230,214,0.02);
+  }
+  .alt-rank{
+    font-family:'Roboto Mono', monospace;
+    font-size:12px;
+    color:rgba(237,230,214,0.4);
+    width:20px;
+  }
+  .alt-rate{
+    font-family:'Roboto Mono', monospace;
+    font-weight:700;
+    color:var(--gold-soft);
+    width:64px;
+    flex:0 0 auto;
+  }
+  .alt-name{ font-weight:500; flex:0 0 auto; min-width:140px; }
+  .alt-note{ font-size:12.5px; color:rgba(237,230,214,0.55); flex:1; }
+
+  /* ---------- Card wallet grid ---------- */
+  .wallet{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap:18px;
+  }
+  .card{
+    position:relative;
+    border-radius: var(--radius);
+    padding:20px;
+    background: linear-gradient(155deg, var(--panel-2) 0%, var(--panel) 100%);
+    border:1px solid var(--line);
+    overflow:hidden;
+    transition: transform .18s ease, border-color .18s ease;
+  }
+  .card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:5px;
+    background: var(--accent, var(--gold));
+  }
+  .card:hover{ transform: translateY(-3px); border-color: var(--line-strong); }
+  .card .chip-icon{
+    width:34px; height:24px;
+    border-radius:5px;
+    background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+    margin-bottom:22px;
+    position:relative;
+  }
+  .card .chip-icon::after{
+    content:"";
+    position:absolute; inset:4px;
+    border:1px solid rgba(0,0,0,0.25);
+    border-radius:3px;
+  }
+  .card .bank{
+    font-family:'Roboto Mono', monospace;
+    font-size:11px;
+    letter-spacing:.1em;
+    color: var(--accent, var(--gold-soft));
+    text-transform:uppercase;
+  }
+  .card h3{
+    font-family:'Noto Serif TC', serif;
+    font-size:19px;
+    margin:4px 0 12px;
+  }
+  .card .field{
+    display:flex;
+    justify-content:space-between;
+    font-size:12.5px;
+    padding:5px 0;
+    border-top:1px solid var(--line);
+    color:rgba(237,230,214,0.7);
+  }
+  .card .field b{ color:var(--paper); font-weight:500; }
+  .card details{ margin-top:14px; }
+  .card summary{
+    cursor:pointer;
+    font-size:12.5px;
+    color:var(--teal);
+    font-family:'Roboto Mono', monospace;
+    list-style:none;
+  }
+  .card summary::-webkit-details-marker{ display:none; }
+  .card summary::after{ content:" ▸"; }
+  .card details[open] summary::after{ content:" ▾"; }
+  .card .note-block{
+    margin-top:10px;
+    font-size:12.5px;
+    color:rgba(237,230,214,0.72);
+    white-space:pre-line;
+  }
+  .card .official-link{
+    display:inline-block;
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--gold-soft);
+    text-decoration:none;
+    border-bottom:1px dotted var(--gold-soft);
+  }
+  .card .official-link:hover{ color:var(--gold); }
+  .card .settle{
+    margin-top:10px;
+    font-size:11.5px;
+    color:rgba(237,230,214,0.45);
+    font-family:'Roboto Mono', monospace;
+  }
+  .card .deadline{
+    display:inline-block;
+    margin-top:8px;
+    font-size:11px;
+    font-family:'Roboto Mono', monospace;
+    padding:3px 8px;
+    border-radius:999px;
+    background: rgba(193,84,60,0.16);
+    color:#E79684;
+    border:1px solid rgba(193,84,60,0.4);
+  }
+
+  /* ---------- Update panel ---------- */
+  .update-panel{
+    border:1px solid var(--line-strong);
+    border-radius: var(--radius);
+    padding:26px;
+    background: rgba(237,230,214,0.03);
+  }
+  .update-panel p{ font-size:14px; color:rgba(237,230,214,0.78); margin:0 0 14px; }
+  .update-panel .why{
+    font-size:12.5px;
+    color:rgba(237,230,214,0.5);
+    border-left:2px solid var(--teal);
+    padding-left:12px;
+    margin: 14px 0 20px;
+  }
+  .link-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+    gap:8px;
+    margin-bottom:20px;
+  }
+  .link-grid a{
+    font-size:12.5px;
+    color:var(--paper);
+    text-decoration:none;
+    padding:9px 12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'Noto Sans TC', sans-serif;
+  }
+  .link-grid a:hover{ border-color:var(--gold); color:var(--gold-soft); }
+  .link-grid a::after{ content:"↗"; font-family:'Roboto Mono', monospace; color:rgba(237,230,214,0.4); }
+
+  .ask-box{
+    background:var(--panel);
+    border:1px solid var(--line-strong);
+    border-radius:12px;
+    padding:16px 18px;
+    font-family:'Roboto Mono', monospace;
+    font-size:13px;
+    color:var(--gold-soft);
+  }
+  .ask-box .lbl{
+    display:block;
+    font-size:10.5px;
+    letter-spacing:.12em;
+    color:rgba(237,230,214,0.5);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+
+  .action-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    margin:18px 0 22px;
+  }
+  .btn{
+    font-family:'Noto Sans TC', sans-serif;
+    font-size:14px;
+    font-weight:700;
+    padding:12px 20px;
+    border-radius:10px;
+    border:1px solid var(--line-strong);
+    background:rgba(237,230,214,0.03);
+    color:var(--paper);
+    cursor:pointer;
+    transition: all .15s ease;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .btn:hover{ border-color:var(--gold); color:var(--gold-soft); }
+  .btn.primary{
+    background:var(--gold);
+    border-color:var(--gold);
+    color:#1B1206;
+  }
+  .btn.primary:hover{ background:var(--gold-soft); color:#1B1206; }
+  .btn:active{ transform: scale(.98); }
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:28px;
+    transform: translateX(-50%) translateY(20px);
+    background:var(--panel-2);
+    border:1px solid var(--gold);
+    color:var(--paper);
+    padding:12px 20px;
+    border-radius:10px;
+    font-size:13px;
+    opacity:0;
+    pointer-events:none;
+    transition: all .25s ease;
+    z-index:50;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+  .toast.show{
+    opacity:1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  footer{
+    max-width:1080px;
+    margin:60px auto 0;
+    padding:24px 24px 0;
+    border-top:1px solid var(--line);
+    font-size:12px;
+    color:rgba(237,230,214,0.4);
+  }
+
+  @media (max-width: 560px){
+    header{ padding:38px 18px 20px; }
+    section{ margin-top:40px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">personal card ledger · 台灣</div>
+  <h1>刷卡前先看一眼，<span>別讓回饋睡著。</span></h1>
+  <p class="sub">這裡收錄你正在使用的 9 張信用卡權益。選一個消費情境，立刻知道該拿哪張卡；資料每季會過期，記得定期核對。</p>
+  <div class="meta-row">
+    <span class="meta-pill">收錄卡片 <b>9</b> 張</span>
+    <span class="meta-pill">資料建立 <b id="build-date"></b></span>
+    <span class="meta-pill">上次核對 <b id="last-checked">讀取中…</b></span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= 情境推薦 ================= -->
+  <section>
+    <div class="section-head">
+      <div class="section-title">今天要刷什麼？</div>
+      <div class="section-note">SELECT A SCENARIO</div>
+    </div>
+    <div class="chip-row" id="chip-row"></div>
+
+    <div class="result" id="result" style="display:none;">
+      <div class="winner-wrap">
+        <div class="stamp">
+          <div class="stamp-ring">
+            <div class="pct"><span id="winner-pct">--</span><small>回饋</small></div>
+          </div>
+        </div>
+        <div class="winner-info">
+          <div class="winner-label">推薦刷這張</div>
+          <div class="winner-name" id="winner-name">—</div>
+          <div class="winner-note" id="winner-note">—</div>
+          <div class="winner-cap" id="winner-cap"></div>
+        </div>
+      </div>
+      <div class="alt-list" id="alt-list"></div>
+    </div>
+  </section>
+
+  <!-- ================= 卡片總覽 ================= -->
+  <section>
+    <div class="section-head">
+      <div class="section-title">我的卡片總覽</div>
+      <div class="section-note">FULL REFERENCE</div>
+    </div>
+    <div class="wallet" id="wallet"></div>
+  </section>
+
+  <!-- ================= 更新資料 ================= -->
+  <section>
+    <div class="section-head">
+      <div class="section-title">核對最新優惠</div>
+      <div class="section-note">KEEP THIS CURRENT</div>
+    </div>
+    <div class="update-panel">
+      <p><b>老實說在前面：</b>這是一個純網頁檔案，瀏覽器基於安全限制，沒辦法自動連到各家銀行網站抓資料（銀行網站也大多會擋這種請求），所以沒有真正的「一鍵自動更新」按鈕。但下面兩顆按鈕可以幫你把「請 Claude 查」跟「記錄核對日期」這兩件事變得更省力。</p>
+
+      <div class="action-row">
+        <button class="btn primary" id="btn-copy-request">📋 複製更新請求給 Claude</button>
+        <button class="btn" id="btn-mark-checked">✅ 記錄今天已核對</button>
+      </div>
+
+      <div class="ask-box">
+        <span class="lbl">用法</span>
+        按「複製更新請求」，把整理好的訊息貼到跟 Claude 的對話框送出，我會重新搜尋這 9 張卡的官方公告，把新的回饋率、期限整理好，回傳一份更新過的網頁給你。核對完之後回來按「記錄今天已核對」，上面就會顯示最新的核對日期，下次打開網頁也還在。
+      </div>
+
+      <p style="margin-top:20px;">或者自己花 5 分鐘點過一輪官方頁面，看看數字有沒有變──下面是這 9 張卡目前查到的官方權益頁：</p>
+      <div class="link-grid" id="link-grid"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  資料整理自各銀行官網及公開權益公告，僅供個人刷卡決策參考；正式回饋條件請以發卡銀行當期公告為準。已排除各卡「新戶」限定的加碼與首刷禮。
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 資料模型 ============ */
+const cards = [
+  {
+    id:"taishin", bank:"台新銀行", name:"台新 Richart 卡", accent:"#C9973F",
+    mode:"實體/線上信用卡・台新Pay・保費", settle:"結算日 27 / 回饋結算 28日–次月27日",
+    deadline:"優惠至 2027/3/31（7大權益延續，3.8%不變）", official:"https://www.taishinbank.com.tw/TSB/personal/credit/intro/overview/cg047/card001/",
+    scenarios:[
+      {cat:"linepay", rate:2.6, label:"2.6%", note:"切換至「Pay著刷」，LINE Pay 綁定支付", cap:"每日限切換方案一次"},
+      {cat:"insurance", rate:1.3, label:"1.3%", note:"保費，不須切換方案，回饋無上限"},
+      {cat:"daily", rate:3.3, label:"3.3%", note:"切換「天天刷」：家樂福、台鐵、高鐵、台灣大車隊、Uber、中油直營、全國加油站等"},
+      {cat:"online", rate:3.3, label:"3.3%", note:"切換「數趣刷」：蝦皮、momo、酷澎(Coupang)、PChome、Amazon、東森、博客來等"},
+      {cat:"overseas", rate:3.3, label:"3.3%", note:"切換「玩旅刷」：海外消費(含線上及實體)、華航、長榮、星宇、虎航、國泰、Klook、KKday、多家旅行社"},
+      {cat:"mall", rate:3.3, label:"3.3%", note:"切換「大筆刷」：所有百貨(環球除外)、兩大Outlet、特力屋、HOLA、宜得利、UNIQLO"},
+      {cat:"dining", rate:3.3, label:"3.3%", note:"切換「好食刷」：全台餐飲(不含餐券)、Uber Eats、展演票券、飯店"},
+      {cat:"holiday", rate:2, label:"2%", note:"切換「假日刷」：國定假日不限通路消費(含保費)"}
+    ],
+    fullNote:"每日限切換權益方案一次；7 大權益需在 Richart Life App 切換，未切換對應方案時僅一般消費 0.3% 回饋。"
+  },
+  {
+    id:"dawa", bank:"永豐銀行", name:"永豐 DaWay 卡", accent:"#4EA491",
+    mode:"LinePay", settle:"結算日 16 / 回饋結算 13日–次月14日",
+    deadline:"優惠至 2026/12/31（舊戶2%不變）", official:"https://bank.sinopac.com/sinopacbt/personal/credit-card/introduction/bankcard/DAWAY.html",
+    scenarios:[
+      {cat:"linepay", rate:2, label:"2%", note:"舊戶 LINE Pay 綁定消費，單筆需滿 NT$100", cap:"回饋上限 NT$20,000/月"}
+    ],
+    fullNote:"部分連鎖店的刷卡機屬「聯合信用卡處理中心」小額支付平台特約商店(如停車場、連鎖速食店、手搖飲料店等)，這類消費無回饋。若額外完成「DAWAY GO」升等任務(自動扣繳+電子帳單+投資屬性問卷)，2026/7/1–12/31期間LINE Pay消費可再拉高至國內最高8%，有興趣可上官網確認條件。"
+  },
+  {
+    id:"linebank", bank:"聯邦銀行", name:"聯邦 LINE BANK 熊大卡", accent:"#8E6BC9",
+    mode:"網購", settle:"回饋結算 10日–次月9日",
+    deadline:"優惠至 7/31", official:"https://card.ubot.com.tw/CardDetail/cardDetail601",
+    scenarios:[
+      {cat:"online", rate:4, label:"4%", note:"指定網購 3 間：momo、PCHOME、蝦皮(1%基本+3%加碼)", cap:"回饋上限 NT$9,000/月"},
+      {cat:"daily", rate:1, label:"1%", note:"一般消費，無上限"}
+    ],
+    fullNote:"指定網購通路(momo/PCHOME/蝦皮)享 1% 無上限基礎回饋 + 3% 加碼(月上限 NT$9,000)。"
+  },
+  {
+    id:"laidian", bank:"聯邦銀行", name:"聯邦賴點卡", accent:"#8E6BC9",
+    mode:"偶數日指定通路", settle:"結算日 9 / 回饋結算 10日–次月9日",
+    deadline:"優惠至 7/31", official:"https://card.ubot.com.tw/CardDetail/cardDetail201",
+    scenarios:[
+      {cat:"evenday", rate:5, label:"5%", note:"偶數日 + 指定通路：三商集團、王品集團、春水堂、壽司郎、八方雲集、麥當勞、肯德基、摩斯、屈臣氏、寶雅", cap:"回饋上限 NT$3,000/月"},
+      {cat:"linepay", rate:2, label:"2%", note:"LINE Pay 綁定消費，單筆需滿 NT$100", cap:"回饋上限 NT$20,000/月"},
+      {cat:"daily", rate:1, label:"1%", note:"一般消費"}
+    ],
+    fullNote:"偶數日(2/4/6…日)在指定連鎖餐飲及藥妝通路消費才享 5% 加碼，單數日恢復一般費率。"
+  },
+  {
+    id:"kumamon", bank:"玉山銀行", name:"玉山熊本熊卡", accent:"#C1543C",
+    mode:"實體卡片", settle:"—",
+    deadline:"優惠至 2026/12/31（8.5%不變）", official:"https://event.esunbank.com.tw/credit/kumamon-card/japan-discount.html",
+    scenarios:[
+      {cat:"japan", rate:8.5, label:"8.5%", note:"日本指定商店加碼(2.5%一般消費 + 6%加碼)：交通卡儲值、藥妝、電器、租車、住宿等", cap:"加碼部分每期回饋上限 NT$500"},
+      {cat:"daily", rate:0.5, label:"0.5%", note:"國內一般消費"}
+    ],
+    fullNote:"日本一般消費 2.5% 無上限；指定商店加碼 6% 有上限。百貨公司、車站及美食街內的店家不列入加碼計算。不適用國外訂房網站。"
+  },
+  {
+    id:"fubonj", bank:"台北富邦銀行", name:"富邦 J 卡", accent:"#3F7FBF",
+    mode:"—", settle:"結算日 8 / 回饋結算 9日–次月8日",
+    deadline:"優惠至 12/31", official:"https://cardpromote.taipeifubon.com.tw/promotion/Detail?sn=D000217",
+    scenarios:[
+      {cat:"taxi", rate:0, label:"現折$50", note:"LINE GO TAXI 單筆滿 $250 現折 $50，每月需登錄"},
+      {cat:"daily", rate:1, label:"1%", note:"一般消費"}
+    ],
+    fullNote:"LINE GO TAXI 現折優惠每個月要重新登錄才有效，忘記登錄就沒有折扣。"
+  },
+  {
+    id:"dbseco", bank:"星展銀行", name:"星展 eco 永續極簡卡", accent:"#C9973F",
+    mode:"實體卡片・Apple Pay", settle:"結算日 23",
+    deadline:"優惠至 12/31", official:"https://www.dbs.com.tw/personal-zh/cards/dbs-credit-cards/eco-ez",
+    scenarios:[
+      {cat:"japan", rate:5, label:"5%", note:"日本指定地區實體消費(1%基本+4%加碼)", cap:"加碼上限 NT$15,000/月"},
+      {cat:"insurance", rate:1, label:"1%", note:"保費，與一般消費同享，無上限"},
+      {cat:"daily", rate:1, label:"1%", note:"國內外一般消費，含超商、街口支付，無上限"}
+    ],
+    fullNote:"「保費」與「超商街口支付」和一般消費同享 1% 無上限回饋。星巴克門市刷卡消費調製飲品，可免費更換為燕麥奶或杏仁堅果奶（非現金回饋，屬門市優惠）。"
+  },
+  {
+    id:"dbsfly", bank:"星展銀行", name:"星展飛行卡", accent:"#4EA491",
+    mode:"積分制・累積到停卡為止", settle:"—",
+    deadline:"優惠至 12/31", official:"https://www.dbs.com.tw/personal-zh/cards/travel_titanium/index.html",
+    scenarios:[
+      {cat:"movie", rate:0, label:"6折起", note:"威秀影城購票：週一至週四 2D/TITAN SCREEN 6折~，3D/IMAX 8折~"},
+      {cat:"daily", rate:0.29, label:"約0.29%", note:"國內消費每 NT$35 累積 1 點飛行積金，可兌換哩程或折抵消費"}
+    ],
+    fullNote:"飛行積金與哩程／點數綁定，若卡片註銷、積分未兌換完會直接歸零，記得定期關注餘額並在有需要時兌換。"
+  },
+  {
+    id:"ctbc", bank:"中國信託", name:"中國信託中華電信聯名卡", accent:"#3F7FBF",
+    mode:"HamiPay", settle:"—",
+    deadline:"優惠至 12/31", official:"https://hamipoint.cht.com.tw/creditcard/",
+    scenarios:[
+      {cat:"telecom", rate:2, label:"2%", note:"中華電信電信費代扣繳，回饋為 Hami Point"},
+      {cat:"daily", rate:1, label:"1%", note:"一般消費"}
+    ],
+    fullNote:"回饋以 Hami Point 發放（1點=NT$1），可用於中華電信門市、Hami Point 購物商城折抵消費，注意點數使用效期。"
+  }
+];
+
+const categoryLabels = {
+  linepay:  "LINE Pay 消費",
+  online:   "網購(蝦皮/momo/PChome)",
+  japan:    "日本消費",
+  insurance:"保費",
+  daily:    "一般日常消費",
+  mall:     "百貨／量販",
+  overseas: "海外消費／旅遊",
+  dining:   "餐飲外送／展演",
+  holiday:  "國定假日不限通路",
+  evenday:  "偶數日連鎖餐飲藥妝",
+  taxi:     "LINE GO TAXI 叫車",
+  telecom:  "電信費",
+  movie:    "威秀影城"
+};
+
+/* ============ 建立日期 ============ */
+document.getElementById('build-date').textContent = new Date().toLocaleDateString('zh-TW', {year:'numeric', month:'long', day:'numeric'});
+
+/* ============ 情境 chips ============ */
+const chipRow = document.getElementById('chip-row');
+Object.keys(categoryLabels).forEach(cat=>{
+  const btn = document.createElement('button');
+  btn.className = 'chip';
+  btn.textContent = categoryLabels[cat];
+  btn.dataset.cat = cat;
+  btn.addEventListener('click', ()=> selectCategory(cat, btn));
+  chipRow.appendChild(btn);
+});
+
+function selectCategory(cat, btnEl){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  btnEl.classList.add('active');
+
+  // gather matching scenarios across cards
+  let matches = [];
+  cards.forEach(card=>{
+    card.scenarios.filter(s=>s.cat===cat).forEach(s=>{
+      matches.push({cardName:card.name, ...s});
+    });
+  });
+  matches.sort((a,b)=> b.rate - a.rate);
+
+  const resultEl = document.getElementById('result');
+  if(matches.length===0){ resultEl.style.display='none'; return; }
+  resultEl.style.display='block';
+
+  const top = matches[0];
+  document.getElementById('winner-pct').textContent = top.label;
+  document.getElementById('winner-name').textContent = top.cardName;
+  document.getElementById('winner-note').textContent = top.note;
+  document.getElementById('winner-cap').textContent = top.cap ? top.cap : '';
+
+  const altList = document.getElementById('alt-list');
+  altList.innerHTML = '';
+  matches.slice(1).forEach((m, i)=>{
+    const row = document.createElement('div');
+    row.className = 'alt-row';
+    row.innerHTML = `
+      <span class="alt-rank mono">#${i+2}</span>
+      <span class="alt-rate">${m.label}</span>
+      <span class="alt-name">${m.cardName}</span>
+      <span class="alt-note">${m.note}${m.cap ? '　·　'+m.cap : ''}</span>
+    `;
+    altList.appendChild(row);
+  });
+}
+
+/* ============ 卡片總覽 wallet ============ */
+const wallet = document.getElementById('wallet');
+cards.forEach(card=>{
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.style.setProperty('--accent', card.accent);
+
+  const scenarioLines = card.scenarios.map(s=>
+    `・${categoryLabels[s.cat] || s.cat}：${s.label}${s.cap ? '（'+s.cap+'）' : ''}`
+  ).join('\n');
+
+  el.innerHTML = `
+    <div class="chip-icon"></div>
+    <div class="bank mono">${card.bank}</div>
+    <h3>${card.name}</h3>
+    <div class="field"><span>場域／支付</span><b>${card.mode}</b></div>
+    <div class="field"><span>結算</span><b>${card.settle}</b></div>
+    <span class="deadline">${card.deadline}</span>
+    <details>
+      <summary>看完整權益與備註</summary>
+      <div class="note-block">${scenarioLines}\n\n${card.fullNote}</div>
+    </details>
+    <br>
+    <a class="official-link" href="${card.official}" target="_blank" rel="noopener">前往官方權益頁面 ↗</a>
+  `;
+  wallet.appendChild(el);
+});
+
+/* ============ 更新面板連結 ============ */
+const linkGrid = document.getElementById('link-grid');
+cards.forEach(card=>{
+  const a = document.createElement('a');
+  a.href = card.official;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.textContent = card.name;
+  linkGrid.appendChild(a);
+});
+
+/* ============ 上次核對日期（persistent storage） ============ */
+const STORAGE_KEY = 'last-checked-date';
+const lastCheckedEl = document.getElementById('last-checked');
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(()=> t.classList.remove('show'), 3200);
+}
+
+async function loadLastChecked(){
+  try{
+    const result = await window.storage.get(STORAGE_KEY, false);
+    if(result && result.value){
+      lastCheckedEl.textContent = result.value;
+    } else {
+      lastCheckedEl.textContent = '尚未記錄';
+    }
+  } catch(err){
+    // key不存在，或不在支援儲存的環境（例如離線開啟此檔案）
+    lastCheckedEl.textContent = '尚未記錄';
+  }
+}
+loadLastChecked();
+
+document.getElementById('btn-mark-checked').addEventListener('click', async ()=>{
+  const todayStr = new Date().toLocaleDateString('zh-TW', {year:'numeric', month:'long', day:'numeric'});
+  try{
+    const result = await window.storage.set(STORAGE_KEY, todayStr, false);
+    if(result){
+      lastCheckedEl.textContent = todayStr;
+      showToast('已記錄核對日期：' + todayStr);
+    } else {
+      throw new Error('storage set 回傳空值');
+    }
+  } catch(err){
+    // 離線開啟此檔案、或環境不支援持久化儲存時，退回只顯示在本次瀏覽
+    lastCheckedEl.textContent = todayStr + '（僅本次瀏覽有效，未離線儲存）';
+    showToast('這個環境無法永久儲存，日期只會顯示到你關閉分頁為止');
+  }
+});
+
+document.getElementById('btn-copy-request').addEventListener('click', async ()=>{
+  const cardNames = cards.map(c => `・${c.name}（${c.bank}）`).join('\n');
+  const requestText =
+`請幫我搜尋以下 9 張信用卡目前(以今天日期為準)最新的優惠內容，並更新我的信用卡優惠儀表板網頁：
+
+${cardNames}
+
+請針對每張卡確認：回饋率是否變動、回饋上限是否變動、優惠截止日期是否延長或已到期。排除「新戶」限定的加碼與首刷禮，只更新既有持卡人可用的權益。`;
+
+  try{
+    await navigator.clipboard.writeText(requestText);
+    showToast('已複製！貼到跟 Claude 的對話框送出即可');
+  } catch(err){
+    // 剪貼簿權限被拒絕時，退回顯示文字讓使用者手動複製
+    showToast('無法自動複製，請改用下方文字手動選取複製');
+    alert(requestText);
+  }
+});
+
+/* 預設開啟第一個情境 */
+selectCategory('linepay', chipRow.querySelector('.chip'));
+</script>
+
+</body>
+</html>
