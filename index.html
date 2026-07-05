@@ -105,7 +105,17 @@ a{color:var(--accent);text-decoration:none}
 .btn-ghost{background:var(--card);color:var(--muted);border:1.5px solid var(--border)}
 .btn-ghost:hover{color:var(--text);border-color:var(--accent);background:rgba(217,119,87,.05)}
 .btn-danger{background:#FBE9E3;color:var(--danger);border:1.5px solid #F3CDBE}
-.btn-success{background:#E7F0E9;color:var(--income);border:1.5px solid #CBE0D1}
+.btn-success{background:var(--accent2);color:#fff;border:none}
+.btn-success:hover{filter:brightness(.92)}
+/* ── Jiajie Ledger ── */
+.ledger-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:15px}
+.ledger-row:last-child{border-bottom:none}
+.ledger-row .lr-date{width:90px;color:var(--muted);font-family:'DM Mono',monospace;flex-shrink:0}
+.ledger-row .lr-desc{flex:1;color:var(--text)}
+.ledger-row .lr-amt{font-family:'DM Mono',monospace;font-weight:700;font-size:17px;flex-shrink:0}
+.ledger-row .lr-bal{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);flex-shrink:0;width:80px;text-align:right}
+.ledger-topup{background:#f0faf3}
+.ledger-expense{background:#fff}
 .btn-sm{padding:10px 18px;font-size:16px;border-radius:18px}
 
 /* ── CARDS ── */
@@ -470,8 +480,41 @@ select option{background:var(--card)}
 
   <!-- 家傑代買 -->
   <div id="et-jiajie-expense" style="display:none">
+
+    <!-- 餘額卡 -->
+    <div style="display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;margin-bottom:16px">
+      <div class="card" style="background:linear-gradient(135deg,#f0faf3 0%,#e3f5e8 100%);border-color:var(--accent2)">
+        <div style="font-size:15px;color:var(--muted);margin-bottom:4px">💰 家傑代買餘額</div>
+        <div id="jiajie-balance-display" style="font-family:'DM Mono',monospace;font-size:36px;font-weight:700;color:var(--accent2);line-height:1">載入中…</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:6px" id="jiajie-balance-sub"></div>
+      </div>
+      <div class="card" style="min-width:200px">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px">📥 媽媽儲值</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <input type="date" id="jiajie-topup-date" style="font-size:16px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit">
+          <input type="number" id="jiajie-topup-amount" placeholder="儲值金額" min="1"
+            style="font-size:18px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace">
+          <button class="btn btn-success btn-sm" onclick="addJiajieTopup()" style="font-size:15px;padding:9px">
+            ＋ 確認儲值
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 流水帳 -->
+    <div class="card mb-16" style="padding:0;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
+        <span style="font-weight:700;font-size:16px;color:var(--text)">📋 流水帳</span>
+        <span style="font-size:13px;color:var(--muted)">儲值＋支出 合併顯示</span>
+      </div>
+      <div id="jiajie-ledger" style="max-height:260px;overflow-y:auto">
+        <div style="text-align:center;padding:24px;color:var(--muted)"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- 支出輸入 -->
     <div class="section-header">
-      <span class="section-title">家傑代買（類 Excel 快速輸入）</span>
+      <span class="section-title">新增代買支出</span>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost btn-sm" onclick="addExcelRow('jiajie-expense-tbody')">＋ 加列</button>
         <button class="btn btn-primary btn-sm" onclick="saveExcelRows('jiajie-expense')">💾 儲存全部</button>
@@ -485,8 +528,8 @@ select option{background:var(--card)}
         <tbody id="jiajie-expense-tbody"></tbody>
       </table>
     </div>
-    <div style="margin-top:10px;font-size:17px;color:var(--muted)">
-      💡 點選「類別」欄位可選取多個類別。
+    <div style="margin-top:10px;font-size:15px;color:var(--muted)">
+      💡 儲存後餘額與流水帳將自動更新。
     </div>
   </div>
 
@@ -1058,6 +1101,13 @@ function switchEntryTab(tab) {
   document.querySelectorAll('#page-entry .tab').forEach((btn, i) => {
     btn.classList.toggle('active', ALL_TABS[i] === tab);
   });
+  if (tab === 'jiajie-expense') {
+    // 預設儲值日期為今天
+    const todayStr = new Date().toISOString().slice(0,10);
+    const topupDate = document.getElementById('jiajie-topup-date');
+    if (topupDate && !topupDate.value) topupDate.value = todayStr;
+    loadJiajiePanel();
+  }
 }
 
 function sortExcelTable(tbody) {
@@ -1127,6 +1177,10 @@ async function saveExcelRows(type) {
   let saved = 0, errors = 0, skipped = 0;
   const errorMsgs = [];
 
+  // 重複偵測：僅對 family-expense / jiajie-expense 啟用
+  const needsDupCheck = (type === 'family-expense' || type === 'jiajie-expense');
+  window._checkingType = type; // 讓 checkDuplicateAcrossTypes 知道目前是哪種類型
+
   for (const row of rows) {
     const date   = row.querySelector('.cell-date')?.value;
     const amtRaw = row.querySelector('.cell-amount')?.value;
@@ -1135,6 +1189,18 @@ async function saveExcelRows(type) {
     if (!date && !amtRaw) { skipped++; continue; }  // truly empty row
     if (!date)  { toast('❌ 有一列缺少日期，已略過', 'error'); skipped++; continue; }
     if (!amount || amount <= 0) { toast('❌ 有一列金額為空或零，已略過', 'error'); skipped++; continue; }
+
+    // ── 重複偵測 ──────────────────────────────────────
+    if (needsDupCheck) {
+      const isDup = await checkDuplicateAcrossTypes(date, amount);
+      if (isDup) {
+        const oppLabel = type === 'family-expense' ? '家傑代買' : '家庭支出';
+        const confirmed = confirm(
+          `⚠️ 重複警告\n\n在「${oppLabel}」中，${date} 已有一筆相同金額 NT$${Math.round(amount).toLocaleString('zh-TW')} 的紀錄。\n\n兩邊只需擇一記錄。確定還是要繼續儲存嗎？`
+        );
+        if (!confirmed) { skipped++; continue; }
+      }
+    }
 
     const d = new Date(date);
     const record = {
@@ -1179,6 +1245,8 @@ async function saveExcelRows(type) {
       tbody.innerHTML = '';
       const resetCount = type === 'pharma-income' ? 3 : 1;
       for (let i = 0; i < resetCount; i++) addExcelRow(type + '-tbody');
+      // 家傑代買儲存後刷新餘額與流水帳
+      if (type === 'jiajie-expense') loadJiajiePanel();
     }, 800);
   } else if (saved > 0 && errors > 0) {
     toast(`⚠️ ${saved} 筆成功，${errors} 筆失敗`, 'error');
@@ -2651,6 +2719,162 @@ async function deleteCalEvent(id, title) {
   } catch (e) {
     console.error(e);
     toast('❌ 刪除失敗：' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// JIAJIE 家傑代買：儲值 / 餘額 / 流水帳
+// ══════════════════════════════════════════════════════
+
+async function fetchJiajieTopups() {
+  if (window._demoMode) {
+    return [...(window._demoTopups || [])].sort((a,b)=>a.date.localeCompare(b.date));
+  }
+  const { collection, getDocs, query, orderBy } = fbFns;
+  const snap = await getDocs(query(collection(db, 'jiajie_topup'), orderBy('date')));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+async function saveJiajieTopup(record) {
+  if (window._demoMode) {
+    if (!window._demoTopups) window._demoTopups = [];
+    record.id = 'demo_tu_' + Date.now();
+    window._demoTopups.push(record);
+    return record;
+  }
+  const { collection, addDoc, Timestamp } = fbFns;
+  record.createdAt = Timestamp.now();
+  const ref = await addDoc(collection(db, 'jiajie_topup'), record);
+  record.id = ref.id;
+  return record;
+}
+
+async function deleteJiajieTopup(id) {
+  if (window._demoMode) {
+    window._demoTopups = (window._demoTopups||[]).filter(r=>r.id!==id);
+    return;
+  }
+  const { collection, doc, deleteDoc } = fbFns;
+  await deleteDoc(doc(db, 'jiajie_topup', id));
+}
+
+async function loadJiajiePanel() {
+  try {
+    const [topups, expenses] = await Promise.all([
+      fetchJiajieTopups(),
+      fetchRecords({ type:'jiajie-expense' }),
+    ]);
+    renderJiajieBalance(topups, expenses);
+    renderJiajieLedger(topups, expenses);
+  } catch(e) {
+    console.error('loadJiajiePanel error:', e);
+    document.getElementById('jiajie-balance-display').textContent = '⚠️ 載入失敗';
+  }
+}
+
+function renderJiajieBalance(topups, expenses) {
+  const totalIn  = topups.reduce((s,r) => s+(+r.amount||0), 0);
+  const totalOut = expenses.reduce((s,r) => s+(+r.amount||0), 0);
+  const balance  = totalIn - totalOut;
+
+  const el  = document.getElementById('jiajie-balance-display');
+  const sub = document.getElementById('jiajie-balance-sub');
+
+  el.textContent = 'NT$ ' + Math.round(balance).toLocaleString('zh-TW');
+  el.style.color = balance >= 0 ? 'var(--accent2)' : 'var(--expense)';
+  sub.textContent = `累計儲值 ${Math.round(totalIn).toLocaleString('zh-TW')}　已使用 ${Math.round(totalOut).toLocaleString('zh-TW')}`;
+}
+
+function renderJiajieLedger(topups, expenses) {
+  const ledger = document.getElementById('jiajie-ledger');
+
+  // 合併兩份清單，依日期升冪排序，同日期儲值排前面
+  const all = [
+    ...topups.map(r  => ({ ...r, _kind:'topup' })),
+    ...expenses.map(r => ({ ...r, _kind:'expense' })),
+  ].sort((a,b) => {
+    const dc = a.date.localeCompare(b.date);
+    if (dc !== 0) return dc;
+    return a._kind === 'topup' ? -1 : 1; // 同日儲值先
+  });
+
+  if (!all.length) {
+    ledger.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">尚無任何紀錄</div>';
+    return;
+  }
+
+  // 計算累計餘額
+  let running = 0;
+  const rows = all.map(r => {
+    const isTopup = r._kind === 'topup';
+    const amt = +r.amount || 0;
+    running += isTopup ? amt : -amt;
+
+    const amtStr  = (isTopup ? '＋' : '－') + Math.round(amt).toLocaleString('zh-TW');
+    const amtCol  = isTopup ? 'var(--income)' : 'var(--expense)';
+    const balCol  = running >= 0 ? 'var(--accent2)' : 'var(--expense)';
+    const icon    = isTopup ? '📥' : '🛒';
+    const desc    = isTopup
+      ? '媽媽儲值'
+      : ((r.categories||[]).join('、') || r.note || '代買支出');
+    const rowCls  = isTopup ? 'ledger-row ledger-topup' : 'ledger-row ledger-expense';
+    const delBtn  = isTopup
+      ? `<button onclick="deleteTopupRow('${r.id}')" title="刪除" style="background:none;border:none;cursor:pointer;font-size:13px;opacity:.4;padding:0 2px" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">✕</button>`
+      : '';
+
+    return `<div class="${rowCls}">
+      <span class="lr-date">${r.date}</span>
+      <span style="font-size:17px;flex-shrink:0">${icon}</span>
+      <span class="lr-desc">${desc}</span>
+      <span class="lr-amt" style="color:${amtCol}">${amtStr}</span>
+      <span class="lr-bal" style="color:${balCol}">${Math.round(running).toLocaleString('zh-TW')}</span>
+      ${delBtn}
+    </div>`;
+  });
+
+  // 最新在上方：反轉後顯示
+  ledger.innerHTML = [...rows].reverse().join('');
+}
+
+async function addJiajieTopup() {
+  const date   = document.getElementById('jiajie-topup-date').value;
+  const amount = parseFloat(document.getElementById('jiajie-topup-amount').value || 0);
+
+  if (!date)          { toast('⚠️ 請選擇儲值日期', 'error'); return; }
+  if (!amount || amount <= 0) { toast('⚠️ 請輸入儲值金額', 'error'); return; }
+
+  try {
+    await saveJiajieTopup({ date, amount });
+    document.getElementById('jiajie-topup-amount').value = '';
+    toast(`✅ 已儲值 NT$ ${Math.round(amount).toLocaleString('zh-TW')}`, 'success');
+    await loadJiajiePanel();
+  } catch(e) {
+    toast('❌ 儲值失敗：' + e.message, 'error');
+  }
+}
+
+async function deleteTopupRow(id) {
+  if (!confirm('確定要刪除這筆儲值紀錄？')) return;
+  try {
+    await deleteJiajieTopup(id);
+    toast('🗑️ 已刪除儲值紀錄', 'success');
+    await loadJiajiePanel();
+  } catch(e) {
+    toast('❌ 刪除失敗：' + e.message, 'error');
+  }
+}
+
+// ── 重複偵測：同日期同金額，family ↔ jiajie 互查 ──────
+async function checkDuplicateAcrossTypes(date, amount) {
+  // 哪個方向要查：family-expense 查 jiajie-expense，反之亦然
+  // 此函數由 saveExcelRows 呼叫，type 由外層提供
+  // 回傳 true 表示發現重複
+  try {
+    const opposite = window._checkingType === 'family-expense' ? 'jiajie-expense' : 'family-expense';
+    const pool = await fetchRecords({ type: opposite });
+    return pool.some(r => r.date === date && Math.round(+r.amount) === Math.round(amount));
+  } catch(e) {
+    return false; // 查詢失敗就放行
   }
 }
 
