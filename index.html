@@ -290,11 +290,11 @@ select option{background:var(--card)}
 .event-chip .chip-text{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .event-chip .del-btn{flex-shrink:0;background:none;border:none;cursor:pointer;font-size:13px;opacity:.5;padding:0 2px;line-height:1;transition:.15s;color:inherit}
 .event-chip .del-btn:hover{opacity:1}
-.cat-家庭{background:#FBEDD9;color:var(--family)}
-.cat-工作{background:#E1ECF7;color:#1f5c8c}
-.cat-醫療{background:#FBE9E3;color:var(--expense)}
-.cat-出遊{background:#E7F0E9;color:var(--income)}
-.cat-其他{background:#EFE9F7;color:#5c3d8c}
+.cat-繳費{background:#FFF0CC;color:#7a5500}
+.cat-掛號就診{background:#FBE9E3;color:var(--expense)}
+.cat-藥局{background:#E7F0E9;color:var(--income)}
+.cat-購物{background:#E1ECF7;color:#1f5c8c}
+.cat-活動行程{background:#EFE9F7;color:#5c3d8c}
 @media(max-width:700px){
   .cal-day{min-height:70px}
   .event-chip{font-size:11px}
@@ -385,15 +385,11 @@ select option{background:var(--card)}
       <div class="form-group">
         <label>🏷️ 類別</label>
         <select id="cal-f-cat">
-          <option value="家庭">🏠 家庭</option>
-          <option value="工作">💼 工作</option>
-          <option value="醫療">🏥 醫療</option>
-          <option value="出遊">🚗 出遊</option>
-          <option value="其他">📌 其他</option>
-        </select>
-      </div>
-      <div class="form-group" style="flex:2">
-        <label>📝 事項</label>
+          <option value="繳費">💳 繳費</option>
+          <option value="掛號就診">🏥 掛號/就診</option>
+          <option value="藥局">💊 藥局</option>
+          <option value="購物">🛒 購物</option>
+          <option value="活動行程">🎉 活動行程</option>
         <input type="text" id="cal-f-title" placeholder="例：看牙醫、家族聚餐">
       </div>
     </div>
@@ -884,15 +880,11 @@ select option{background:var(--card)}
       <div class="form-group">
         <label>🏷️ 類別</label>
         <select id="cal-edit-cat" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%">
-          <option value="家庭">🏠 家庭</option>
-          <option value="工作">💼 工作</option>
-          <option value="醫療">🏥 醫療</option>
-          <option value="出遊">🚗 出遊</option>
-          <option value="其他">📌 其他</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>📝 事項</label>
+          <option value="繳費">💳 繳費</option>
+          <option value="掛號就診">🏥 掛號/就診</option>
+          <option value="藥局">💊 藥局</option>
+          <option value="購物">🛒 購物</option>
+          <option value="活動行程">🎉 活動行程</option>
         <input type="text" id="cal-edit-title" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%">
       </div>
     </div>
