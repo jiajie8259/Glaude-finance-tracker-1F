@@ -112,8 +112,8 @@ a{color:var(--accent);text-decoration:none}
 .ledger-row:last-child{border-bottom:none}
 .ledger-row .lr-date{width:90px;color:var(--muted);font-family:'DM Mono',monospace;flex-shrink:0}
 .ledger-row .lr-desc{flex:1;color:var(--text)}
-.ledger-row .lr-amt{font-family:'DM Mono',monospace;font-weight:700;font-size:17px;flex-shrink:0}
-.ledger-row .lr-bal{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);flex-shrink:0;width:80px;text-align:right}
+.ledger-row .lr-amt{font-family:'DM Mono',monospace;font-weight:600;font-size:14px;flex-shrink:0;width:110px;text-align:right}
+.ledger-row .lr-bal{font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--muted);flex-shrink:0;width:72px;text-align:right}
 .ledger-topup{background:#f0faf3}
 .ledger-expense{background:#fff}
 .btn-sm{padding:10px 18px;font-size:16px;border-radius:18px}
@@ -507,7 +507,11 @@ select option{background:var(--card)}
     <div class="card mb-16" style="padding:0;overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
         <span style="font-weight:700;font-size:16px;color:var(--text)">📋 流水帳</span>
-        <span style="font-size:13px;color:var(--muted)">儲值＋支出 合併顯示</span>
+        <div style="display:flex;align-items:center;gap:0">
+          <span style="font-size:15px;color:var(--muted);width:110px;text-align:right;font-weight:600">金額異動</span>
+          <span style="font-size:15px;color:var(--muted);width:72px;text-align:right;font-weight:600">餘額</span>
+          <span style="width:20px;display:inline-block"></span>
+        </div>
       </div>
       <div id="jiajie-ledger" style="max-height:260px;overflow-y:auto">
         <div style="text-align:center;padding:24px;color:var(--muted)"><div class="spinner"></div></div>
@@ -2884,7 +2888,11 @@ function renderJiajieBalance(topups, expenses) {
 
   el.textContent = 'NT$ ' + Math.round(balance).toLocaleString('zh-TW');
   el.style.color = balance >= 0 ? 'var(--accent2)' : 'var(--expense)';
-  sub.textContent = `累計儲值 ${Math.round(totalIn).toLocaleString('zh-TW')}　已使用 ${Math.round(totalOut).toLocaleString('zh-TW')}`;
+  // 最後一次儲值
+  const lastTopup = topups.length ? topups[topups.length - 1] : null;
+  sub.textContent = lastTopup
+    ? `最後一次儲值　${lastTopup.date}　NT$ ${Math.round(+lastTopup.amount).toLocaleString('zh-TW')}`
+    : '尚無儲值紀錄';
 }
 
 function renderJiajieLedger(topups, expenses) {
@@ -2920,9 +2928,9 @@ function renderJiajieLedger(topups, expenses) {
       ? '媽媽儲值'
       : ((r.categories||[]).join('、') || r.note || '代買支出');
     const rowCls  = isTopup ? 'ledger-row ledger-topup' : 'ledger-row ledger-expense';
-    const delBtn  = isTopup
-      ? `<button onclick="deleteTopupRow('${r.id}')" title="刪除" style="background:none;border:none;cursor:pointer;font-size:13px;opacity:.4;padding:0 2px" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">✕</button>`
-      : '';
+    const delBtn = isTopup
+      ? `<button onclick="deleteTopupRow('${r.id}')" title="刪除" style="background:none;border:none;cursor:pointer;font-size:13px;opacity:.4;padding:0 2px;width:20px;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">✕</button>`
+      : `<span style="width:20px;flex-shrink:0;display:inline-block"></span>`;
 
     return `<div class="${rowCls}">
       <span class="lr-date">${r.date}</span>
@@ -2934,8 +2942,8 @@ function renderJiajieLedger(topups, expenses) {
     </div>`;
   });
 
-  // 最新在上方：反轉後顯示
-  ledger.innerHTML = [...rows].reverse().join('');
+  // 最新在上方：反轉後顯示，只取最近 10 筆
+  ledger.innerHTML = [...rows].reverse().slice(0, 10).join('');
 }
 
 async function addJiajieTopup() {
