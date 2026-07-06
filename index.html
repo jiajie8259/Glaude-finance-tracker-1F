@@ -866,6 +866,43 @@ select option{background:var(--card)}
   </div>
 </div>
 
+<!-- ── CALENDAR EDIT MODAL ── -->
+<div class="overlay" id="cal-edit-modal">
+  <div class="modal" style="max-width:460px">
+    <button class="modal-close" onclick="closeCalEditModal()">✕</button>
+    <div class="modal-title">✏️ 修改事項</div>
+    <input type="hidden" id="cal-edit-id">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="form-group">
+        <label>📅 日期</label>
+        <input type="date" id="cal-edit-date" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%">
+      </div>
+      <div class="form-group">
+        <label>🕐 時間（選填）</label>
+        <input type="time" id="cal-edit-time" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%">
+      </div>
+      <div class="form-group">
+        <label>🏷️ 類別</label>
+        <select id="cal-edit-cat" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%">
+          <option value="家庭">🏠 家庭</option>
+          <option value="工作">💼 工作</option>
+          <option value="醫療">🏥 醫療</option>
+          <option value="出遊">🚗 出遊</option>
+          <option value="其他">📌 其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📝 事項</label>
+        <input type="text" id="cal-edit-title" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:22px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeCalEditModal()">取消</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveCalEdit()">💾 儲存修改</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── CATEGORY MODAL ── -->
 <div class="overlay" id="cat-modal">
   <div class="modal" style="max-width:480px">
@@ -2665,8 +2702,10 @@ function makeCalCell(dayNum, dateStr, otherMonth, isToday = false, events = []) 
 
     const label = document.createElement('span');
     label.className = 'chip-text';
-    label.title = `${ev.time ? ev.time + ' ' : ''}【${ev.category}】${ev.title}`;
+    label.title = `點擊修改：${ev.time ? ev.time + ' ' : ''}【${ev.category}】${ev.title}`;
     label.textContent = (ev.time ? ev.time.slice(0, 5) + ' ' : '') + ev.title;
+    label.style.cursor = 'pointer';
+    label.onclick = () => openCalEditModal(ev);
 
     const del = document.createElement('button');
     del.className = 'del-btn';
@@ -2719,6 +2758,71 @@ async function deleteCalEvent(id, title) {
   } catch (e) {
     console.error(e);
     toast('❌ 刪除失敗：' + e.message, 'error');
+  }
+}
+
+async function updateCalEventRecord(id, data) {
+  if (window._demoMode) {
+    const idx = window._demoCalData?.findIndex(e => e.id === id);
+    if (idx !== undefined && idx >= 0) Object.assign(window._demoCalData[idx], data);
+    return;
+  }
+  const { doc, updateDoc } = fbFns;
+  await updateDoc(doc(db, 'events', id), data);
+}
+
+function openCalEditModal(ev) {
+  document.getElementById('cal-edit-id').value    = ev.id;
+  document.getElementById('cal-edit-date').value  = ev.date;
+  document.getElementById('cal-edit-time').value  = ev.time || '';
+  document.getElementById('cal-edit-cat').value   = ev.category;
+  document.getElementById('cal-edit-title').value = ev.title;
+  document.getElementById('cal-edit-modal').classList.add('open');
+  // 讓事項欄位自動獲得焦點，方便快速修改
+  setTimeout(() => document.getElementById('cal-edit-title').focus(), 80);
+}
+
+function closeCalEditModal() {
+  document.getElementById('cal-edit-modal').classList.remove('open');
+}
+
+async function saveCalEdit() {
+  const id    = document.getElementById('cal-edit-id').value;
+  const date  = document.getElementById('cal-edit-date').value;
+  const time  = document.getElementById('cal-edit-time').value;
+  const cat   = document.getElementById('cal-edit-cat').value;
+  const title = document.getElementById('cal-edit-title').value.trim();
+
+  if (!date)  { toast('⚠️ 請選擇日期', 'error'); return; }
+  if (!title) { toast('⚠️ 請填寫事項', 'error'); return; }
+
+  const saveBtn = document.querySelector('#cal-edit-modal .btn-primary');
+  const origHTML = saveBtn.innerHTML;
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<div class="spinner"></div> 儲存中…';
+
+  try {
+    const updates = { date, time: time || '', category: cat, title };
+    await updateCalEventRecord(id, updates);
+
+    // 更新本地快取
+    const idx = calEvents.findIndex(e => e.id === id);
+    if (idx >= 0) Object.assign(calEvents[idx], updates);
+
+    // 若日期改變，確保月曆切到該月
+    const [y, m] = date.split('-').map(Number);
+    calViewYear  = y;
+    calViewMonth = m - 1;
+
+    closeCalEditModal();
+    drawCalendarGrid();
+    toast('✅ 已更新！', 'success');
+  } catch (e) {
+    console.error(e);
+    toast('❌ 更新失敗：' + e.message, 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = origHTML;
   }
 }
 
