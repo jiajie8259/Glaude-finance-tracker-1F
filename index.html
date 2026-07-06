@@ -371,31 +371,35 @@ select option{background:var(--card)}
 <!-- ══════════════ CALENDAR ══════════════ -->
 <div class="page active" id="page-calendar">
 
-  <div class="card mb-20" id="cal-add-card">
-    <div class="section-title mb-16">✏️ 新增事項</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>📅 日期</label>
-        <input type="date" id="cal-f-date">
+  <div class="card" id="cal-add-card" style="padding:14px 18px">
+    <div class="section-title" style="margin-bottom:12px">✏️ 新增事項</div>
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:4px;flex:0 0 148px">
+        <label style="font-size:13px;color:var(--muted);font-weight:600">📅 日期</label>
+        <input type="date" id="cal-f-date" style="font-size:15px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit">
       </div>
-      <div class="form-group">
-        <label>🕐 時間（選填）</label>
-        <input type="time" id="cal-f-time">
+      <div style="display:flex;flex-direction:column;gap:4px;flex:0 0 126px">
+        <label style="font-size:13px;color:var(--muted);font-weight:600">🕐 時間（選填）</label>
+        <input type="time" id="cal-f-time" style="font-size:15px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit">
       </div>
-      <div class="form-group">
-        <label>🏷️ 類別</label>
-        <select id="cal-f-cat">
+      <div style="display:flex;flex-direction:column;gap:4px;flex:0 0 148px">
+        <label style="font-size:13px;color:var(--muted);font-weight:600">🏷️ 類別</label>
+        <select id="cal-f-cat" style="font-size:15px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit">
           <option value="繳費">💳 繳費</option>
           <option value="掛號就診">🏥 掛號/就診</option>
           <option value="藥局">💊 藥局</option>
           <option value="購物">🛒 購物</option>
           <option value="活動行程">🎉 活動行程</option>
-        <input type="text" id="cal-f-title" placeholder="例：看牙醫、家族聚餐">
+        </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px">
+        <label style="font-size:13px;color:var(--muted);font-weight:600">📝 事項</label>
+        <input type="text" id="cal-f-title" placeholder="例：看牙醫、家族聚餐" style="font-size:15px;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit">
+      </div>
+      <div style="flex:0 0 auto;padding-bottom:1px">
+        <button class="btn btn-primary" onclick="addCalEvent()" style="padding:8px 18px;font-size:15px;white-space:nowrap;height:38px">➕ 新增</button>
       </div>
     </div>
-    <button class="btn btn-primary" onclick="addCalEvent()" style="width:100%;justify-content:center;margin-top:4px">
-      ➕ 新增到行事曆
-    </button>
   </div>
 
   <div class="card" style="padding:0;overflow:hidden">
@@ -477,23 +481,25 @@ select option{background:var(--card)}
   <!-- 家傑代買 -->
   <div id="et-jiajie-expense" style="display:none">
 
-    <!-- 餘額卡 -->
-    <div style="display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;margin-bottom:16px">
-      <div class="card" style="background:linear-gradient(135deg,#f0faf3 0%,#e3f5e8 100%);border-color:var(--accent2)">
-        <div style="font-size:15px;color:var(--muted);margin-bottom:4px">💰 家傑代買餘額</div>
-        <div id="jiajie-balance-display" style="font-family:'DM Mono',monospace;font-size:36px;font-weight:700;color:var(--accent2);line-height:1">載入中…</div>
-        <div style="font-size:14px;color:var(--muted);margin-top:6px" id="jiajie-balance-sub"></div>
+    <!-- 餘額卡 + 儲值 合併一列 -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;background:linear-gradient(135deg,#f0faf3 0%,#e3f5e8 100%);border:1.5px solid var(--accent2);border-radius:12px;padding:12px 16px;flex-wrap:wrap">
+      <!-- 餘額 -->
+      <div style="flex:1;min-width:180px">
+        <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px">💰 家傑代買餘額</div>
+        <div id="jiajie-balance-display" style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;color:var(--accent2);line-height:1.1">載入中…</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px" id="jiajie-balance-sub"></div>
       </div>
-      <div class="card" style="min-width:200px">
-        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px">📥 媽媽儲值</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <input type="date" id="jiajie-topup-date" style="font-size:16px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit">
-          <input type="number" id="jiajie-topup-amount" placeholder="儲值金額" min="1"
-            style="font-size:18px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace">
-          <button class="btn btn-success btn-sm" onclick="addJiajieTopup()" style="font-size:15px;padding:9px">
-            ＋ 確認儲值
-          </button>
+      <!-- 分隔線 -->
+      <div style="width:1px;height:52px;background:var(--accent2);opacity:.3;flex-shrink:0"></div>
+      <!-- 儲值表單 -->
+      <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <label style="font-size:12px;color:var(--muted);font-weight:600">📥 媽媽儲值</label>
+          <input type="date" id="jiajie-topup-date" style="font-size:14px;padding:6px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit">
         </div>
+        <input type="number" id="jiajie-topup-amount" placeholder="金額" min="1"
+          style="font-size:15px;padding:6px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:'DM Mono',monospace;width:110px;align-self:flex-end">
+        <button class="btn btn-success btn-sm" onclick="addJiajieTopup()" style="font-size:14px;padding:7px 14px;align-self:flex-end;white-space:nowrap">＋ 確認儲值</button>
       </div>
     </div>
 
