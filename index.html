@@ -290,6 +290,12 @@ select option{background:var(--card)}
 .event-chip .chip-text{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .event-chip .del-btn{flex-shrink:0;background:none;border:none;cursor:pointer;font-size:13px;opacity:.5;padding:0 2px;line-height:1;transition:.15s;color:inherit}
 .event-chip .del-btn:hover{opacity:1}
+.event-chip .done-btn{flex-shrink:0;background:none;border:1.5px solid currentColor;border-radius:50%;width:16px;height:16px;cursor:pointer;font-size:10px;line-height:14px;text-align:center;padding:0;opacity:.45;transition:.15s;color:inherit;display:flex;align-items:center;justify-content:center}
+.event-chip .done-btn:hover{opacity:1}
+.event-chip.is-done{opacity:.6}
+.event-chip.is-done .chip-text{text-decoration:line-through;opacity:.7}
+.event-chip.is-done .done-btn{opacity:1;background:currentColor;color:#fff;border-color:currentColor}
+.chip-creator{font-size:10px;opacity:.65;flex-shrink:0;font-weight:700;letter-spacing:.02em}
 .cat-繳費{background:#FFF0CC;color:#7a5500}
 .cat-掛號就診{background:#FBE9E3;color:var(--expense)}
 .cat-藥局{background:#E7F0E9;color:var(--income)}
@@ -309,6 +315,11 @@ select option{background:var(--card)}
   <div class="logo">
     <h1>📋 1F 大事記</h1>
     <span>Family Hub</span>
+    <div id="sidebar-user" style="margin-top:8px;display:flex;align-items:center;gap:6px;cursor:pointer" onclick="promptChangeName()" title="點擊修改名字">
+      <span id="sidebar-user-badge" style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;flex-shrink:0"></span>
+      <span id="sidebar-user-name" style="font-size:14px;color:var(--text);font-weight:600"></span>
+      <span style="font-size:11px;color:var(--muted);margin-left:auto">✎</span>
+    </div>
   </div>
   <nav class="nav">
     <div class="nav-section">總覽</div>
@@ -599,7 +610,7 @@ select option{background:var(--card)}
   <div class="table-wrap">
     <table>
       <thead><tr>
-        <th>日期</th><th>類型</th><th>類別</th><th>金額</th><th>付款方式</th><th>備註</th><th></th>
+        <th>日期</th><th>類型</th><th>類別</th><th>金額</th><th>付款方式</th><th>備註</th><th>建立者</th><th></th>
       </tr></thead>
       <tbody id="records-tbody"><tr><td colspan="7" class="text-center" style="padding:30px;color:var(--muted)"><div class="spinner"></div></td></tr></tbody>
     </table>
@@ -872,6 +883,21 @@ select option{background:var(--card)}
   </div>
 </div>
 
+<!-- ── USER NAME MODAL ── -->
+<div class="overlay" id="user-name-modal">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div style="font-size:48px;margin-bottom:8px">👋</div>
+    <div class="modal-title" style="justify-content:center">歡迎來到 1F 大事記</div>
+    <p style="color:var(--muted);font-size:16px;margin-bottom:20px;line-height:1.6">請輸入你的名字，之後新增的事項和記錄都會標記是誰建立的。</p>
+    <input type="text" id="user-name-input" placeholder="例：媽媽、家傑、爸爸"
+      maxlength="6"
+      style="width:100%;font-size:20px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;text-align:center;margin-bottom:16px">
+    <button class="btn btn-primary" onclick="saveUserName()" style="width:100%;font-size:17px;padding:12px">
+      確認，開始使用 →
+    </button>
+  </div>
+</div>
+
 <!-- ── CALENDAR EDIT MODAL ── -->
 <div class="overlay" id="cal-edit-modal">
   <div class="modal" style="max-width:460px">
@@ -997,6 +1023,11 @@ setTimeout(() => {
 function init() {
   populatePeriodSelectors();
   navigate('calendar');
+  checkUserName();
+  // Enter 鍵送出名字
+  document.getElementById('user-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') saveUserName();
+  });
   // Init entry rows
   // 家庭支出、家傑代買、藥局支出：預設 1 列；藥局收入：3 列
   ['family-expense-tbody','jiajie-expense-tbody','pharma-expense-tbody'].forEach(id => addExcelRow(id));
@@ -1250,6 +1281,7 @@ async function saveExcelRows(type) {
       amount,
       note:    row.querySelector('.cell-note')?.value  || '',
       payment: row.querySelector('.cell-pay')?.value   || '現金',
+      createdBy: getCurrentUser(),
     };
 
     if (type === 'pharma-expense') record.category = row.querySelector('.cell-cat')?.value || '';
@@ -1366,6 +1398,7 @@ async function loadRecords() {
       <td class="mono ${amtClass}">${r.type==='pharma-income'?'+':'−'}${fmt(r.amount)}</td>
       <td>${r.payment||'–'}</td>
       <td style="color:var(--muted);font-size:17px">${r.note||'–'}</td>
+      <td style="font-size:14px;color:var(--muted);font-weight:600">${r.createdBy||'–'}</td>
       <td><button class="btn btn-danger btn-sm" onclick="confirmDelete('${r.id}')">刪除</button></td>
     </tr>`;
   }).join('');
@@ -2585,6 +2618,59 @@ window.goImportStep = function(n) {
 };
 
 // ══════════════════════════════════════════════════════
+// 使用者識別（localStorage）
+// ══════════════════════════════════════════════════════
+const USER_KEY = '1f_user_name';
+
+function getCurrentUser() {
+  return localStorage.getItem(USER_KEY) || '';
+}
+
+function updateSidebarUser(name) {
+  const badge = document.getElementById('sidebar-user-badge');
+  const label = document.getElementById('sidebar-user-name');
+  if (!badge || !label) return;
+  if (name) {
+    badge.textContent = name.slice(0, 1);
+    label.textContent = name;
+    // 每個名字對應固定顏色
+    const colors = ['#D97757','#7FA88F','#C9874A','#5c7aa8','#8c5c9e'];
+    const idx = [...name].reduce((s,c) => s + c.charCodeAt(0), 0) % colors.length;
+    badge.style.background = colors[idx];
+  }
+}
+
+function saveUserName() {
+  const input = document.getElementById('user-name-input');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  localStorage.setItem(USER_KEY, name);
+  document.getElementById('user-name-modal').classList.remove('open');
+  updateSidebarUser(name);
+}
+
+function promptChangeName() {
+  const current = getCurrentUser();
+  const newName = prompt('修改你的名字：', current);
+  if (newName === null) return; // 取消
+  const trimmed = newName.trim().slice(0, 6);
+  if (!trimmed) return;
+  localStorage.setItem(USER_KEY, trimmed);
+  updateSidebarUser(trimmed);
+}
+
+function checkUserName() {
+  const name = getCurrentUser();
+  if (!name) {
+    // 第一次使用，彈出歡迎視窗
+    document.getElementById('user-name-modal').classList.add('open');
+    setTimeout(() => document.getElementById('user-name-input').focus(), 100);
+  } else {
+    updateSidebarUser(name);
+  }
+}
+
+// ══════════════════════════════════════════════════════
 // CALENDAR
 // ══════════════════════════════════════════════════════
 let calViewYear, calViewMonth;
@@ -2700,7 +2786,14 @@ function makeCalCell(dayNum, dateStr, otherMonth, isToday = false, events = []) 
 
   events.slice().sort((a, b) => (a.time || '').localeCompare(b.time || '')).forEach(ev => {
     const chip = document.createElement('div');
-    chip.className = `event-chip cat-${ev.category}`;
+    chip.className = `event-chip cat-${ev.category}${ev.done ? ' is-done' : ''}`;
+
+    // 勾選按鈕（左側）
+    const doneBtn = document.createElement('button');
+    doneBtn.className = 'done-btn';
+    doneBtn.title = ev.done ? '標記為未完成' : '標記為已完成';
+    doneBtn.textContent = ev.done ? '✓' : '';
+    doneBtn.onclick = (e) => { e.stopPropagation(); toggleCalDone(ev); };
 
     const label = document.createElement('span');
     label.className = 'chip-text';
@@ -2715,7 +2808,14 @@ function makeCalCell(dayNum, dateStr, otherMonth, isToday = false, events = []) 
     del.title = '刪除';
     del.onclick = () => deleteCalEvent(ev.id, ev.title);
 
+    chip.appendChild(doneBtn);
     chip.appendChild(label);
+    if (ev.createdBy) {
+      const creator = document.createElement('span');
+      creator.className = 'chip-creator';
+      creator.textContent = ev.createdBy;
+      chip.appendChild(creator);
+    }
     chip.appendChild(del);
     cell.appendChild(chip);
   });
@@ -2733,7 +2833,7 @@ async function addCalEvent() {
   if (!title) { toast('⚠️ 請填寫事項', 'error'); return; }
 
   try {
-    const record = await addCalEventRecord({ date, time: time || '', category: cat, title });
+    const record = await addCalEventRecord({ date, time: time || '', category: cat, title, createdBy: getCurrentUser() });
     calEvents.push(record);
     document.getElementById('cal-f-title').value = '';
     document.getElementById('cal-f-time').value = '';
@@ -2747,6 +2847,20 @@ async function addCalEvent() {
   } catch (e) {
     console.error(e);
     toast('❌ 新增失敗：' + e.message, 'error');
+  }
+}
+
+async function toggleCalDone(ev) {
+  const newDone = !ev.done;
+  try {
+    await updateCalEventRecord(ev.id, { done: newDone });
+    // 更新本地快取
+    const idx = calEvents.findIndex(e => e.id === ev.id);
+    if (idx >= 0) calEvents[idx].done = newDone;
+    drawCalendarGrid();
+  } catch(e) {
+    console.error(e);
+    toast('❌ 狀態更新失敗', 'error');
   }
 }
 
