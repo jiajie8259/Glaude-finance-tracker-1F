@@ -2751,6 +2751,19 @@ function toggleCalAddForm(forceOpen) {
   if (arrow) arrow.textContent = open ? '－' : '＋';
 }
 
+function toggleCalDoneById(id) {
+  const ev = calEvents.find(e => e.id === id);
+  if (ev) toggleCalDone(ev);
+}
+
+function refreshDayDetail(dateStr) {
+  // 等待 toggleCalDone 更新 calEvents 後重繪 modal
+  setTimeout(() => {
+    const events = calEvents.filter(e => e.date === dateStr);
+    openDayDetail(dateStr, events);
+  }, 150);
+}
+
 // ── 手機版當日事項 Modal ──────────────────────────────
 let currentDayDetail = '';
 
@@ -2773,7 +2786,7 @@ function openDayDetail(dateStr, events) {
     };
     list.innerHTML = events.slice().sort((a,b)=>(a.time||'').localeCompare(b.time||'')).map(ev => `
       <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border)">
-        <button onclick="toggleCalDone(calEvents.find(e=>e.id==='${ev.id}'))"
+        <button onclick="toggleCalDoneById('${ev.id}');refreshDayDetail('${dateStr}')"
           style="flex-shrink:0;width:22px;height:22px;border-radius:50%;
             border:1.5px solid ${ev.done?'#4caf50':'#ccc'};
             background:${ev.done?'#4caf50':'transparent'};
