@@ -467,6 +467,22 @@ select option{background:var(--card)}
 
   <!-- Family Expense (預設顯示) -->
   <div id="et-family-expense">
+
+    <!-- 流水帳 -->
+    <div class="card mb-16" style="padding:0;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
+        <span style="font-weight:700;font-size:16px;color:var(--text)">📋 流水帳</span>
+        <div style="display:flex;align-items:center;gap:0">
+          <span style="font-size:15px;color:var(--muted);width:110px;text-align:right;font-weight:600">金額異動</span>
+          <span style="font-size:15px;color:var(--muted);width:72px;text-align:right;font-weight:600">累計</span>
+          <span style="width:20px;display:inline-block"></span>
+        </div>
+      </div>
+      <div id="family-ledger" style="max-height:260px;overflow-y:auto">
+        <div style="text-align:center;padding:24px;color:var(--muted)"><div class="spinner"></div></div>
+      </div>
+    </div>
+
     <div class="section-header">
       <span class="section-title">家庭支出（類 Excel 快速輸入）</span>
       <div style="display:flex;gap:8px">
@@ -1095,6 +1111,7 @@ function navigate(page) {
   document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
 
   if (page === 'calendar')  renderCalendar();
+  if (page === 'entry')     loadFamilyLedger();
   if (page === 'dashboard') loadDashboard();
   if (page === 'records')   loadRecords();
   if (page === 'monthly')   loadMonthly();
@@ -1169,6 +1186,7 @@ function switchEntryTab(tab) {
   document.querySelectorAll('#page-entry .tab').forEach((btn, i) => {
     btn.classList.toggle('active', ALL_TABS[i] === tab);
   });
+  if (tab === 'family-expense') loadFamilyLedger();
   if (tab === 'jiajie-expense') {
     // 預設儲值日期為今天
     const todayStr = new Date().toISOString().slice(0,10);
@@ -1316,6 +1334,8 @@ async function saveExcelRows(type) {
       for (let i = 0; i < resetCount; i++) addExcelRow(type + '-tbody');
       // 家傑代買儲存後刷新餘額與流水帳
       if (type === 'jiajie-expense') loadJiajiePanel();
+      // 家庭支出儲存後刷新流水帳
+      if (type === 'family-expense') loadFamilyLedger();
     }, 800);
   } else if (saved > 0 && errors > 0) {
     toast(`⚠️ ${saved} 筆成功，${errors} 筆失敗`, 'error');
@@ -2938,6 +2958,55 @@ async function saveCalEdit() {
     saveBtn.disabled = false;
     saveBtn.innerHTML = origHTML;
   }
+}
+
+// ══════════════════════════════════════════════════════
+// FAMILY EXPENSE 流水帳
+// ══════════════════════════════════════════════════════
+async function loadFamilyLedger() {
+  try {
+    const records = await fetchRecords({ type: 'family-expense' });
+    renderFamilyLedger(records);
+  } catch(e) {
+    console.error('loadFamilyLedger error:', e);
+    const el = document.getElementById('family-ledger');
+    if (el) el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">⚠️ 載入失敗</div>';
+  }
+}
+
+function renderFamilyLedger(records) {
+  const ledger = document.getElementById('family-ledger');
+  if (!ledger) return;
+
+  const sorted = [...records].sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!sorted.length) {
+    ledger.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">尚無任何紀錄</div>';
+    return;
+  }
+
+  let running = 0;
+  const rows = sorted.map(r => {
+    const amt = +r.amount || 0;
+    running += amt;
+    const cats = (r.categories || []).join('、') || r.note || '家庭支出';
+    const desc = r.note ? `${cats}　${r.note}` : cats;
+    const runStr = Math.round(running).toLocaleString('zh-TW');
+    const amtStr = '－' + Math.round(amt).toLocaleString('zh-TW');
+    const creator = r.createdBy ? `<span style="font-size:11px;color:var(--muted);margin-left:4px">${r.createdBy}</span>` : '';
+
+    return `<div class="ledger-row ledger-expense">
+      <span class="lr-date">${r.date}</span>
+      <span style="font-size:17px;flex-shrink:0">🏠</span>
+      <span class="lr-desc">${desc}${creator}</span>
+      <span class="lr-amt" style="color:var(--expense)">${amtStr}</span>
+      <span class="lr-bal">${runStr}</span>
+      <span style="width:20px;flex-shrink:0;display:inline-block"></span>
+    </div>`;
+  });
+
+  // 最新在上，只顯示最近 10 筆
+  ledger.innerHTML = [...rows].reverse().slice(0, 10).join('');
 }
 
 // ══════════════════════════════════════════════════════
