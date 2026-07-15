@@ -311,7 +311,11 @@ select option{background:var(--card)}
   /* 內容底部留出 nav 空間 */
   /* 一般頁面內容留出底部導航空間 */
   .content{padding-bottom:70px !important}
-  /* 行事曆頁：讓 cal-active flex 機制接管，僅調整 content bottom padding */
+  /* 手機新增表單：預設收折 */
+  #cal-add-toggle{display:flex !important}
+  #cal-add-body{display:none}
+  #cal-add-body.open{display:block;margin-top:10px}
+  #cal-add-card{padding:8px 16px !important}
   .content.cal-active{
     padding-bottom:0 !important;
     height:calc(100dvh - 46px);  /* 視窗 - topbar */
@@ -454,6 +458,13 @@ select option{background:var(--card)}
 <div class="page active" id="page-calendar">
 
   <div class="card" id="cal-add-card" style="padding:8px 16px;flex-shrink:0">
+    <!-- 手機版：收折按鈕 -->
+    <div id="cal-add-toggle" style="display:none;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleCalAddForm()">
+      <span style="font-size:14px;font-weight:600;color:var(--muted)">✏️ 新增事項</span>
+      <span id="cal-add-arrow" style="color:var(--muted);font-size:18px;transition:.2s">＋</span>
+    </div>
+    <!-- 表單內容 -->
+    <div id="cal-add-body">
     <div style="font-size:14px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.02em">✏️ 新增事項</div>
     <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
       <div style="display:flex;flex-direction:column;gap:4px;flex:0 0 148px">
@@ -482,6 +493,7 @@ select option{background:var(--card)}
         <button class="btn btn-primary" onclick="addCalEvent()" style="padding:8px 18px;font-size:15px;white-space:nowrap;height:38px">➕ 新增</button>
       </div>
     </div>
+    </div><!-- /cal-add-body -->
   </div>
 
   <div class="card" style="padding:0;overflow:hidden;flex:1;display:flex;flex-direction:column;min-height:0">
@@ -2710,6 +2722,15 @@ window.goImportStep = function(n) {
   if (n === 3) buildMappingUI();
 };
 
+function toggleCalAddForm(forceOpen) {
+  const body  = document.getElementById('cal-add-body');
+  const arrow = document.getElementById('cal-add-arrow');
+  if (!body) return;
+  const open = forceOpen !== undefined ? forceOpen : !body.classList.contains('open');
+  body.classList.toggle('open', open);
+  if (arrow) arrow.textContent = open ? '－' : '＋';
+}
+
 // ── 手機底部導航 ──────────────────────────────────────
 const MOB_NAV_MAP = { calendar:'mob-calendar', entry:'mob-entry', records:'mob-records', monthly:'mob-monthly' };
 
@@ -2955,6 +2976,7 @@ async function addCalEvent() {
     calEvents.push(record);
     document.getElementById('cal-f-title').value = '';
     document.getElementById('cal-f-time').value = '';
+    toggleCalAddForm(false); // 手機版新增後自動收折
 
     const [y, m] = date.split('-').map(Number);
     calViewYear = y;
