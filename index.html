@@ -378,7 +378,11 @@ select option{background:var(--card)}
 .cat-購物{background:#E1ECF7;color:#1f5c8c}
 .cat-活動行程{background:#EFE9F7;color:#5c3d8c}
 @media(max-width:700px){
-  .event-chip{font-size:11px}
+  /* 手機：chip 隱藏，改顯示小圓點，格子可點擊 */
+  .cal-day{cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,.06)}
+  .event-chip{display:none !important}
+  .day-dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px}
+  .day-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 }
 </style>
 </head>
@@ -978,6 +982,22 @@ select option{background:var(--card)}
     <div style="margin-top:20px">
       <button class="btn btn-primary btn-sm" onclick="runDiagnosticWrite()">🧪 測試寫入一筆資料</button>
       <span id="diag-write-result" style="margin-left:12px;font-size:17px"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ── DAY DETAIL MODAL（手機點擊日期） ── -->
+<div class="overlay" id="day-detail-modal">
+  <div class="modal" style="max-width:420px;padding:0;overflow:hidden">
+    <div style="background:var(--accent2);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+      <span id="day-detail-title" style="font-family:'Fredoka',sans-serif;font-size:20px;font-weight:600"></span>
+      <button onclick="closeDayDetail()" style="background:rgba(255,255,255,.25);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div id="day-detail-list" style="padding:8px 0;max-height:60vh;overflow-y:auto"></div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border)">
+      <button class="btn btn-primary" style="width:100%;font-size:15px" onclick="closeDayDetail();toggleCalAddForm(true);setCalDate(currentDayDetail)">
+        ＋ 新增這天的事項
+      </button>
     </div>
   </div>
 </div>
@@ -2731,6 +2751,60 @@ function toggleCalAddForm(forceOpen) {
   if (arrow) arrow.textContent = open ? '－' : '＋';
 }
 
+// ── 手機版當日事項 Modal ──────────────────────────────
+let currentDayDetail = '';
+
+function openDayDetail(dateStr, events) {
+  currentDayDetail = dateStr;
+  const [y, m, d] = dateStr.split('-');
+  document.getElementById('day-detail-title').textContent = `${+m} 月 ${+d} 日`;
+
+  const list = document.getElementById('day-detail-list');
+  if (!events.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:15px">這天尚無事項</div>';
+  } else {
+    const catColors = {
+      '繳費':'#FFF0CC','掛號就診':'#FBE9E3','藥局':'#E7F0E9',
+      '購物':'#E1ECF7','活動行程':'#EFE9F7'
+    };
+    const catText = {
+      '繳費':'#7a5500','掛號就診':'#c0392b','藥局':'#4a7c59',
+      '購物':'#1f5c8c','活動行程':'#5c3d8c'
+    };
+    list.innerHTML = events.slice().sort((a,b)=>(a.time||'').localeCompare(b.time||'')).map(ev => `
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border)">
+        <button onclick="toggleCalDone(calEvents.find(e=>e.id==='${ev.id}'))"
+          style="flex-shrink:0;width:22px;height:22px;border-radius:50%;
+            border:1.5px solid ${ev.done?'#4caf50':'#ccc'};
+            background:${ev.done?'#4caf50':'transparent'};
+            color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+          ${ev.done?'✓':''}
+        </button>
+        <div style="flex:1;min-width:0" onclick="closeDayDetail();openCalEditModal(calEvents.find(e=>e.id==='${ev.id}'))">
+          <div style="font-size:15px;font-weight:600;color:var(--text);${ev.done?'text-decoration:line-through;opacity:.5':''}">
+            ${ev.time ? `<span style="color:var(--muted);font-size:13px;margin-right:4px">${ev.time.slice(0,5)}</span>` : ''}${ev.title}
+          </div>
+          <span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:20px;
+            background:${catColors[ev.category]||'#eee'};color:${catText[ev.category]||'#555'}">
+            ${ev.category}
+          </span>
+          ${ev.createdBy ? `<span style="font-size:11px;color:var(--muted);margin-left:4px">${ev.createdBy}</span>` : ''}
+        </div>
+        <button onclick="deleteCalEvent('${ev.id}','${ev.title.replace(/'/g,"\\'")}');closeDayDetail()"
+          style="flex-shrink:0;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px">✕</button>
+      </div>`).join('');
+  }
+  document.getElementById('day-detail-modal').classList.add('open');
+}
+
+function closeDayDetail() {
+  document.getElementById('day-detail-modal').classList.remove('open');
+}
+
+function setCalDate(dateStr) {
+  if (dateStr) document.getElementById('cal-f-date').value = dateStr;
+}
+
 // ── 手機底部導航 ──────────────────────────────────────
 const MOB_NAV_MAP = { calendar:'mob-calendar', entry:'mob-entry', records:'mob-records', monthly:'mob-monthly' };
 
@@ -2918,10 +2992,46 @@ function makeCalCell(dayNum, dateStr, otherMonth, isToday = false, events = []) 
   const cell = document.createElement('div');
   cell.className = 'cal-day' + (otherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
 
+  const isMobile = () => window.innerWidth <= 700;
+
+  // 手機版：整格可點擊開啟當日事項
+  if (!otherMonth) {
+    cell.onclick = (e) => {
+      if (isMobile() && !e.target.closest('.event-chip')) {
+        openDayDetail(dateStr, events);
+      }
+    };
+  }
+
   const numSpan = document.createElement('span');
   numSpan.className = 'day-num';
   numSpan.textContent = dayNum;
   cell.appendChild(numSpan);
+
+  // 手機版：顯示彩色小圓點
+  if (events.length > 0) {
+    const dots = document.createElement('div');
+    dots.className = 'day-dots';
+    const dotColors = {
+      '繳費':'#c9a000','掛號就診':'#c0392b','藥局':'#4a7c59',
+      '購物':'#1f5c8c','活動行程':'#5c3d8c'
+    };
+    const shown = events.slice(0, 4);
+    shown.forEach(ev => {
+      const dot = document.createElement('span');
+      dot.className = 'day-dot';
+      dot.style.background = dotColors[ev.category] || 'var(--accent)';
+      if (ev.done) dot.style.opacity = '.4';
+      dots.appendChild(dot);
+    });
+    if (events.length > 4) {
+      const more = document.createElement('span');
+      more.style.cssText = 'font-size:9px;color:var(--muted);line-height:7px';
+      more.textContent = `+${events.length - 4}`;
+      dots.appendChild(more);
+    }
+    cell.appendChild(dots);
+  }
 
   events.slice().sort((a, b) => (a.time || '').localeCompare(b.time || '')).forEach(ev => {
     const chip = document.createElement('div');
