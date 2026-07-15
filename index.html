@@ -321,28 +321,36 @@ select option{background:var(--card)}
   .excel-table tbody{display:flex;flex-direction:column;gap:10px;padding:4px 0}
   .excel-table tr{
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:6px 8px;
+    grid-template-columns:1fr;
+    gap:8px;
     background:var(--card);
     border:1.5px solid var(--border);
     border-radius:12px;
-    padding:10px 12px;
+    padding:12px 14px;
     box-shadow:var(--shadow);
   }
   /* 讓每個 td 加上 label */
   .excel-table td{border:none;padding:0;background:transparent;position:relative}
   .excel-table td::before{
     display:block;font-size:11px;font-weight:700;
-    color:var(--muted);margin-bottom:2px;letter-spacing:.03em
+    color:var(--muted);margin-bottom:3px;letter-spacing:.03em
   }
   .excel-table td:nth-child(1)::before{content:'📅 日期'}
   .excel-table td:nth-child(2)::before{content:'💰 金額 (NT$)'}
   .excel-table td:nth-child(3)::before{content:'🏷️ 類別'}
   .excel-table td:nth-child(4)::before{content:'📝 備註'}
   .excel-table td:nth-child(5)::before{content:'💳 付款'}
-  /* 刪除按鈕欄：跨兩欄靠右 */
-  .excel-table td:last-child{grid-column:1/-1;display:flex;justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border);margin-top:4px}
+  /* 刪除按鈕欄：靠右 */
+  .excel-table td:last-child{display:flex;justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border);margin-top:2px}
   .excel-table td:last-child::before{display:none}
+  /* 輸入框全寬 */
+  .excel-table input,.excel-table select{
+    width:100%;padding:10px 12px;font-size:16px;
+    border:1.5px solid var(--border);border-radius:8px;
+    background:var(--card);box-sizing:border-box;
+  }
+  /* table-wrap 底部留出底部導航空間 */
+  .table-wrap{margin-bottom:80px}
   /* 藥局收入無類別欄：調整 */
   .excel-table input,.excel-table select{
     padding:8px 10px;font-size:15px;
