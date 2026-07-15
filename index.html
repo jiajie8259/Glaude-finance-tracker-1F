@@ -311,6 +311,64 @@ select option{background:var(--card)}
   /* 內容底部留出 nav 空間 */
   /* 一般頁面內容留出底部導航空間 */
   .content{padding-bottom:70px !important}
+  /* ── 手機版新增收支 ── */
+  /* Tabs 可捲動 */
+  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px}
+  .tab{white-space:nowrap;flex-shrink:0;font-size:14px;padding:8px 14px}
+
+  /* 隱藏 table header，每列改為卡片 */
+  .excel-table thead{display:none}
+  .excel-table tbody{display:flex;flex-direction:column;gap:10px;padding:4px 0}
+  .excel-table tr{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px 8px;
+    background:var(--card);
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    padding:10px 12px;
+    box-shadow:var(--shadow);
+  }
+  /* 讓每個 td 加上 label */
+  .excel-table td{border:none;padding:0;background:transparent;position:relative}
+  .excel-table td::before{
+    display:block;font-size:11px;font-weight:700;
+    color:var(--muted);margin-bottom:2px;letter-spacing:.03em
+  }
+  .excel-table td:nth-child(1)::before{content:'📅 日期'}
+  .excel-table td:nth-child(2)::before{content:'💰 金額 (NT$)'}
+  .excel-table td:nth-child(3)::before{content:'🏷️ 類別'}
+  .excel-table td:nth-child(4)::before{content:'📝 備註'}
+  .excel-table td:nth-child(5)::before{content:'💳 付款'}
+  /* 刪除按鈕欄：跨兩欄靠右 */
+  .excel-table td:last-child{grid-column:1/-1;display:flex;justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border);margin-top:4px}
+  .excel-table td:last-child::before{display:none}
+  /* 藥局收入無類別欄：調整 */
+  .excel-table input,.excel-table select{
+    padding:8px 10px;font-size:15px;
+    border:1.5px solid var(--border);border-radius:8px;
+    background:var(--card);
+  }
+  /* 類別按鈕全寬 */
+  .cell-cat-btn{font-size:13px !important;padding:7px 8px !important}
+  /* 流水帳手機版縮減 */
+  .ledger-row{padding:8px 12px;font-size:13px}
+  .ledger-row .lr-amt{font-size:16px;width:88px}
+  .ledger-row .lr-bal{font-size:14px;width:60px}
+  .ledger-row .lr-date{width:76px;font-size:12px}
+  /* section-header */
+  .section-header{flex-wrap:wrap;gap:8px}
+
+  /* 家傑代買餘額卡手機版垂直排列 */
+  #et-jiajie-expense > div:first-child{flex-direction:column;gap:10px}
+  #et-jiajie-expense > div:first-child > div:nth-child(2){display:none} /* 隱藏分隔線 */
+
+  /* 藥局收入（無類別欄）調整 label */
+  #pharma-income-tbody tr td:nth-child(3)::before{content:'📝 備註'}
+  #pharma-income-tbody tr td:nth-child(4)::before{content:'💳 付款'}
+  /* 藥局支出有單選類別 */
+  #pharma-expense-tbody tr td:nth-child(3)::before{content:'🏷️ 類別'}
+
   /* 手機新增表單：預設收折 */
   #cal-add-toggle{display:flex !important}
   #cal-add-body{display:none}
