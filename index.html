@@ -309,8 +309,22 @@ select option{background:var(--card)}
   .mob-btn.active{color:var(--accent)}
   .mob-btn.active svg{stroke:var(--accent)}
   /* 內容底部留出 nav 空間 */
+  /* 一般頁面內容留出底部導航空間 */
   .content{padding-bottom:70px !important}
-  #page-calendar.active{height:calc(100dvh - 46px - 70px - 18px) !important}
+  /* 行事曆頁：讓 cal-active flex 機制接管，僅調整 content bottom padding */
+  .content.cal-active{
+    padding-bottom:0 !important;
+    height:calc(100dvh - 46px);  /* 視窗 - topbar */
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .content.cal-active > #page-calendar.active{
+    flex:1;
+    height:auto !important;
+    min-height:0;
+    padding-bottom:66px;   /* 為底部導航留空間 */
+  }
   /* 更多選單 */
   .mob-more-overlay{
     display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:300
