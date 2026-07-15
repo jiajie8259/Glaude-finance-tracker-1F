@@ -76,7 +76,11 @@ a{color:var(--accent);text-decoration:none}
 .sidebar{width:250px;background:var(--surface);border-right:2px dashed var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
 .main{margin-left:250px;flex:1;display:flex;flex-direction:column;min-height:100vh}
 .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:68px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
-.content{padding:22px 28px;flex:1}
+.content{padding:22px 28px;flex:1;overflow:hidden}
+/* 行事曆頁：main 撐滿視窗，content 固定可用高度 */
+.main{display:flex;flex-direction:column;height:100vh}
+.content.cal-active{padding-bottom:0;overflow:hidden;display:flex;flex-direction:column}
+.content.cal-active > #page-calendar.active{flex:1;height:auto}
 
 /* ── SIDEBAR：藥袋標籤造型 ── */
 .logo{padding:10px 16px 8px;border-bottom:2px dashed var(--border);position:relative;flex-shrink:0}
@@ -219,8 +223,9 @@ select option{background:var(--card)}
 #page-calendar.active{
   display:flex;
   flex-direction:column;
-  height:calc(100vh - 68px - 44px); /* viewport - topbar - content top+bottom padding */
-  gap:12px;
+  height:100%;
+  gap:10px;
+  overflow:hidden;
 }
 
 /* ── IMPORT STEPS ── */
@@ -1116,6 +1121,7 @@ function navigate(page) {
   document.querySelector(`.nav-item[onclick*="${page}"]`)?.classList.add('active');
   document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
 
+  document.querySelector('.content').classList.toggle('cal-active', page === 'calendar');
   if (page === 'calendar')  renderCalendar();
   if (page === 'entry')     loadFamilyLedger();
   if (page === 'dashboard') loadDashboard();
