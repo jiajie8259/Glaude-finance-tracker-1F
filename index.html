@@ -284,6 +284,54 @@ select option{background:var(--card)}
   .main{margin-left:0}
 }
 
+/* ── MOBILE BOTTOM NAV ── */
+.mobile-nav{display:none}
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .mobile-nav{
+    display:flex;
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--card);
+    border-top:1.5px solid var(--border);
+    z-index:200;
+    padding:4px 0 max(4px, env(safe-area-inset-bottom));
+    box-shadow:0 -2px 12px rgba(0,0,0,.08);
+  }
+  .mob-btn{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;padding:4px 2px;
+    background:none;border:none;cursor:pointer;
+    font-family:inherit;font-size:10px;font-weight:600;
+    color:var(--muted);transition:.15s;
+  }
+  .mob-btn svg{width:22px;height:22px;stroke:currentColor;flex-shrink:0}
+  .mob-btn.active{color:var(--accent)}
+  .mob-btn.active svg{stroke:var(--accent)}
+  /* 內容底部留出 nav 空間 */
+  .content{padding-bottom:70px !important}
+  #page-calendar.active{height:calc(100dvh - 46px - 70px - 18px) !important}
+  /* 更多選單 */
+  .mob-more-overlay{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:300
+  }
+  .mob-more-overlay.open{display:block}
+  .mob-more-menu{
+    display:none;position:fixed;bottom:64px;left:12px;right:12px;
+    background:var(--card);border-radius:16px;
+    box-shadow:0 8px 32px rgba(0,0,0,.18);
+    z-index:301;overflow:hidden;
+  }
+  .mob-more-menu.open{display:block}
+  .mob-more-item{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 20px;font-size:16px;font-weight:600;color:var(--text);
+    cursor:pointer;border-bottom:1px solid var(--border);
+  }
+  .mob-more-item:last-child{border-bottom:none}
+  .mob-more-item:active{background:var(--surface)}
+}
+
 /* ── CALENDAR ── */
 .cal-nav-btn{font-family:inherit;font-size:22px;background:rgba(255,255,255,.2);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;transition:.15s;line-height:1}
 .cal-nav-btn:hover{background:rgba(255,255,255,.35)}
@@ -1122,6 +1170,7 @@ function navigate(page) {
   document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
 
   document.querySelector('.content').classList.toggle('cal-active', page === 'calendar');
+  updateMobNav(page);
   if (page === 'calendar')  renderCalendar();
   if (page === 'entry')     loadFamilyLedger();
   if (page === 'dashboard') loadDashboard();
@@ -2647,6 +2696,31 @@ window.goImportStep = function(n) {
   if (n === 3) buildMappingUI();
 };
 
+// ── 手機底部導航 ──────────────────────────────────────
+const MOB_NAV_MAP = { calendar:'mob-calendar', entry:'mob-entry', records:'mob-records', monthly:'mob-monthly' };
+
+function updateMobNav(page) {
+  document.querySelectorAll('.mob-btn').forEach(b => b.classList.remove('active'));
+  const id = MOB_NAV_MAP[page];
+  if (id) document.getElementById(id)?.classList.add('active');
+  // 更多 選單裡的頁面也高亮 mob-more 按鈕
+  const inMore = !id && page !== 'calendar';
+  document.getElementById('mob-more')?.classList.toggle('active', !!(!id));
+  // 更新名字標籤
+  const label = document.getElementById('mob-user-label');
+  if (label) label.textContent = getCurrentUser() || '我的名字';
+}
+
+function toggleMobMore() {
+  document.getElementById('mob-more-overlay')?.classList.toggle('open');
+  document.getElementById('mob-more-menu')?.classList.toggle('open');
+}
+
+function closeMobMore() {
+  document.getElementById('mob-more-overlay')?.classList.remove('open');
+  document.getElementById('mob-more-menu')?.classList.remove('open');
+}
+
 // ══════════════════════════════════════════════════════
 // 使用者識別（localStorage）
 // ══════════════════════════════════════════════════════
@@ -3195,5 +3269,54 @@ function toast(msg, type = 'success') {
 }
 
 </script>
+<!-- ── MOBILE BOTTOM NAV ── -->
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mob-btn" onclick="navigate('calendar')" id="mob-calendar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    行事曆
+  </button>
+  <button class="mob-btn" onclick="navigate('entry')" id="mob-entry">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    新增收支
+  </button>
+  <button class="mob-btn" onclick="navigate('records')" id="mob-records">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    記錄
+  </button>
+  <button class="mob-btn" onclick="navigate('monthly')" id="mob-monthly">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+    月結
+  </button>
+  <button class="mob-btn" onclick="toggleMobMore()" id="mob-more">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="19" cy="12" r="1.5" fill="currentColor"/></svg>
+    更多
+  </button>
+</nav>
+
+<!-- 更多選單 -->
+<div class="mob-more-overlay" id="mob-more-overlay" onclick="closeMobMore()"></div>
+<div class="mob-more-menu" id="mob-more-menu">
+  <div class="mob-more-item" onclick="navigate('dashboard');closeMobMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    儀表板
+  </div>
+  <div class="mob-more-item" onclick="navigate('yearly');closeMobMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+    年結報表
+  </div>
+  <div class="mob-more-item" onclick="navigate('pharmacy');closeMobMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M3 3h18v4H3zM3 10h18v11H3z"/></svg>
+    藥局分析
+  </div>
+  <div class="mob-more-item" onclick="navigate('import');closeMobMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    匯入資料
+  </div>
+  <div class="mob-more-item" onclick="promptChangeName();closeMobMore()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span id="mob-user-label">我的名字</span>
+  </div>
+</div>
+
 </body>
 </html>
