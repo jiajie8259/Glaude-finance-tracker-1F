@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>1F 大事記</title>
 
 <!-- Firebase -->
@@ -288,7 +288,10 @@ select option{background:var(--card)}
 .mobile-nav{display:none}
 @media(max-width:768px){
   .sidebar{display:none}
-  .main{margin-left:0}
+  .main{margin-left:0;width:100%;overflow-x:hidden}
+  /* 防止任何元素撐破螢幕寬度 */
+  *{max-width:100%;box-sizing:border-box}
+  input,select,textarea,button{max-width:100%;min-width:0}
   .mobile-nav{
     display:flex;
     position:fixed;bottom:0;left:0;right:0;
@@ -311,6 +314,10 @@ select option{background:var(--card)}
   /* 內容底部留出 nav 空間 */
   /* 一般頁面內容留出底部導航空間 */
   .content{padding-bottom:70px !important}
+  /* ── 防止寬度溢出 ── */
+  .form-row{flex-wrap:wrap}
+  .form-group{min-width:0;flex:1 1 100%}
+  .section-header{flex-wrap:wrap}
   /* ── 手機版新增收支 ── */
   /* Tabs 可捲動 */
   .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px}
