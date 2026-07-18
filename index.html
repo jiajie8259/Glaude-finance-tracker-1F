@@ -420,15 +420,14 @@ select option{background:var(--card)}
     grid-column:2;grid-row:2;
     font-size:11px;color:var(--muted);text-align:right
   }
-  /* 第6格備註、第7格建立者：合併成第三行小字 */
-  #page-records td:nth-child(6),
-  #page-records td:nth-child(7){
+  /* 第6格：備註＋建立者合併（第三行小字） */
+  #page-records td:nth-child(6){
     grid-column:1/-1;grid-row:3;
     font-size:11px;color:var(--muted);
-    display:inline;
   }
-  #page-records td:nth-child(6){padding-right:4px}
-  /* 第8格：刪除按鈕（獨立一行） */
+  /* 第7格：已合併，隱藏 */
+  #page-records td:nth-child(7){display:none}
+  /* 第8格：刪除按鈕 */
   #page-records td:nth-child(8){
     grid-column:1/-1;grid-row:4;
     display:flex;justify-content:flex-end;
@@ -440,6 +439,52 @@ select option{background:var(--card)}
   /* 篩選器換行 */
   #page-records .section-header > div{flex-wrap:wrap;gap:6px}
   #page-records select{font-size:14px;padding:5px 8px;flex:1;min-width:80px}
+  /* ── 月結／年結報表手機版 ── */
+  /* 數字卡片：改為橫向緊湊列表，統一字體大小 */
+  #page-monthly .stats-grid,
+  #page-yearly  .stats-grid{
+    grid-template-columns:1fr;gap:0;
+    border:1px solid var(--border);border-radius:12px;
+    overflow:hidden;background:var(--card);
+  }
+  #page-monthly .stats-grid .card,
+  #page-yearly  .stats-grid .card{
+    display:flex;align-items:center;justify-content:space-between;
+    border-radius:0;border:none;border-bottom:1px solid var(--border);
+    padding:11px 16px;box-shadow:none;
+  }
+  #page-monthly .stats-grid .card:last-child,
+  #page-yearly  .stats-grid .card:last-child{border-bottom:none}
+  #page-monthly .stats-grid .card-title,
+  #page-yearly  .stats-grid .card-title{font-size:15px;margin-bottom:0;color:var(--text)}
+  #page-monthly .stats-grid .card-value,
+  #page-yearly  .stats-grid .card-value{font-size:18px;font-weight:700}
+  /* 圖表區：強制單欄 */
+  #monthly-content div[style*="1fr 1fr"]{grid-template-columns:1fr !important;gap:12px !important}
+  .bar-label{font-size:13px;white-space:nowrap}
+  .bar-val{font-size:13px;white-space:nowrap}
+  #page-monthly .section-title,
+  #page-yearly  .section-title{font-size:16px}
+  /* 明細 table：緊湊卡片 */
+  #monthly-content .table-wrap,
+  #yearly-content  .table-wrap{border:none;background:transparent;box-shadow:none}
+  #monthly-content table,#yearly-content table{display:block;font-size:13px}
+  #monthly-content thead,#yearly-content thead{display:none}
+  #monthly-content tbody,#yearly-content tbody{display:flex;flex-direction:column;gap:5px}
+  #monthly-content tr,#yearly-content tr{
+    display:grid;grid-template-columns:1fr auto;gap:2px 8px;
+    background:var(--card);border:1px solid var(--border);
+    border-radius:10px;padding:8px 12px;
+  }
+  #monthly-content td,#yearly-content td{border:none;padding:0;font-size:13px}
+  #monthly-content td:nth-child(1),#yearly-content td:nth-child(1){grid-column:1;grid-row:1;color:var(--muted);font-size:12px}
+  #monthly-content td:nth-child(2),#yearly-content td:nth-child(2){grid-column:2;grid-row:1;font-weight:700;font-size:15px;text-align:right}
+  #monthly-content td:nth-child(3),#yearly-content td:nth-child(3){grid-column:1;grid-row:2;font-size:13px;font-weight:600}
+  #monthly-content td:nth-child(4),#yearly-content td:nth-child(4){grid-column:2;grid-row:2;font-size:12px;color:var(--muted);text-align:right}
+  #monthly-content td:nth-child(5),#yearly-content td:nth-child(5){grid-column:1/-1;grid-row:3;font-size:11px;color:var(--muted)}
+  /* 已連線狀態字體 */
+  #sync-text{font-size:13px}
+
   #et-jiajie-expense > div:first-child{flex-direction:column;gap:10px}
   #et-jiajie-expense > div:first-child > div:nth-child(2){display:none} /* 隱藏分隔線 */
 
@@ -1654,14 +1699,15 @@ async function loadRecords() {
     const typeBadge = { 'pharma-income':'income','pharma-expense':'expense','family-expense':'family','jiajie-expense':'family' }[r.type] || '';
     const cats = r.categories?.join('、') || r.category || '–';
     const amtClass = r.type === 'pharma-income' ? 'amount-pos' : 'amount-neg';
+    const noteCreator = [r.note, r.createdBy].filter(Boolean).join('　');
     return `<tr>
       <td class="mono" style="font-size:14px">${r.date} <span class="badge badge-${typeBadge}" style="font-size:12px;padding:2px 8px">${typeLabel}</span></td>
       <td style="display:none"></td>
       <td style="font-size:17px;max-width:160px">${cats}</td>
       <td class="mono ${amtClass}">${r.type==='pharma-income'?'+':'−'}${fmt(r.amount)}</td>
       <td>${r.payment||'–'}</td>
-      <td style="color:var(--muted);font-size:17px">${r.note||'–'}</td>
-      <td style="font-size:14px;color:var(--muted);font-weight:600">${r.createdBy||'–'}</td>
+      <td style="color:var(--muted);font-size:17px">${noteCreator||'–'}</td>
+      <td style="display:none"></td>
       <td><button class="btn btn-danger btn-sm" onclick="confirmDelete('${r.id}')">刪除</button></td>
     </tr>`;
   }).join('');
