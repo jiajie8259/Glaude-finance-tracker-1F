@@ -76,10 +76,10 @@ a{color:var(--accent);text-decoration:none}
 .sidebar{width:250px;background:var(--surface);border-right:2px dashed var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
 .main{margin-left:250px;flex:1;display:flex;flex-direction:column;min-height:100vh}
 .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:46px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
-.content{padding:14px 28px;flex:1;overflow:hidden}
+.content{padding:14px 28px;flex:1;overflow-y:auto;overflow-x:hidden}
 /* 行事曆頁：main 撐滿視窗，content 固定可用高度 */
 .main{display:flex;flex-direction:column;height:100vh}
-.content.cal-active{padding-bottom:0;overflow:hidden;display:flex;flex-direction:column}
+.content.cal-active{padding-bottom:0;overflow:hidden !important;display:flex;flex-direction:column}
 .content.cal-active > #page-calendar.active{flex:1;height:auto}
 
 /* ── SIDEBAR：藥袋標籤造型 ── */
@@ -313,7 +313,7 @@ select option{background:var(--card)}
   .mob-btn.active svg{stroke:var(--accent)}
   /* 內容底部留出 nav 空間 */
   /* 一般頁面內容留出底部導航空間 */
-  .content{padding-bottom:70px !important}
+  .content{padding-bottom:80px !important;overflow-y:auto !important;overflow-x:hidden !important;-webkit-overflow-scrolling:touch}
   /* ── 防止寬度溢出 ── */
   .form-row{flex-wrap:wrap}
   .form-group{min-width:0;flex:1 1 100%}
@@ -357,7 +357,10 @@ select option{background:var(--card)}
     background:var(--card);box-sizing:border-box;
   }
   /* table-wrap 底部留出底部導航空間 */
-  .table-wrap{margin-bottom:80px}
+  .table-wrap{margin-bottom:0}
+  /* entry 頁面最後元素加底部間距 */
+  #page-entry.active > div > *:last-child{margin-bottom:20px}
+  #page-entry.active{padding-bottom:20px}
   /* 藥局收入無類別欄：調整 */
   .excel-table input,.excel-table select{
     padding:8px 10px;font-size:15px;
