@@ -377,7 +377,69 @@ select option{background:var(--card)}
   /* section-header */
   .section-header{flex-wrap:wrap;gap:8px}
 
-  /* 家傑代買餘額卡手機版垂直排列 */
+  /* ── 所有記錄：手機版緊湊卡片 ── */
+  #page-records .table-wrap{border:none;background:transparent;box-shadow:none;margin-bottom:0}
+  #page-records table{display:block}
+  #page-records thead{display:none}
+  #page-records tbody{display:flex;flex-direction:column;gap:6px}
+  #page-records tr{
+    display:grid;
+    grid-template-columns:1fr auto;
+    grid-template-rows:auto auto;
+    gap:2px 8px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:9px 12px;
+    box-shadow:0 1px 4px rgba(0,0,0,.06);
+  }
+  /* 第1格：日期＋類型 badge（左上） */
+  #page-records td:nth-child(1){
+    grid-column:1;grid-row:1;
+    font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;
+    display:flex;align-items:center;gap:6px
+  }
+  /* 第2格：badge 接在日期後 */
+  #page-records td:nth-child(2){
+    display:none /* badge 移入 JS 合併到第1格 */
+  }
+  /* 第3格：類別（左下主文字） */
+  #page-records td:nth-child(3){
+    grid-column:1;grid-row:2;
+    font-size:14px;font-weight:600;color:var(--text);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none
+  }
+  /* 第4格：金額（右上，大字） */
+  #page-records td:nth-child(4){
+    grid-column:2;grid-row:1;
+    font-family:'DM Mono',monospace;font-size:16px;font-weight:700;
+    text-align:right;white-space:nowrap
+  }
+  /* 第5格：付款方式（右下小字） */
+  #page-records td:nth-child(5){
+    grid-column:2;grid-row:2;
+    font-size:11px;color:var(--muted);text-align:right
+  }
+  /* 第6格備註、第7格建立者：合併成第三行小字 */
+  #page-records td:nth-child(6),
+  #page-records td:nth-child(7){
+    grid-column:1/-1;grid-row:3;
+    font-size:11px;color:var(--muted);
+    display:inline;
+  }
+  #page-records td:nth-child(6){padding-right:4px}
+  /* 第8格：刪除按鈕（獨立一行） */
+  #page-records td:nth-child(8){
+    grid-column:1/-1;grid-row:4;
+    display:flex;justify-content:flex-end;
+    padding-top:6px;margin-top:2px;border-top:1px solid var(--border)
+  }
+  #page-records .btn-danger{font-size:12px;padding:4px 12px}
+  /* badge 縮小 */
+  #page-records .badge{padding:2px 8px;font-size:11px;border-radius:10px}
+  /* 篩選器換行 */
+  #page-records .section-header > div{flex-wrap:wrap;gap:6px}
+  #page-records select{font-size:14px;padding:5px 8px;flex:1;min-width:80px}
   #et-jiajie-expense > div:first-child{flex-direction:column;gap:10px}
   #et-jiajie-expense > div:first-child > div:nth-child(2){display:none} /* 隱藏分隔線 */
 
@@ -1593,8 +1655,8 @@ async function loadRecords() {
     const cats = r.categories?.join('、') || r.category || '–';
     const amtClass = r.type === 'pharma-income' ? 'amount-pos' : 'amount-neg';
     return `<tr>
-      <td class="mono">${r.date}</td>
-      <td><span class="badge badge-${typeBadge}">${typeLabel}</span></td>
+      <td class="mono" style="font-size:14px">${r.date} <span class="badge badge-${typeBadge}" style="font-size:12px;padding:2px 8px">${typeLabel}</span></td>
+      <td style="display:none"></td>
       <td style="font-size:17px;max-width:160px">${cats}</td>
       <td class="mono ${amtClass}">${r.type==='pharma-income'?'+':'−'}${fmt(r.amount)}</td>
       <td>${r.payment||'–'}</td>
