@@ -8,7 +8,7 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, deleteDoc, doc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, deleteDoc, doc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   // ── ① 在此填入您的 Firebase 專案設定 ──────────────────────────────
   const firebaseConfig = {
@@ -26,7 +26,7 @@
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
     window._db = db;
-    window._fbFns = { collection, addDoc, getDocs, query, where, orderBy, deleteDoc, doc, updateDoc, Timestamp };
+    window._fbFns = { collection, addDoc, getDocs, query, where, orderBy, limit, deleteDoc, doc, updateDoc, Timestamp };
     // 用 _firebaseReady flag 避免事件時序問題
     window._firebaseReady = true;
     // 若主程式已在等待，立刻通知；否則 flag 本身就夠了
@@ -176,7 +176,7 @@ select option{background:var(--card)}
 .checkbox-label.checked{border-color:var(--accent);background:rgba(217,119,87,.12);color:var(--accent);font-weight:700}
 
 /* ── TABS ── */
-.tabs{display:flex;gap:5px;margin-bottom:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px}
+.tabs{display:flex;gap:5px;margin-bottom:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px;overflow:hidden}
 .tab{padding:13px 26px;border-radius:16px;cursor:pointer;font-size:18px;color:var(--muted);transition:.18s;border:none;background:transparent;font-family:inherit;font-weight:700}
 .tab:hover{color:var(--text)}
 .tab.active{background:var(--accent);color:#fff;box-shadow:var(--shadow)}
@@ -1483,10 +1483,11 @@ async function fetchRecords(filters = {}) {
     return data.sort((a,b) => (b.date||'').localeCompare(a.date||''));
   }
   // Firestore：兩個相等條件（==）不需要複合索引，可以安全同時傳
-  const { collection, getDocs, query, where } = fbFns;
+  const { collection, getDocs, query, where, limit } = fbFns;
   const constraints = [];
   if (filters.type)  constraints.push(where('type', '==', filters.type));
   if (filters.year)  constraints.push(where('year', '==', +filters.year));
+  constraints.push(limit(500)); // 避免「全部類型」時一次抓全年所有紀錄，拖慢查詢
   const snap = await getDocs(query(collection(db, 'records'), ...constraints));
   let data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   // 前端補篩月份 + 排序
@@ -1727,14 +1728,21 @@ async function loadRecords() {
   if (month) filters.month = month;
 
   // 查詢逾時保護：避免 Firestore 請求卡住時畫面永遠轉圈、看不到任何錯誤訊息
-  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
+  // 「全部類型」沒有 type 篩選條件，抓取的資料量較大，逾時秒數拉長一些
+  const timeoutMs = type ? 10000 : 18000;
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs));
   let records;
   try {
     records = await Promise.race([fetchRecords(filters), timeout]);
   } catch (e) {
     console.error('loadRecords error:', e);
+    const hint = e.message === 'timeout'
+      ? (type
+          ? '載入逾時，請檢查網路連線'
+          : '載入逾時。選擇「全部類型」時資料量較大，若持續逾時，也請確認 Firestore Security Rules 是否允許「不帶 type 條件」的查詢')
+      : '載入失敗：' + e.message;
     tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:30px;color:var(--muted)">
-      ⚠️ ${e.message === 'timeout' ? '載入逾時，請檢查網路連線' : '載入失敗：' + e.message}
+      ⚠️ ${hint}
       <div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="loadRecords()">重試</button></div>
     </td></tr>`;
     return;
