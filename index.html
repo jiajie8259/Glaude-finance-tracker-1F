@@ -325,8 +325,8 @@ select option{background:var(--card)}
   .section-header{flex-wrap:wrap}
   /* ── 手機版新增收支 ── */
   /* Tabs 可捲動 */
-  .tabs{overflow-x:visible;flex-wrap:nowrap;padding-bottom:0;gap:3px}
-  .tab{white-space:nowrap;flex:1;min-width:0;font-size:11.5px;padding:8px 3px;text-align:center;overflow:hidden;text-overflow:ellipsis}
+  .tabs{overflow-x:visible;flex-wrap:nowrap;padding-bottom:0;gap:3px;align-items:stretch}
+  .tab{white-space:nowrap;flex:1;min-width:0;font-size:11.5px;padding:8px 3px;text-align:center;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;justify-content:center;line-height:1.15}
 
   /* 隱藏 table header，每列改為卡片 */
   .excel-table thead{display:none}
@@ -1726,7 +1726,19 @@ async function loadRecords() {
   if (type)  filters.type  = type;
   if (month) filters.month = month;
 
-  const records = await fetchRecords(filters).catch(() => []);
+  // 查詢逾時保護：避免 Firestore 請求卡住時畫面永遠轉圈、看不到任何錯誤訊息
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
+  let records;
+  try {
+    records = await Promise.race([fetchRecords(filters), timeout]);
+  } catch (e) {
+    console.error('loadRecords error:', e);
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="padding:30px;color:var(--muted)">
+      ⚠️ ${e.message === 'timeout' ? '載入逾時，請檢查網路連線' : '載入失敗：' + e.message}
+      <div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="loadRecords()">重試</button></div>
+    </td></tr>`;
+    return;
+  }
 
   if (!records.length) {
     tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:30px;color:var(--muted)">無記錄</td></tr>';
