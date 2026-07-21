@@ -103,7 +103,7 @@ a{color:var(--accent);text-decoration:none}
 .dot.offline{background:var(--danger)}
 
 /* ── BUTTONS ── */
-.btn{display:inline-flex;align-items:center;gap:7px;padding:13px 24px;border-radius:22px;border:none;cursor:pointer;font-size:18px;font-family:inherit;font-weight:700;transition:.18s}
+.btn{-webkit-appearance:none;appearance:none;display:inline-flex;align-items:center;gap:7px;padding:13px 24px;border-radius:22px;border:none;cursor:pointer;font-size:18px;font-family:inherit;font-weight:700;transition:.18s}
 .btn-primary{background:var(--accent);color:#fff;box-shadow:0 3px 0 #B85A3D}
 .btn-primary:hover{background:#C76847;transform:translateY(1px);box-shadow:0 2px 0 #B85A3D}
 .btn-ghost{background:var(--card);color:var(--muted);border:1.5px solid var(--border)}
@@ -177,7 +177,7 @@ select option{background:var(--card)}
 
 /* ── TABS ── */
 .tabs{display:flex;gap:5px;margin-bottom:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px;overflow:hidden}
-.tab{padding:13px 26px;border-radius:16px;cursor:pointer;font-size:18px;color:var(--muted);transition:.18s;border:none;background:transparent;font-family:inherit;font-weight:700}
+.tab{-webkit-appearance:none;appearance:none;padding:13px 26px;border-radius:16px;cursor:pointer;font-size:18px;color:var(--muted);transition:.18s;border:none;background:transparent;font-family:inherit;font-weight:700}
 .tab:hover{color:var(--text)}
 .tab.active{background:var(--accent);color:#fff;box-shadow:var(--shadow)}
 
@@ -325,8 +325,8 @@ select option{background:var(--card)}
   .section-header{flex-wrap:wrap}
   /* ── 手機版新增收支 ── */
   /* Tabs 可捲動 */
-  .tabs{overflow-x:visible;flex-wrap:nowrap;padding-bottom:0;gap:3px;align-items:stretch}
-  .tab{white-space:nowrap;flex:1;min-width:0;font-size:11.5px;padding:8px 3px;text-align:center;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;justify-content:center;line-height:1.15}
+  .tabs{overflow-x:visible;flex-wrap:nowrap;padding-bottom:0;gap:3px;align-items:stretch;height:38px}
+  .tab{-webkit-appearance:none;appearance:none;box-sizing:border-box;height:100%;white-space:nowrap;flex:1;min-width:0;font-size:11.5px;padding:0 3px;text-align:center;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;justify-content:center;line-height:1.15}
 
   /* 隱藏 table header，每列改為卡片 */
   .excel-table thead{display:none}
