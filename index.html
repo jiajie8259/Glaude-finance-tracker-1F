@@ -334,21 +334,21 @@ select option{background:var(--card)}
   .excel-table tr{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:8px 10px;
+    gap:6px 8px;
     background:var(--card);
     border:1.5px solid var(--border);
-    border-radius:12px;
-    padding:12px 14px;
+    border-radius:10px;
+    padding:9px 11px;
     box-shadow:var(--shadow);
   }
   /* 讓每個 td 加上 label */
   .excel-table td{border:none;padding:0;background:transparent;position:relative;min-width:0}
   .excel-table td::before{
-    display:block;font-size:11px;font-weight:700;
-    color:var(--muted);margin-bottom:3px;letter-spacing:.03em
+    display:block;font-size:10px;font-weight:700;
+    color:var(--muted);margin-bottom:2px;letter-spacing:.02em
   }
   .excel-table td:nth-child(1)::before{content:'📅 日期'}
-  .excel-table td:nth-child(2)::before{content:'💰 金額 (NT$)'}
+  .excel-table td:nth-child(2)::before{content:'💰 金額'}
   .excel-table td:nth-child(3)::before{content:'🏷️ 類別'}
   .excel-table td:nth-child(4)::before{content:'📝 備註'}
   .excel-table td:nth-child(5)::before{content:'💳 付款'}
@@ -365,14 +365,15 @@ select option{background:var(--card)}
   #pharma-income-tbody tr td:nth-child(3){grid-column:1;grid-row:2}
   #pharma-income-tbody tr td:nth-child(4){grid-column:2;grid-row:2}
   /* 刪除按鈕欄：靠右、獨立一排 */
-  .excel-table td:last-child{display:flex;justify-content:flex-end;grid-column:1/-1;padding-top:4px;border-top:1px solid var(--border);margin-top:2px}
+  .excel-table td:last-child{display:flex;justify-content:flex-end;grid-column:1/-1;padding-top:3px;border-top:1px solid var(--border);margin-top:1px}
   .excel-table td:last-child::before{display:none}
-  /* 輸入框：不再強制撐滿整排寬度 */
+  /* 輸入框：不再強制撐滿整排寬度，並整體再縮小一級 */
   .excel-table input,.excel-table select{
-    width:100%;padding:9px 10px;font-size:15px;
-    border:1.5px solid var(--border);border-radius:8px;
+    width:100%;padding:6px 8px;font-size:14px;
+    border:1.5px solid var(--border);border-radius:7px;
     background:var(--card);box-sizing:border-box;
   }
+  .excel-table td:last-child .btn{padding:5px 12px !important;font-size:12px !important}
   /* table-wrap 底部留出底部導航空間 */
   .table-wrap{margin-bottom:0}
   /* entry 頁面最後元素加底部間距 */
@@ -385,7 +386,7 @@ select option{background:var(--card)}
     background:var(--card);
   }
   /* 類別按鈕全寬 */
-  .cell-cat-btn{font-size:13px !important;padding:7px 8px !important}
+  .cell-cat-btn{font-size:13px !important;padding:6px 8px !important}
   /* 流水帳手機版縮減：單行主標題＋副標題，長文字用省略號截斷，不再逐字換行 */
   .ledger-row{padding:8px 12px;gap:8px}
   .ledger-row .lr-icon{font-size:14px;width:16px}
