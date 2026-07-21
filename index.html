@@ -325,8 +325,8 @@ select option{background:var(--card)}
   .section-header{flex-wrap:wrap}
   /* ── 手機版新增收支 ── */
   /* Tabs 可捲動 */
-  .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px}
-  .tab{white-space:nowrap;flex-shrink:0;font-size:14px;padding:8px 14px}
+  .tabs{overflow-x:visible;flex-wrap:nowrap;padding-bottom:0;gap:3px}
+  .tab{white-space:nowrap;flex:1;min-width:0;font-size:11.5px;padding:8px 3px;text-align:center;overflow:hidden;text-overflow:ellipsis}
 
   /* 隱藏 table header，每列改為卡片 */
   .excel-table thead{display:none}
