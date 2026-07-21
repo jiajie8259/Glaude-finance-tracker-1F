@@ -111,13 +111,18 @@ a{color:var(--accent);text-decoration:none}
 .btn-danger{background:#FBE9E3;color:var(--danger);border:1.5px solid #F3CDBE}
 .btn-success{background:var(--accent2);color:#fff;border:none}
 .btn-success:hover{filter:brightness(.92)}
-/* ── Jiajie Ledger ── */
-.ledger-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:15px}
+/* ── Ledger（流水帳）：單行主標題 + 灰色副標題，避免長文字被壓成逐字換行 ── */
+.ledger-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:15px}
 .ledger-row:last-child{border-bottom:none}
-.ledger-row .lr-date{width:90px;color:var(--muted);font-family:'DM Mono',monospace;flex-shrink:0}
-.ledger-row .lr-desc{flex:1;color:var(--text)}
-.ledger-row .lr-amt{font-family:'DM Mono',monospace;font-weight:600;font-size:14px;flex-shrink:0;width:110px;text-align:right}
-.ledger-row .lr-bal{font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--muted);flex-shrink:0;width:72px;text-align:right}
+.ledger-row .lr-icon{font-size:17px;flex-shrink:0;width:20px;text-align:center}
+.ledger-row .lr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ledger-row .lr-title{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ledger-row .lr-sub{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ledger-row .lr-amt{font-family:'DM Mono',monospace;font-weight:600;font-size:14px;flex-shrink:0;width:100px;text-align:right}
+.ledger-row .lr-bal{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--muted);flex-shrink:0;width:68px;text-align:right}
+.ledger-row .lr-del{width:20px;flex-shrink:0}
+.ledger-head-amt{font-size:15px;color:var(--muted);width:100px;text-align:right;font-weight:600}
+.ledger-head-bal{font-size:15px;color:var(--muted);width:68px;text-align:right;font-weight:600}
 .ledger-topup{background:#f0faf3}
 .ledger-expense{background:#fff}
 .btn-sm{padding:10px 18px;font-size:16px;border-radius:18px}
@@ -328,8 +333,8 @@ select option{background:var(--card)}
   .excel-table tbody{display:flex;flex-direction:column;gap:10px;padding:4px 0}
   .excel-table tr{
     display:grid;
-    grid-template-columns:1fr;
-    gap:8px;
+    grid-template-columns:1fr 1fr;
+    gap:8px 10px;
     background:var(--card);
     border:1.5px solid var(--border);
     border-radius:12px;
@@ -337,7 +342,7 @@ select option{background:var(--card)}
     box-shadow:var(--shadow);
   }
   /* 讓每個 td 加上 label */
-  .excel-table td{border:none;padding:0;background:transparent;position:relative}
+  .excel-table td{border:none;padding:0;background:transparent;position:relative;min-width:0}
   .excel-table td::before{
     display:block;font-size:11px;font-weight:700;
     color:var(--muted);margin-bottom:3px;letter-spacing:.03em
@@ -347,12 +352,24 @@ select option{background:var(--card)}
   .excel-table td:nth-child(3)::before{content:'🏷️ 類別'}
   .excel-table td:nth-child(4)::before{content:'📝 備註'}
   .excel-table td:nth-child(5)::before{content:'💳 付款'}
-  /* 刪除按鈕欄：靠右 */
-  .excel-table td:last-child{display:flex;justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border);margin-top:2px}
+  /* 日期＋金額同排、類別＋付款同排，備註與刪除各自獨佔一整排（6欄結構：日期/金額/類別/備註/付款/操作） */
+  .excel-table td:nth-child(1){grid-column:1;grid-row:1}
+  .excel-table td:nth-child(2){grid-column:2;grid-row:1}
+  .excel-table td:nth-child(3){grid-column:1;grid-row:2}
+  .excel-table td:nth-child(5){grid-column:2;grid-row:2}
+  .excel-table td:nth-child(4){grid-column:1/-1;grid-row:3}
+  .excel-table td:nth-child(6){grid-column:1/-1;grid-row:4}
+  /* 藥局收入無類別欄（5欄結構：日期/金額/備註/付款/操作），需另外指定欄位位置；第5欄(刪除)沿用下方 last-child 規則自動排到最後一排 */
+  #pharma-income-tbody tr td:nth-child(1){grid-column:1;grid-row:1}
+  #pharma-income-tbody tr td:nth-child(2){grid-column:2;grid-row:1}
+  #pharma-income-tbody tr td:nth-child(3){grid-column:1;grid-row:2}
+  #pharma-income-tbody tr td:nth-child(4){grid-column:2;grid-row:2}
+  /* 刪除按鈕欄：靠右、獨立一排 */
+  .excel-table td:last-child{display:flex;justify-content:flex-end;grid-column:1/-1;padding-top:4px;border-top:1px solid var(--border);margin-top:2px}
   .excel-table td:last-child::before{display:none}
-  /* 輸入框全寬 */
+  /* 輸入框：不再強制撐滿整排寬度 */
   .excel-table input,.excel-table select{
-    width:100%;padding:10px 12px;font-size:16px;
+    width:100%;padding:9px 10px;font-size:15px;
     border:1.5px solid var(--border);border-radius:8px;
     background:var(--card);box-sizing:border-box;
   }
@@ -369,13 +386,27 @@ select option{background:var(--card)}
   }
   /* 類別按鈕全寬 */
   .cell-cat-btn{font-size:13px !important;padding:7px 8px !important}
-  /* 流水帳手機版縮減 */
-  .ledger-row{padding:8px 12px;font-size:13px}
-  .ledger-row .lr-amt{font-size:16px;width:88px}
-  .ledger-row .lr-bal{font-size:14px;width:60px}
-  .ledger-row .lr-date{width:76px;font-size:12px}
-  /* section-header */
-  .section-header{flex-wrap:wrap;gap:8px}
+  /* 流水帳手機版縮減：單行主標題＋副標題，長文字用省略號截斷，不再逐字換行 */
+  .ledger-row{padding:8px 12px;gap:8px}
+  .ledger-row .lr-icon{font-size:14px;width:16px}
+  .ledger-row .lr-title{font-size:13px}
+  .ledger-row .lr-sub{font-size:10.5px}
+  .ledger-row .lr-amt{font-size:12.5px;width:76px}
+  .ledger-row .lr-bal{font-size:13px;width:54px}
+  .ledger-row .lr-del{width:16px}
+  .ledger-head-amt{font-size:11px;width:76px}
+  .ledger-head-bal{font-size:11px;width:54px}
+
+  /* section-header：標題與操作按鈕分兩排，避免擠壓 */
+  .section-header{flex-direction:column;align-items:stretch;gap:8px}
+  /* 快速操作按鈕（貼上圖片辨識／加列／儲存全部）：縮小成與文字比例相符的尺寸，三顆平均分配寬度 */
+  .section-header > div{display:flex;gap:6px;width:100%}
+  .section-header > div .btn{
+    flex:1;justify-content:center;white-space:nowrap;
+    padding:8px 6px;font-size:12px;border-radius:10px;gap:4px;
+    box-shadow:none;
+  }
+  .section-header > div .btn-primary{box-shadow:0 2px 0 #B85A3D}
 
   /* ── 所有記錄：手機版緊湊卡片 ── */
   #page-records .table-wrap{border:none;background:transparent;box-shadow:none;margin-bottom:0}
@@ -487,6 +518,13 @@ select option{background:var(--card)}
 
   #et-jiajie-expense > div:first-child{flex-direction:column;gap:10px}
   #et-jiajie-expense > div:first-child > div:nth-child(2){display:none} /* 隱藏分隔線 */
+  /* 儲值：日期／金額／確認按鈕同一排，不再各自換行 */
+  .jiajie-topup-row{flex-wrap:nowrap !important;width:100%;gap:6px}
+  .jiajie-topup-datewrap{flex:1.3;min-width:0}
+  .jiajie-topup-datewrap label{display:none}
+  .jiajie-topup-datewrap input{width:100%}
+  #jiajie-topup-amount{flex:1;width:auto !important;min-width:0}
+  .jiajie-topup-row .btn{flex-shrink:0;padding:7px 12px !important;font-size:13px !important}
 
   /* 藥局收入（無類別欄）調整 label */
   #pharma-income-tbody tr td:nth-child(3)::before{content:'📝 備註'}
@@ -745,8 +783,8 @@ select option{background:var(--card)}
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
         <span style="font-weight:700;font-size:16px;color:var(--text)">📋 流水帳</span>
         <div style="display:flex;align-items:center;gap:0">
-          <span style="font-size:15px;color:var(--muted);width:110px;text-align:right;font-weight:600">金額異動</span>
-          <span style="font-size:15px;color:var(--muted);width:72px;text-align:right;font-weight:600">累計</span>
+          <span class="ledger-head-amt">金額異動</span>
+          <span class="ledger-head-bal">累計</span>
           <span style="width:20px;display:inline-block"></span>
         </div>
       </div>
@@ -789,8 +827,8 @@ select option{background:var(--card)}
       <!-- 分隔線 -->
       <div style="width:1px;height:52px;background:var(--accent2);opacity:.3;flex-shrink:0"></div>
       <!-- 儲值表單 -->
-      <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap">
-        <div style="display:flex;flex-direction:column;gap:3px">
+      <div class="jiajie-topup-row" style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap">
+        <div class="jiajie-topup-datewrap" style="display:flex;flex-direction:column;gap:3px">
           <label style="font-size:12px;color:var(--muted);font-weight:600">📥 媽媽儲值</label>
           <input type="date" id="jiajie-topup-date" style="font-size:14px;padding:6px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit">
         </div>
@@ -805,8 +843,8 @@ select option{background:var(--card)}
       <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
         <span style="font-weight:700;font-size:16px;color:var(--text)">📋 流水帳</span>
         <div style="display:flex;align-items:center;gap:0">
-          <span style="font-size:15px;color:var(--muted);width:110px;text-align:right;font-weight:600">金額異動</span>
-          <span style="font-size:15px;color:var(--muted);width:72px;text-align:right;font-weight:600">餘額</span>
+          <span class="ledger-head-amt">金額異動</span>
+          <span class="ledger-head-bal">餘額</span>
           <span style="width:20px;display:inline-block"></span>
         </div>
       </div>
@@ -3418,19 +3456,21 @@ function renderFamilyLedger(records) {
   const rows = sorted.map(r => {
     const amt = +r.amount || 0;
     running += amt;
-    const cats = (r.categories || []).join('、') || r.note || '家庭支出';
-    const desc = r.note ? `${cats}　${r.note}` : cats;
+    const title = (r.categories || []).join('、') || '家庭支出';
+    const creator = r.createdBy ? `・${r.createdBy}` : '';
+    const sub = r.note ? `${r.note}・${r.date}${creator}` : `${r.date}${creator}`;
     const runStr = Math.round(running).toLocaleString('zh-TW');
     const amtStr = '－' + Math.round(amt).toLocaleString('zh-TW');
-    const creator = r.createdBy ? `<span style="font-size:11px;color:var(--muted);margin-left:4px">${r.createdBy}</span>` : '';
 
     return `<div class="ledger-row ledger-expense">
-      <span class="lr-date">${r.date}</span>
-      <span style="font-size:17px;flex-shrink:0">🏠</span>
-      <span class="lr-desc">${desc}${creator}</span>
+      <span class="lr-icon">🏠</span>
+      <span class="lr-info">
+        <span class="lr-title">${title}</span>
+        <span class="lr-sub">${sub}</span>
+      </span>
       <span class="lr-amt" style="color:var(--expense)">${amtStr}</span>
       <span class="lr-bal">${runStr}</span>
-      <span style="width:20px;flex-shrink:0;display:inline-block"></span>
+      <span class="lr-del"></span>
     </div>`;
   });
 
@@ -3534,18 +3574,21 @@ function renderJiajieLedger(topups, expenses) {
     const amtCol  = isTopup ? 'var(--income)' : 'var(--expense)';
     const balCol  = running >= 0 ? 'var(--accent2)' : 'var(--expense)';
     const icon    = isTopup ? '📥' : '🛒';
-    const desc    = isTopup
+    const title   = isTopup
       ? '媽媽儲值'
-      : ((r.categories||[]).join('、') || r.note || '代買支出');
+      : ((r.categories||[]).join('、') || '代買支出');
+    const sub     = isTopup ? r.date : (r.note ? `${r.note}・${r.date}` : r.date);
     const rowCls  = isTopup ? 'ledger-row ledger-topup' : 'ledger-row ledger-expense';
     const delBtn = isTopup
-      ? `<button onclick="deleteTopupRow('${r.id}')" title="刪除" style="background:none;border:none;cursor:pointer;font-size:13px;opacity:.4;padding:0 2px;width:20px;flex-shrink:0" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">✕</button>`
-      : `<span style="width:20px;flex-shrink:0;display:inline-block"></span>`;
+      ? `<button onclick="deleteTopupRow('${r.id}')" title="刪除" class="lr-del" style="background:none;border:none;cursor:pointer;font-size:13px;opacity:.4;padding:0 2px" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">✕</button>`
+      : `<span class="lr-del"></span>`;
 
     return `<div class="${rowCls}">
-      <span class="lr-date">${r.date}</span>
-      <span style="font-size:17px;flex-shrink:0">${icon}</span>
-      <span class="lr-desc">${desc}</span>
+      <span class="lr-icon">${icon}</span>
+      <span class="lr-info">
+        <span class="lr-title">${title}</span>
+        <span class="lr-sub">${sub}</span>
+      </span>
       <span class="lr-amt" style="color:${amtCol}">${amtStr}</span>
       <span class="lr-bal" style="color:${balCol}">${Math.round(running).toLocaleString('zh-TW')}</span>
       ${delBtn}
