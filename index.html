@@ -344,8 +344,8 @@ select option{background:var(--card)}
   /* 讓每個 td 加上 label */
   .excel-table td{border:none;padding:0;background:transparent;position:relative;min-width:0}
   .excel-table td::before{
-    display:block;font-size:10px;font-weight:700;
-    color:var(--muted);margin-bottom:2px;letter-spacing:.02em
+    display:block;font-size:10px;font-weight:700;line-height:1.4;
+    color:var(--muted);margin-bottom:3px;letter-spacing:.02em
   }
   .excel-table td:nth-child(1)::before{content:'📅 日期'}
   .excel-table td:nth-child(2)::before{content:'💰 金額'}
@@ -379,12 +379,6 @@ select option{background:var(--card)}
   /* entry 頁面最後元素加底部間距 */
   #page-entry.active > div > *:last-child{margin-bottom:20px}
   #page-entry.active{padding-bottom:20px}
-  /* 藥局收入無類別欄：調整 */
-  .excel-table input,.excel-table select{
-    padding:8px 10px;font-size:15px;
-    border:1.5px solid var(--border);border-radius:8px;
-    background:var(--card);
-  }
   /* 類別按鈕全寬 */
   .cell-cat-btn{font-size:13px !important;padding:6px 8px !important}
   /* 流水帳手機版縮減：單行主標題＋副標題，長文字用省略號截斷，不再逐字換行 */
