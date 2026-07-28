@@ -140,7 +140,7 @@ a{color:var(--accent);text-decoration:none}
 .table-wrap{overflow-x:auto;border-radius:18px;border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow)}
 table{width:100%;border-collapse:collapse;font-size:19px}
 thead{background:var(--surface)}
-th{padding:16px 20px;text-align:left;font-weight:700;color:var(--muted);font-size:15px;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+th{padding:16px 20px;text-align:left;font-weight:700;color:var(--muted);font-size:15px;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:16px 20px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:rgba(217,119,87,.035)}
@@ -1753,15 +1753,14 @@ async function loadRecords() {
     const typeBadge = { 'pharma-income':'income','pharma-expense':'expense','family-expense':'family','jiajie-expense':'family' }[r.type] || '';
     const cats = r.categories?.join('、') || r.category || '–';
     const amtClass = r.type === 'pharma-income' ? 'amount-pos' : 'amount-neg';
-    const noteCreator = [r.note, r.createdBy].filter(Boolean).join('　');
     return `<tr>
       <td class="mono" style="font-size:14px">${r.date} <span class="badge badge-${typeBadge}" style="font-size:12px;padding:2px 8px">${typeLabel}</span></td>
       <td style="display:none"></td>
       <td style="font-size:17px;max-width:160px">${cats}</td>
       <td class="mono ${amtClass}">${r.type==='pharma-income'?'+':'−'}${fmt(r.amount)}</td>
       <td>${r.payment||'–'}</td>
-      <td style="color:var(--muted);font-size:17px">${noteCreator||'–'}</td>
-      <td style="display:none"></td>
+      <td style="color:var(--muted);font-size:17px">${r.note||'–'}</td>
+      <td style="color:var(--muted);font-size:15px;white-space:nowrap">${r.createdBy||'–'}</td>
       <td><button class="btn btn-danger btn-sm" onclick="confirmDelete('${r.id}')">刪除</button></td>
     </tr>`;
   }).join('');
