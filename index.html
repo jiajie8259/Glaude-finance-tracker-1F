@@ -1937,15 +1937,28 @@ async function loadYearly() {
   monthly.forEach(r => r.net = r.pi - r.pe - r.fe - r.jj);
 
   const totPI = sum(pi), totPE = sum(pe), totFE = sum(fe), totJJ = sum(jj);
-  const totNet = totPI - totPE - totFE - totJJ;
+  const totExpense = totPE + totFE + totJJ;
+  const totNet = totPI - totExpense;
   const maxBar = Math.max(1, ...monthly.map(r => Math.max(r.pi, r.pe+r.fe)));
+
+  const yrExpenseSub = (label, val) => `
+    <div style="flex:1;min-width:0;text-align:center">
+      <div style="font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
+      <div class="mono" style="font-size:15px;color:var(--expense);font-weight:700">－${fmt(val)}</div>
+    </div>`;
 
   el.innerHTML = `
     <div class="stats-grid mb-24">
-      <div class="card"><div class="card-title">年度藥局收入</div><div class="card-value income mono">＋${fmt(totPI)}</div></div>
-      <div class="card"><div class="card-title">年度藥局支出</div><div class="card-value expense mono">－${fmt(totPE)}</div></div>
-      <div class="card"><div class="card-title">年度家庭支出</div><div class="card-value pharmacy mono">－${fmt(totFE)}</div></div>
-      <div class="card"><div class="card-title">年度家傑代買</div><div class="card-value pharmacy mono">－${fmt(totJJ)}</div></div>
+      <div class="card"><div class="card-title">年度總收入</div><div class="card-value income mono">＋${fmt(totPI)}</div></div>
+      <div class="card">
+        <div class="card-title">年度總支出</div>
+        <div class="card-value expense mono">－${fmt(totExpense)}</div>
+        <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          ${yrExpenseSub('藥局支出', totPE)}
+          ${yrExpenseSub('家庭支出', totFE)}
+          ${yrExpenseSub('家傑代買', totJJ)}
+        </div>
+      </div>
       <div class="card"><div class="card-title">年度淨利</div><div class="card-value mono" style="color:${totNet>=0?'var(--income)':'var(--expense)'}">${totNet>=0?'＋':'－'}${fmt(Math.abs(totNet))}</div></div>
     </div>
     <div class="card mb-24">
