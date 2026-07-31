@@ -588,23 +588,25 @@ const cards = [
   {
     id:"linebank", bank:"聯邦銀行", name:"聯邦 LINE BANK 熊大卡", accent:"#8E6BC9",
     mode:"網購", settle:"回饋結算 10日–次月9日",
-    deadline:"優惠至 7/31", official:"https://card.ubot.com.tw/CardDetail/cardDetail601",
+    deadline:"優惠至 2027/7/31（權益續延，指定通路加碼上限降至$300/月）", official:"https://card.ubot.com.tw/CardDetail/cardDetail601",
     scenarios:[
-      {cat:"online", rate:4, label:"4%", note:"指定網購 3 間：momo、PCHOME、蝦皮(1%基本+3%加碼)", cap:"回饋上限 NT$9,000/月"},
+      {cat:"online", rate:4, label:"4%", note:"指定通路(1%基本+3%加碼)：momo、PChome、蝦皮、淘寶、酷澎，及Netflix/Disney+/LINE TV/KKTV、Spotify/KKBOX、Steam/PS/Nintendo/Blizzard/Garena、tixCraft/KKTIX", cap:"月上限 NT$300（原NT$9,000已於2026/8/1調降）"},
+      {cat:"overseas", rate:2.5, label:"2.5%", note:"國外消費，無上限"},
+      {cat:"insurance", rate:1, label:"1%", note:"保費，無上限"},
       {cat:"daily", rate:1, label:"1%", note:"一般消費，無上限"}
     ],
-    fullNote:"指定網購通路(momo/PCHOME/蝦皮)享 1% 無上限基礎回饋 + 3% 加碼(月上限 NT$9,000)。"
+    fullNote:"2026/8/1起權益續延至2027/7/31，卡面同步更新。指定通路加碼3%的月上限從NT$9,000大幅調降為NT$300，是本次最大變化，網購族要注意回饋會比之前少很多。"
   },
   {
     id:"laidian", bank:"聯邦銀行", name:"聯邦賴點卡", accent:"#8E6BC9",
     mode:"偶數日指定通路", settle:"結算日 9 / 回饋結算 10日–次月9日",
-    deadline:"優惠至 7/31", official:"https://card.ubot.com.tw/CardDetail/cardDetail201",
+    deadline:"優惠至 2026/12/31", official:"https://card.ubot.com.tw/CardDetail/cardDetail201",
     scenarios:[
-      {cat:"evenday", rate:5, label:"5%", note:"偶數日 + 指定通路：三商集團、王品集團、春水堂、壽司郎、八方雲集、麥當勞、肯德基、摩斯、屈臣氏、寶雅", cap:"回饋上限 NT$3,000/月"},
-      {cat:"linepay", rate:2, label:"2%", note:"LINE Pay 綁定消費，單筆需滿 NT$100", cap:"回饋上限 NT$20,000/月"},
-      {cat:"daily", rate:1, label:"1%", note:"一般消費"}
+      {cat:"evenday", rate:5, label:"5%", note:"偶數日 + 指定通路：三商集團、王品集團、春水堂、壽司郎、八方雲集、麥當勞、肯德基、摩斯、屈臣氏、寶雅等，需LINE Pay付款", cap:"回饋上限 NT$3,000/月（歸戶150點）"},
+      {cat:"linepay", rate:2, label:"2%", note:"LINE Pay 綁定消費，單筆需滿 NT$100（基本1%+LINE Pay加碼1%）", cap:"回饋上限 NT$20,000/月"},
+      {cat:"daily", rate:1, label:"1%", note:"一般消費，無上限"}
     ],
-    fullNote:"偶數日(2/4/6…日)在指定連鎖餐飲及藥妝通路消費才享 5% 加碼，單數日恢復一般費率。"
+    fullNote:"偶數日(2/4/6…日)在指定連鎖餐飲及藥妝通路以LINE Pay消費才享5%加碼，單數日恢復一般費率。萊爾富另有5%無上限回饋（不需偶數日）。"
   },
   {
     id:"kumamon", bank:"玉山銀行", name:"玉山熊本熊卡", accent:"#C1543C",
