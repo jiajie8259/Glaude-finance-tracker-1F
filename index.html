@@ -1774,9 +1774,9 @@ async function loadDashboard() {
   netEl.textContent = (net >= 0 ? '＋' : '－') + fmt(Math.abs(net));
   netEl.style.color = net >= 0 ? 'var(--income)' : 'var(--expense)';
 
-  // Family category bars
+  // Family category bars（家庭支出 + 歸類在家庭類別下的家傑代買）
   const catTotals = {};
-  fe.forEach(r => (r.categories || []).forEach(c => catTotals[c] = (catTotals[c]||0) + r.amount));
+  [...fe, ...jj].forEach(r => (r.categories || []).forEach(c => catTotals[c] = (catTotals[c]||0) + r.amount));
   const maxCat = Math.max(1, ...Object.values(catTotals));
   const bars = document.getElementById('dash-family-bars');
   if (!Object.keys(catTotals).length) {
@@ -1829,7 +1829,7 @@ async function loadMonthly() {
   const net = sumPI - totalExpense;
 
   const catTotals = {};
-  fe.forEach(r => (r.categories || []).forEach(c => catTotals[c] = (catTotals[c]||0) + r.amount));
+  [...fe, ...jj].forEach(r => (r.categories || []).forEach(c => catTotals[c] = (catTotals[c]||0) + r.amount));
 
   const expenseSub = (label, val) => `
     <div style="flex:1;min-width:0;text-align:center">
