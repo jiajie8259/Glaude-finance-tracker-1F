@@ -668,10 +668,6 @@ select option{background:var(--card)}
       <span class="dot" id="sync-dot"></span>
       <span id="sync-text">連線中…</span>
     </div>
-    <button class="btn btn-primary btn-sm" id="topbar-add-btn" onclick="topbarAdd()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-      新增
-    </button>
   </div>
 </header>
 
@@ -1406,34 +1402,12 @@ function populatePeriodSelectors() {
 // ══════════════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════════════
-function topbarAdd() {
-  // If already on entry page, just pulse the tab bar to draw attention
-  if (document.getElementById('page-entry').classList.contains('active')) {
-    const tabs = document.querySelector('#page-entry .tabs');
-    if (tabs) {
-      tabs.style.outline = '2px solid var(--accent)';
-      tabs.style.transition = 'outline .3s';
-      setTimeout(() => { tabs.style.outline = ''; }, 1000);
-    }
-    // Also add a new row to the currently active tab
-    const activeTab = document.querySelector('#page-entry .tab.active');
-    if (activeTab) {
-      const tabMap = { '🏠 家庭支出':'family-expense-tbody', '🛍️ 家傑代買':'jiajie-expense-tbody', '💸 藥局支出':'pharma-expense-tbody', '💊 藥局收入':'pharma-income-tbody' };
-      const tbodyId = tabMap[activeTab.textContent.trim()];
-      if (tbodyId) { addExcelRow(tbodyId); toast('已加入一列', 'success'); }
-    }
-    return;
-  }
-  navigate('entry');
-}
-
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   document.querySelector(`.nav-item[onclick*="${page}"]`)?.classList.add('active');
   document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
-  document.getElementById('topbar-add-btn').style.display = (page === 'monthly') ? 'none' : '';
 
   document.querySelector('.content').classList.toggle('cal-active', page === 'calendar');
   updateMobNav(page);
