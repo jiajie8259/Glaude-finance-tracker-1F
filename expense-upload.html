@@ -451,7 +451,7 @@ async function parsePdf(file, password){
         const d = Math.abs(a.y - y);
         if(d < bestDist){ bestDist = d; bestIdx = i; }
       });
-      return bestDist <= 40 ? bestIdx : -1; // 距離太遠（超過大約3行）就不歸類，避免抓到不相干的頁尾文字
+      return bestDist <= 10 ? bestIdx : -1; // 真正的換行摘要跟日期的垂直距離固定差5左右；超過這個範圍的（卡片分類標籤、頁尾說明文字等）直接排除，不歸類
     }
 
     // 把「消費明細」欄位跟「新臺幣金額」欄位的文字，各自依最近的日期錨點分組
