@@ -37,7 +37,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "YOUR_API_KEY";
 
 /* ⚠️ 白名單：只有這個 email 能登入成功（Google登入用任何帳號都能點進去，
    靠這個檢查擋掉非本人帳號）。請換成你自己實際會用來登入的 Gmail。 */
-const ALLOWED_EMAIL = "jiajie8259@gmail.com";
+const ALLOWED_EMAIL = "your-email@gmail.com";
 
 let db = null;
 let auth = null;
@@ -68,11 +68,13 @@ function initAuthGate(onReady){
       <div class="auth-lock">🔒</div>
       <div class="auth-title">需要登入</div>
       <div class="auth-sub">這是個人支出紀錄，請先登入才能繼續。</div>
-      <button id="auth-google-btn" class="auth-btn google">🔵 使用 Google 帳號登入</button>
+      <button id="auth-google-btn" type="button" class="auth-btn google">🔵 使用 Google 帳號登入</button>
       <div class="auth-divider"><span>或用 Email</span></div>
-      <input type="email" id="auth-email" placeholder="Email" autocomplete="username">
-      <input type="password" id="auth-password" placeholder="密碼" autocomplete="current-password">
-      <button id="auth-submit" class="auth-btn">登入</button>
+      <form id="auth-form">
+        <input type="email" id="auth-email" placeholder="Email" autocomplete="username">
+        <input type="password" id="auth-password" placeholder="密碼" autocomplete="current-password">
+        <button id="auth-submit" type="submit" class="auth-btn">登入</button>
+      </form>
       <div id="auth-error" class="auth-error"></div>
     </div>
   `;
@@ -83,6 +85,7 @@ function initAuthGate(onReady){
   const errorBox = document.getElementById('auth-error');
   const submitBtn = document.getElementById('auth-submit');
   const googleBtn = document.getElementById('auth-google-btn');
+  const authForm = document.getElementById('auth-form');
 
   async function doLogin(){
     errorBox.textContent = '';
@@ -97,8 +100,7 @@ function initAuthGate(onReady){
       submitBtn.textContent = '登入';
     }
   }
-  submitBtn.addEventListener('click', doLogin);
-  pwInput.addEventListener('keydown', e=>{ if(e.key === 'Enter') doLogin(); });
+  authForm.addEventListener('submit', e=>{ e.preventDefault(); doLogin(); });
 
   googleBtn.addEventListener('click', async ()=>{
     errorBox.textContent = '';
