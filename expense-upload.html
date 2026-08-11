@@ -397,7 +397,10 @@ async function parsePdf(file, password){
       const lineItems = byY[y].slice().sort((a,b)=> a.x - b.x);
       const text = lineItems.map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
       if(text) fallbackLines.push(text);
-      if(headerY === null && text.includes('消費日') && (text.includes('消費明細') || text.includes('新臺幣金額'))){
+      // 有些銀行的表頭文字，每個字中間會夾一個空白（例如「消 費 日」），
+      // 比對關鍵字前要先把空白拿掉，不然永遠比對不到。
+      const compact = text.replace(/\s+/g,'');
+      if(headerY === null && compact.includes('消費日') && (compact.includes('消費明細') || compact.includes('新臺幣金額'))){
         headerY = y;
       }
     });
@@ -407,7 +410,7 @@ async function parsePdf(file, password){
       const headerItems = byY[headerY];
       const found = [];
       COLUMN_KEYWORDS.forEach(kw=>{
-        const hit = headerItems.find(it=> it.str.includes(kw));
+        const hit = headerItems.find(it=> it.str.replace(/\s+/g,'').includes(kw));
         if(hit) found.push({ name: kw, x: hit.x });
       });
       if(found.length >= 4){ // 至少抓到日期/摘要/金額這幾個關鍵欄位才算可信
@@ -417,8 +420,11 @@ async function parsePdf(file, password){
 
     if(!columnBounds) continue; // 這一頁還沒有可用的欄位資訊，先跳過，等備援機制處理
 
+    // 下邊界稍微放寬（欄位內容常常比標題文字起始位置略靠左一點）；
+    // 上邊界只留一點點緩衝，避免把下一欄的內容也吃進來，
+    // 但同時也要夠寬，因為像「新臺幣金額」這種右對齊欄位，數字有時會比標題文字更靠右。
     const boundsWithRange = columnBounds.map((c,i)=>({
-      name: c.name, x0: c.x - 3, x1: (columnBounds[i+1] ? columnBounds[i+1].x - 3 : Infinity)
+      name: c.name, x0: c.x - 20, x1: (columnBounds[i+1] ? columnBounds[i+1].x - 5 : Infinity)
     }));
     function columnOf(x){
       const hit = boundsWithRange.find(b=> x >= b.x0 && x < b.x1);
@@ -488,7 +494,10 @@ async function parsePdf(file, password){
 function parseFromFallbackLines(lines){
   const dateStartRegex = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\s+\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}(?=\s|$)/;
   const rowRegex = /^(\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})\s+\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\s+(.+?)\s+(-?[\d,]+(?:\.\d{1,2})?)(?=\s|$)/;
-  const looksLikeHeader = line => line.includes('消費日') && (line.includes('消費明細') || line.includes('新臺幣金額'));
+  const looksLikeHeader = line => {
+    const compact = line.replace(/\s+/g,'');
+    return compact.includes('消費日') && (compact.includes('消費明細') || compact.includes('新臺幣金額'));
+  };
   const hasAmount = text => rowRegex.test(text);
 
   const blocks = [];
