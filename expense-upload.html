@@ -91,6 +91,41 @@
   .empty-preview{ text-align:center; padding:30px; color:rgba(237,230,214,0.4); font-size:13px; }
 
   footer{ max-width:980px; margin:60px auto 0; padding:24px 24px 0; border-top:1px solid var(--line); font-size:12px; color:rgba(237,230,214,0.4); }
+
+  /* 加密 PDF 密碼輸入 modal */
+  .pw-modal-overlay{
+    position:fixed; inset:0; z-index:900;
+    background:rgba(15,30,41,0.82);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .pw-modal-box{
+    width:100%; max-width:340px;
+    background: var(--panel);
+    border:1px solid var(--line-strong);
+    border-radius:18px;
+    padding:28px 26px;
+    text-align:center;
+  }
+  .pw-modal-icon{ font-size:26px; margin-bottom:8px; }
+  .pw-modal-title{ font-family:'Noto Serif TC', serif; font-weight:700; font-size:18px; margin-bottom:6px; }
+  .pw-modal-sub{ font-size:12.5px; color:rgba(237,230,214,0.6); margin-bottom:18px; line-height:1.5; }
+  .pw-modal-box input{
+    width:100%; box-sizing:border-box; background: var(--panel-2);
+    border:1px solid var(--line-strong); color:var(--paper);
+    padding:11px 14px; border-radius:10px; font-size:14px; margin-bottom:14px;
+    font-family:'Noto Sans TC', sans-serif;
+  }
+  .pw-modal-box input:focus{ outline:none; border-color:var(--gold); }
+  .pw-modal-btn-row{ display:flex; gap:10px; }
+  .pw-btn{
+    flex:1; padding:11px; border-radius:10px; border:1px solid var(--line-strong);
+    background: var(--gold); color:#1B1206; font-weight:700; font-size:13.5px; cursor:pointer;
+    font-family:'Noto Sans TC', sans-serif;
+  }
+  .pw-btn.ghost{ background:transparent; color:var(--paper); }
+  .pw-btn:hover{ background:var(--gold-soft); }
+  .pw-btn.ghost:hover{ border-color:var(--gold); color:var(--gold-soft); }
 </style>
 </head>
 <body>
@@ -130,7 +165,7 @@
       <input type="file" id="file-input" accept="application/pdf">
       <div id="file-chip-wrap"></div>
       <div id="parse-status" class="status" style="display:none;"></div>
-      <div class="why">解析結果會因為各家銀行 PDF 格式不同而有落差，抓錯、漏抓都可能發生——所以下面一定要逐行核對，覺得不對就直接改，或刪掉/手動新增那一列，不會直接寫入資料庫。</div>
+      <div class="why">解析結果會因為各家銀行 PDF 格式不同而有落差，抓錯、漏抓都可能發生——所以下面一定要逐行核對，覺得不對就直接改，或刪掉/手動新增那一列，不會直接寫入資料庫。如果 PDF 有加密（常見於銀行電子帳單，密碼通常是身分證字號或生日），上傳後系統會自動跳出密碼輸入框。</div>
     </div>
   </section>
 
@@ -199,7 +234,11 @@ async function handleFile(file){
   showParseStatus('解析中…請稍候', false);
 
   try{
-    const rows = await parsePdf(file);
+    const rows = await parsePdfWithPasswordPrompt(file);
+    if(rows === null) { // 使用者取消輸入密碼
+      showParseStatus('已取消，這份 PDF 沒有解析。', true);
+      return;
+    }
     if(rows.length === 0){
       showParseStatus('沒有自動抓到任何交易列，可能是這份 PDF 格式跟預期的不一樣。你可以用下面「手動新增一列」自己補登。', true);
     } else {
@@ -218,10 +257,65 @@ function showParseStatus(msg, isError){
   parseStatus.className = 'status' + (isError ? ' error' : '');
 }
 
+/* ---------- 加密 PDF：偵測並跳出密碼輸入框 ---------- */
+async function parsePdfWithPasswordPrompt(file){
+  let password = undefined;
+  let wrongAttempt = false;
+  while(true){
+    try{
+      return await parsePdf(file, password);
+    } catch(err){
+      if(err.name === 'PasswordException'){
+        password = await askPassword(wrongAttempt);
+        if(password === null) return null; // 使用者按取消
+        wrongAttempt = true; // 下一輪若還錯，訊息會改成「密碼錯誤」
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
+function askPassword(isRetry){
+  return new Promise(resolve=>{
+    const modal = document.createElement('div');
+    modal.className = 'pw-modal-overlay';
+    modal.innerHTML = `
+      <div class="pw-modal-box">
+        <div class="pw-modal-icon">🔐</div>
+        <div class="pw-modal-title">這份 PDF 有加密</div>
+        <div class="pw-modal-sub">${isRetry ? '密碼錯誤，請再輸入一次。' : '銀行電子帳單通常用身分證字號或生日當開啟密碼，請輸入。'}</div>
+        <form id="pw-modal-form">
+          <input type="password" id="pw-modal-input" placeholder="PDF 開啟密碼" autocomplete="off">
+          <div class="pw-modal-btn-row">
+            <button type="button" id="pw-modal-cancel" class="pw-btn ghost">取消</button>
+            <button type="submit" id="pw-modal-ok" class="pw-btn">解鎖</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    const input = modal.querySelector('#pw-modal-input');
+    input.focus();
+    modal.querySelector('#pw-modal-form').addEventListener('submit', e=>{
+      e.preventDefault();
+      const val = input.value;
+      modal.remove();
+      resolve(val);
+    });
+    modal.querySelector('#pw-modal-cancel').addEventListener('click', ()=>{
+      modal.remove();
+      resolve(null);
+    });
+  });
+}
+
 /* ---------- PDF 解析（啟發式：日期 + 摘要 + 金額）---------- */
-async function parsePdf(file){
+async function parsePdf(file, password){
   const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const params = { data: buf };
+  if(password) params.password = password;
+  const pdf = await pdfjsLib.getDocument(params).promise;
   const lines = [];
 
   for(let p=1; p<=pdf.numPages; p++){
