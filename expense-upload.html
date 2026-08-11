@@ -451,7 +451,14 @@ async function parsePdf(file, password){
         const d = Math.abs(a.y - y);
         if(d < bestDist){ bestDist = d; bestIdx = i; }
       });
-      return bestDist <= 10 ? bestIdx : -1; // 真正的換行摘要跟日期的垂直距離固定差5左右；超過這個範圍的（卡片分類標籤、頁尾說明文字等）直接排除，不歸類
+      return bestDist <= 8 ? bestIdx : -1; // 真正的換行摘要跟日期的垂直距離固定差5左右；超過這個範圍的直接排除，不歸類
+    }
+
+    // 內容特徵過濾：這些關鍵字只會出現在卡片分類標籤、頁尾說明段落，不會是真正的消費摘要，
+    // 不管座標距離算出來多近，看到這些內容一律排除，當作距離判斷的第二層保險。
+    const NOISE_PATTERNS = ['卡號末四碼','本期消費回饋','切換刷方案','一般消費累計','保費累計','回饋明細','循環信用利率','點數到期'];
+    function looksLikeNoise(text){
+      return NOISE_PATTERNS.some(p=> text.includes(p)) || /^[)）】》」』.,、。]+$/.test(text.trim());
     }
 
     // 把「消費明細」欄位跟「新臺幣金額」欄位的文字，各自依最近的日期錨點分組
@@ -460,6 +467,7 @@ async function parsePdf(file, password){
     bodyItems.forEach(it=>{
       const col = columnOf(it.x);
       if(col !== '消費明細' && col !== '新臺幣金額') return;
+      if(looksLikeNoise(it.str)) return;
       const idx = nearestAnchorIndex(it.y);
       if(idx === -1) return;
       (col === '消費明細' ? descByAnchor : amtByAnchor)[idx].push(it);
