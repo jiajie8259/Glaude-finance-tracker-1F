@@ -166,6 +166,14 @@
       <div id="file-chip-wrap"></div>
       <div id="parse-status" class="status" style="display:none;"></div>
       <div class="why">解析結果會因為各家銀行 PDF 格式不同而有落差，抓錯、漏抓都可能發生——所以下面一定要逐行核對，覺得不對就直接改，或刪掉/手動新增那一列，不會直接寫入資料庫。如果 PDF 有加密（常見於銀行電子帳單，密碼通常是身分證字號或生日），上傳後系統會自動跳出密碼輸入框。</div>
+      <button class="btn" id="debug-toggle-btn" style="display:none; margin-top:14px; font-size:12.5px; padding:8px 14px;">🔍 顯示原始解析文字（除錯用）</button>
+      <div id="debug-panel" style="display:none; margin-top:12px;">
+        <div style="font-size:12px; color:rgba(237,230,214,0.55); margin-bottom:8px;">
+          這是系統實際從 PDF 抓到的文字座標，跟任何解析規則無關。如果哪一筆抓錯，把這段複製貼給 Claude，會比截圖畫面更準確。
+        </div>
+        <textarea id="debug-textarea" readonly style="width:100%; height:220px; background:var(--panel-2); border:1px solid var(--line-strong); color:var(--paper); font-family:'Roboto Mono', monospace; font-size:11.5px; padding:10px; border-radius:10px; box-sizing:border-box;"></textarea>
+        <button class="btn" id="debug-copy-btn" style="margin-top:8px; font-size:12.5px; padding:8px 14px;">📋 複製除錯文字</button>
+      </div>
     </div>
   </section>
 
@@ -245,10 +253,54 @@ async function handleFile(file){
       showParseStatus(`自動抓到 ${rows.length} 筆交易，請逐行核對，有錯就直接改。`, false);
     }
     renderPreview(rows);
+    populateDebugPanel();
   } catch(err){
     console.error(err);
     showParseStatus('解析失敗：' + (err.message || err), true);
+    populateDebugPanel();
   }
+}
+
+function populateDebugPanel(){
+  const debugBtn = document.getElementById('debug-toggle-btn');
+  const info = window.__lastDebug;
+  if(!info || !info.items || info.items.length === 0){
+    debugBtn.style.display = 'none';
+    return;
+  }
+  debugBtn.style.display = 'inline-block';
+
+  const boundsText = info.columnBounds
+    ? '偵測到的欄位 X 座標：\n' + info.columnBounds.map(c=>`  ${c.name}：x=${Math.round(c.x)}`).join('\n')
+    : '沒有偵測到表頭欄位，改用整行文字備援解析。';
+
+  const itemsText = info.items
+    .map(it=> `p${it.page}  y=${it.y}\tx=${it.x}\t"${it.str}"`)
+    .join('\n');
+
+  document.getElementById('debug-textarea').value =
+    boundsText + '\n\n---- 每個文字片段的原始座標（依 PDF 讀取順序）----\n' + itemsText;
+}
+
+document.getElementById('debug-toggle-btn').addEventListener('click', ()=>{
+  const panel = document.getElementById('debug-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+});
+document.getElementById('debug-copy-btn').addEventListener('click', async ()=>{
+  const ta = document.getElementById('debug-textarea');
+  ta.select();
+  try{
+    await navigator.clipboard.writeText(ta.value);
+    showToastSimple('已複製除錯文字');
+  } catch(err){
+    // 剪貼簿權限被拒絕時，使用者可以直接在文字框裡手動選取複製
+  }
+});
+function showToastSimple(msg){
+  const btn = document.getElementById('debug-copy-btn');
+  const original = btn.textContent;
+  btn.textContent = '✓ ' + msg;
+  setTimeout(()=>{ btn.textContent = original; }, 1800);
 }
 
 function showParseStatus(msg, isError){
@@ -312,7 +364,7 @@ function askPassword(isRetry){
 
 /* ---------- PDF 解析（座標式：用欄位標題的 X 座標分欄，用日期欄的 Y 座標分筆）---------- */
 const COLUMN_KEYWORDS = ['消費日','入帳起息日','消費明細','新臺幣金額','外幣折算日','消費地','幣別','外幣金額'];
-const DATE_PATTERN = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}$/;
+const DATE_PATTERN = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}/;
 
 async function parsePdf(file, password){
   const buf = await file.arrayBuffer();
@@ -323,6 +375,7 @@ async function parsePdf(file, password){
   let columnBounds = null; // [{name, x}], 一旦在某一頁找到表頭就沿用到後面所有頁
   const rows = [];
   const fallbackLines = []; // 找不到表頭時，退回舊的整行文字清單當備援
+  const debugItems = []; // 除錯用：每個文字片段的原始座標，跟解析邏輯完全無關
 
   for(let p=1; p<=pdf.numPages; p++){
     const page = await pdf.getPage(p);
@@ -332,6 +385,8 @@ async function parsePdf(file, password){
       x: it.transform[4],
       y: Math.round(it.transform[5])
     })).filter(it=> it.str.trim());
+
+    items.forEach(it=> debugItems.push({ page: p, x: Math.round(it.x), y: it.y, str: it.str }));
 
     // 依 y 座標重組整行文字，用來找表頭、以及當作備援解析來源
     const byY = {};
@@ -376,8 +431,9 @@ async function parsePdf(file, password){
     // 找出「消費日」欄位裡符合日期格式的文字，當作每一筆交易的錨點
     const anchors = [];
     bodyItems.forEach(it=>{
-      if(columnOf(it.x) === '消費日' && DATE_PATTERN.test(it.str.trim())){
-        anchors.push({ y: it.y, dateText: it.str.trim() });
+      if(columnOf(it.x) === '消費日'){
+        const m = it.str.trim().match(DATE_PATTERN);
+        if(m) anchors.push({ y: it.y, dateText: m[0] });
       }
     });
     anchors.sort((a,b)=> b.y - a.y);
@@ -416,6 +472,12 @@ async function parsePdf(file, password){
       }
     });
   }
+
+  window.__lastDebug = {
+    columnBounds: columnBounds,
+    items: debugItems,
+    fallbackLines: fallbackLines
+  };
 
   if(rows.length > 0) return rows;
 
