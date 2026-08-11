@@ -24,12 +24,13 @@
    ===================================================================== */
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyB-JV7IFk4wRtNG3C5ugrqSO-h98xVZ37M",
+  authDomain: "glaude-finance-tracker-1f.firebaseapp.com",
+  projectId: "glaude-finance-tracker-1f",
+  storageBucket: "glaude-finance-tracker-1f.firebasestorage.app",
+  messagingSenderId: "551294320640",
+  appId: "1:551294320640:web:caec827a871f18a25898e5",
+  measurementId: "G-FCW04KDJQ0"
 };
 
 const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "YOUR_API_KEY";
