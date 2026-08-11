@@ -310,58 +310,135 @@ function askPassword(isRetry){
   });
 }
 
-/* ---------- PDF 解析（啟發式：日期起始行合併換行摘要 + 抓第一個獨立金額欄位）---------- */
+/* ---------- PDF 解析（座標式：用欄位標題的 X 座標分欄，用日期欄的 Y 座標分筆）---------- */
+const COLUMN_KEYWORDS = ['消費日','入帳起息日','消費明細','新臺幣金額','外幣折算日','消費地','幣別','外幣金額'];
+const DATE_PATTERN = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}$/;
+
 async function parsePdf(file, password){
   const buf = await file.arrayBuffer();
   const params = { data: buf };
   if(password) params.password = password;
   const pdf = await pdfjsLib.getDocument(params).promise;
-  const lines = [];
+
+  let columnBounds = null; // [{name, x}], 一旦在某一頁找到表頭就沿用到後面所有頁
+  const rows = [];
+  const fallbackLines = []; // 找不到表頭時，退回舊的整行文字清單當備援
 
   for(let p=1; p<=pdf.numPages; p++){
     const page = await pdf.getPage(p);
     const content = await page.getTextContent();
+    const items = content.items.map(it=>({
+      str: it.str,
+      x: it.transform[4],
+      y: Math.round(it.transform[5])
+    })).filter(it=> it.str.trim());
 
-    // 依 y 座標把文字片段重組成一行一行
+    // 依 y 座標重組整行文字，用來找表頭、以及當作備援解析來源
     const byY = {};
-    content.items.forEach(item=>{
-      const y = Math.round(item.transform[5]);
-      if(!byY[y]) byY[y] = [];
-      byY[y].push(item);
-    });
+    items.forEach(it=>{ (byY[it.y] = byY[it.y] || []).push(it); });
     const ys = Object.keys(byY).map(Number).sort((a,b)=> b-a);
+    let headerY = null;
     ys.forEach(y=>{
-      const lineItems = byY[y].sort((a,b)=> a.transform[4] - b.transform[4]);
+      const lineItems = byY[y].slice().sort((a,b)=> a.x - b.x);
       const text = lineItems.map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
-      if(text) lines.push(text);
+      if(text) fallbackLines.push(text);
+      if(headerY === null && text.includes('消費日') && (text.includes('消費明細') || text.includes('新臺幣金額'))){
+        headerY = y;
+      }
+    });
+
+    // 在這一頁找到表頭的話，重新定位每一欄的 X 座標邊界
+    if(headerY !== null){
+      const headerItems = byY[headerY];
+      const found = [];
+      COLUMN_KEYWORDS.forEach(kw=>{
+        const hit = headerItems.find(it=> it.str.includes(kw));
+        if(hit) found.push({ name: kw, x: hit.x });
+      });
+      if(found.length >= 4){ // 至少抓到日期/摘要/金額這幾個關鍵欄位才算可信
+        columnBounds = found.sort((a,b)=> a.x - b.x);
+      }
+    }
+
+    if(!columnBounds) continue; // 這一頁還沒有可用的欄位資訊，先跳過，等備援機制處理
+
+    const boundsWithRange = columnBounds.map((c,i)=>({
+      name: c.name, x0: c.x - 3, x1: (columnBounds[i+1] ? columnBounds[i+1].x - 3 : Infinity)
+    }));
+    function columnOf(x){
+      const hit = boundsWithRange.find(b=> x >= b.x0 && x < b.x1);
+      return hit ? hit.name : null;
+    }
+
+    // 排除表頭那一行本身，避免被當成資料
+    const bodyItems = headerY === null ? items : items.filter(it=> it.y !== headerY);
+
+    // 找出「消費日」欄位裡符合日期格式的文字，當作每一筆交易的錨點
+    const anchors = [];
+    bodyItems.forEach(it=>{
+      if(columnOf(it.x) === '消費日' && DATE_PATTERN.test(it.str.trim())){
+        anchors.push({ y: it.y, dateText: it.str.trim() });
+      }
+    });
+    anchors.sort((a,b)=> b.y - a.y);
+    if(anchors.length === 0) continue;
+
+    function nearestAnchorIndex(y){
+      let bestIdx = 0, bestDist = Infinity;
+      anchors.forEach((a,i)=>{
+        const d = Math.abs(a.y - y);
+        if(d < bestDist){ bestDist = d; bestIdx = i; }
+      });
+      return bestDist <= 40 ? bestIdx : -1; // 距離太遠（超過大約3行）就不歸類，避免抓到不相干的頁尾文字
+    }
+
+    // 把「消費明細」欄位跟「新臺幣金額」欄位的文字，各自依最近的日期錨點分組
+    const descByAnchor = anchors.map(()=> []);
+    const amtByAnchor = anchors.map(()=> []);
+    bodyItems.forEach(it=>{
+      const col = columnOf(it.x);
+      if(col !== '消費明細' && col !== '新臺幣金額') return;
+      const idx = nearestAnchorIndex(it.y);
+      if(idx === -1) return;
+      (col === '消費明細' ? descByAnchor : amtByAnchor)[idx].push(it);
+    });
+
+    anchors.forEach((a, i)=>{
+      const descText = descByAnchor[i]
+        .sort((x,y)=> y.y - x.y || x.x - y.x)
+        .map(it=>it.str).join(' ').replace(/\s+/g,' ').trim();
+      const amtText = amtByAnchor[i]
+        .sort((x,y)=> y.y - x.y || x.x - y.x)
+        .map(it=>it.str).join('').replace(/,/g,'').trim();
+      const amount = parseFloat(amtText);
+      if(descText && !isNaN(amount)){
+        rows.push({ date: normalizeDate(a.dateText), description: descText, amount });
+      }
     });
   }
 
-  // 一筆交易的開頭一定是「消費日 + 入帳起息日」兩個日期連在一起，
-  // 只有單一組數字/數字/數字（像頁尾點數到期提醒裡的日期）不算，可以避免誤判成新的一筆。
+  if(rows.length > 0) return rows;
+
+  // 備援：完全找不到表頭欄位資訊時（例如格式差異很大），退回舊的整行文字規則解析
+  return parseFromFallbackLines(fallbackLines);
+}
+
+function parseFromFallbackLines(lines){
   const dateStartRegex = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\s+\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}(?=\s|$)/;
-  // 抓「日期 日期 摘要 第一個獨立金額」；用「第一個」數字是因為外幣消費列後面還有
-  // 外幣折算日／幣別／外幣金額，真正要記的新臺幣金額一定排在摘要後面遇到的第一個獨立數字。
   const rowRegex = /^(\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})\s+\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\s+(.+?)\s+(-?[\d,]+(?:\.\d{1,2})?)(?=\s|$)/;
   const looksLikeHeader = line => line.includes('消費日') && (line.includes('消費明細') || line.includes('新臺幣金額'));
   const hasAmount = text => rowRegex.test(text);
 
-  // 換行的摘要文字，在座標上有時候會比自己這筆的日期列還高，導致掃描順序上先讀到，
-  // 這種情況下先暫存起來，等真正遇到下一筆交易的日期列時，再接在它後面（而不是誤接回上一筆）。
   const blocks = [];
   let pendingPrefix = '';
-
   lines.forEach(line=>{
-    if(looksLikeHeader(line)) return; // 表頭文字，直接跳過
-
+    if(looksLikeHeader(line)) return;
     if(dateStartRegex.test(line)){
       blocks.push(pendingPrefix ? (line + ' ' + pendingPrefix) : line);
       pendingPrefix = '';
     } else if(blocks.length > 0 && !hasAmount(blocks[blocks.length - 1])){
-      // 上一筆還沒湊齊金額，代表這行還是屬於同一筆的延續內容
       blocks[blocks.length - 1] += ' ' + line;
     } else {
-      // 上一筆已經完整了（或還沒有任何一筆），這行文字視為「下一筆」提早出現的摘要，先暫存
       pendingPrefix = pendingPrefix ? (pendingPrefix + ' ' + line) : line;
     }
   });
