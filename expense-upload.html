@@ -156,6 +156,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
@@ -389,6 +390,8 @@ saveBtn.addEventListener('click', async ()=>{
     saveBtn.disabled = false;
   }
 });
+
+initAuthGate(function(user){ /* 這頁在按下「確認並存入」前不會寫入資料庫，這裡只需要擋住整個畫面 */ });
 </script>
 
 </body>
