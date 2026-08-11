@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>各信用卡支出紀錄｜儀表板</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1E29; --panel:#16283A; --panel-2:#1D3348; --paper:#EDE6D6;
+    --gold:#C9973F; --gold-soft:#E7C888; --teal:#4EA491; --red:#C1543C;
+    --line: rgba(237,230,214,0.14); --line-strong: rgba(237,230,214,0.28);
+    --radius: 18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #1B3145 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #1A2E40 0%, transparent 55%),
+      var(--ink);
+    color:var(--paper);
+    font-family:'Noto Sans TC', sans-serif;
+    line-height:1.6;
+    padding: 0 0 80px;
+  }
+  .mono{ font-family:'Roboto Mono', monospace; }
+
+  header{ max-width:1400px; margin:0 auto; padding:30px 24px 12px; }
+  .header-top{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+  .crumb{ font-family:'Roboto Mono', monospace; font-size:12px; color:rgba(237,230,214,0.5); }
+  .crumb a{ color:var(--gold-soft); text-decoration:none; }
+  h1{ font-family:'Noto Serif TC', serif; font-weight:900; font-size: clamp(26px, 4vw, 36px); margin:8px 0 4px; }
+  .sub{ color:rgba(237,230,214,0.65); font-size:14px; }
+  .btn-link{
+    font-family:'Noto Sans TC', sans-serif; font-size:13.5px; font-weight:700;
+    color:#1B1206; background:var(--gold); border:1px solid var(--gold);
+    padding:10px 18px; border-radius:999px; text-decoration:none; white-space:nowrap;
+  }
+  .btn-link:hover{ background:var(--gold-soft); }
+  .btn-ghost{
+    font-family:'Noto Sans TC', sans-serif; font-size:13px; font-weight:500;
+    color:var(--paper); background:transparent; border:1px solid var(--line-strong);
+    padding:9px 16px; border-radius:999px; text-decoration:none; white-space:nowrap;
+  }
+  .btn-ghost:hover{ border-color:var(--gold); color:var(--gold-soft); }
+
+  main{ max-width:1400px; margin:0 auto; padding:0 24px; }
+  section{ margin-top:36px; }
+  .section-title{ font-family:'Noto Serif TC', serif; font-weight:700; font-size:20px; margin-bottom:14px; }
+
+  /* setup banner */
+  .banner{
+    border:1px solid var(--red); background: rgba(193,84,60,0.12);
+    border-radius:14px; padding:16px 20px; font-size:13.5px; color:#EBD2CB; margin-top:24px;
+  }
+  .banner code{ background:rgba(0,0,0,0.25); padding:2px 6px; border-radius:4px; font-family:'Roboto Mono', monospace; }
+
+  /* summary strip */
+  .summary-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:14px; }
+  .summary-box{
+    border:1px solid var(--line-strong); border-radius:14px; padding:16px 18px;
+    background: rgba(237,230,214,0.03);
+  }
+  .summary-label{ font-family:'Roboto Mono', monospace; font-size:11px; letter-spacing:.08em; color:rgba(237,230,214,0.5); text-transform:uppercase; }
+  .summary-value{ font-family:'Roboto Mono', monospace; font-weight:700; font-size:24px; color:var(--gold-soft); margin-top:6px; }
+
+  /* card grid */
+  .wallet{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:16px; }
+  .exp-card{
+    position:relative; border-radius:var(--radius); padding:18px;
+    background: linear-gradient(155deg, var(--panel-2) 0%, var(--panel) 100%);
+    border:1px solid var(--line); overflow:hidden;
+  }
+  .exp-card::before{ content:""; position:absolute; top:0; left:0; right:0; height:5px; background:var(--accent, var(--gold)); }
+  .exp-card h3{ font-family:'Noto Serif TC', serif; font-size:17px; margin:0 0 12px; white-space:nowrap; }
+  .exp-card .stat-row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+  .exp-card .stat-box{ border:1px solid var(--line-strong); border-radius:10px; padding:8px 10px; background:rgba(201,151,63,0.08); }
+  .exp-card .stat-box.count{ background:rgba(78,164,145,0.08); }
+  .exp-card .stat-label{ display:block; font-family:'Roboto Mono', monospace; font-size:9.5px; color:rgba(237,230,214,0.5); text-transform:uppercase; margin-bottom:3px; }
+  .exp-card .stat-value{ display:block; font-family:'Roboto Mono', monospace; font-weight:700; font-size:15px; color:var(--gold-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .exp-card .stat-box.count .stat-value{ color:var(--teal); }
+  .exp-card .last-upload{ font-size:11.5px; color:rgba(237,230,214,0.5); font-family:'Roboto Mono', monospace; }
+  .exp-card.empty{ opacity:.55; }
+  .exp-card.empty .stat-value{ color:rgba(237,230,214,0.35); }
+
+  /* recent transactions table */
+  .tx-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  .tx-table th{
+    text-align:left; font-family:'Roboto Mono', monospace; font-size:11px; letter-spacing:.06em;
+    color:rgba(237,230,214,0.5); text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line-strong);
+  }
+  .tx-table td{ padding:9px 10px; border-bottom:1px solid var(--line); color:rgba(237,230,214,0.85); }
+  .tx-table tr:hover td{ background:rgba(237,230,214,0.02); }
+  .tag{ font-family:'Roboto Mono', monospace; font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid var(--line-strong); white-space:nowrap; }
+  .amount{ font-family:'Roboto Mono', monospace; font-weight:700; color:var(--gold-soft); text-align:right; }
+  .empty-state{ text-align:center; padding:50px 20px; color:rgba(237,230,214,0.45); font-size:13.5px; border:1px dashed var(--line-strong); border-radius:14px; }
+  .empty-state a{ color:var(--gold-soft); }
+
+  footer{ max-width:1400px; margin:60px auto 0; padding:24px 24px 0; border-top:1px solid var(--line); font-size:12px; color:rgba(237,230,214,0.4); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="crumb"><a href="credit-card-dashboard.html">← 回到信用卡優惠儀表板</a></div>
+  <div class="header-top">
+    <div>
+      <h1>各信用卡支出紀錄</h1>
+      <p class="sub">上傳每期對帳單，追蹤每張卡實際刷了多少、刷了什麼。</p>
+    </div>
+    <a class="btn-link" href="expense-upload.html">＋ 上傳新明細</a>
+  </div>
+</header>
+
+<main>
+
+  <div id="setup-banner"></div>
+
+  <section>
+    <div class="section-title">總覽</div>
+    <div class="summary-row">
+      <div class="summary-box">
+        <div class="summary-label">累計總支出</div>
+        <div class="summary-value" id="sum-total">—</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-label">交易筆數</div>
+        <div class="summary-value" id="sum-count">—</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-label">已有資料的卡片</div>
+        <div class="summary-value" id="sum-cards">—</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">各卡片使用狀況</div>
+    <div class="wallet" id="wallet"></div>
+  </section>
+
+  <section>
+    <div class="section-title">最近交易（最新 20 筆）</div>
+    <div id="recent-wrap"></div>
+  </section>
+
+</main>
+
+<footer>分類統計功能尚未開發，等資料量足夠後再加上。目前僅提供上傳、預覽、儲存與各卡總覽。</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+async function init(){
+  const wallet = document.getElementById('wallet');
+  const bannerWrap = document.getElementById('setup-banner');
+
+  if (FIREBASE_NOT_CONFIGURED) {
+    bannerWrap.innerHTML = `
+      <div class="banner">
+        <b>⚠️ 還沒設定 Firebase：</b>目前 <code>firebase-config.js</code> 裡還是預設的
+        <code>YOUR_API_KEY</code>，資料無法儲存或讀取。請打開那個檔案，照裡面的說明填入你自己
+        Firebase 專案的設定值，並開好 Firestore 資料庫和存取規則後，重新整理這個頁面。
+      </div>`;
+    renderWallet({}); // 全部顯示空狀態
+    document.getElementById('sum-total').textContent = 'NT$0';
+    document.getElementById('sum-count').textContent = '0';
+    document.getElementById('sum-cards').textContent = '0 / 9';
+    document.getElementById('recent-wrap').innerHTML = `<div class="empty-state">尚未連接資料庫，無法顯示交易紀錄。</div>`;
+    return;
+  }
+
+  try{
+    const snap = await db.collection('transactions').orderBy('date','desc').get();
+    const txs = [];
+    snap.forEach(doc => txs.push({ id: doc.id, ...doc.data() }));
+
+    // 依卡片彙整
+    const byCard = {};
+    CARD_LIST.forEach(c => byCard[c.id] = { total:0, count:0, lastDate:null, lastUpload:null });
+    let grandTotal = 0;
+    txs.forEach(tx => {
+      const cid = tx.cardId;
+      if(!byCard[cid]) byCard[cid] = { total:0, count:0, lastDate:null, lastUpload:null };
+      byCard[cid].total += Number(tx.amount) || 0;
+      byCard[cid].count += 1;
+      if(!byCard[cid].lastDate || tx.date > byCard[cid].lastDate) byCard[cid].lastDate = tx.date;
+      grandTotal += Number(tx.amount) || 0;
+    });
+
+    const cardsWithData = Object.values(byCard).filter(c => c.count > 0).length;
+    document.getElementById('sum-total').textContent = 'NT$' + grandTotal.toLocaleString('zh-TW');
+    document.getElementById('sum-count').textContent = txs.length.toLocaleString('zh-TW');
+    document.getElementById('sum-cards').textContent = cardsWithData + ' / 9';
+
+    renderWallet(byCard);
+    renderRecent(txs.slice(0,20));
+
+  } catch(err){
+    console.error(err);
+    bannerWrap.innerHTML = `
+      <div class="banner">
+        <b>⚠️ 讀取資料庫時發生錯誤：</b>${err.message || err}<br>
+        常見原因：Firestore 規則設成拒絕讀取、專案設定值填錯，或還沒建立 <code>transactions</code> 集合（第一次上傳後就會自動建立）。
+      </div>`;
+    renderWallet({});
+  }
+}
+
+function renderWallet(byCard){
+  const wallet = document.getElementById('wallet');
+  wallet.innerHTML = '';
+  CARD_LIST.forEach(card=>{
+    const data = byCard[card.id] || { total:0, count:0, lastDate:null };
+    const hasData = data.count > 0;
+    const el = document.createElement('div');
+    el.className = 'exp-card' + (hasData ? '' : ' empty');
+    el.style.setProperty('--accent', card.accent);
+    el.innerHTML = `
+      <h3>${card.name}</h3>
+      <div class="stat-row">
+        <div class="stat-box">
+          <span class="stat-label">累計支出</span>
+          <span class="stat-value">${hasData ? 'NT$'+data.total.toLocaleString('zh-TW') : '尚無資料'}</span>
+        </div>
+        <div class="stat-box count">
+          <span class="stat-label">交易筆數</span>
+          <span class="stat-value">${hasData ? data.count+' 筆' : '—'}</span>
+        </div>
+      </div>
+      <div class="last-upload">${hasData ? '最新交易日期：'+data.lastDate : '尚未上傳過對帳單'}</div>
+    `;
+    wallet.appendChild(el);
+  });
+}
+
+function renderRecent(txs){
+  const wrap = document.getElementById('recent-wrap');
+  if(txs.length === 0){
+    wrap.innerHTML = `<div class="empty-state">還沒有任何交易紀錄，<a href="expense-upload.html">上傳第一份對帳單</a>吧。</div>`;
+    return;
+  }
+  const rows = txs.map(tx => `
+    <tr>
+      <td class="mono">${tx.date || '—'}</td>
+      <td><span class="tag">${cardNameById(tx.cardId)}</span></td>
+      <td>${tx.description || ''}</td>
+      <td class="amount">NT$${(Number(tx.amount)||0).toLocaleString('zh-TW')}</td>
+    </tr>
+  `).join('');
+  wrap.innerHTML = `
+    <table class="tx-table">
+      <thead><tr><th>日期</th><th>卡片</th><th>摘要</th><th style="text-align:right;">金額</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+init();
+</script>
+
+</body>
+</html>

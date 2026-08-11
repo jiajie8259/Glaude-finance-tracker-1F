@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>上傳信用卡明細</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1E29; --panel:#16283A; --panel-2:#1D3348; --paper:#EDE6D6;
+    --gold:#C9973F; --gold-soft:#E7C888; --teal:#4EA491; --red:#C1543C;
+    --line: rgba(237,230,214,0.14); --line-strong: rgba(237,230,214,0.28);
+    --radius: 18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #1B3145 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #1A2E40 0%, transparent 55%),
+      var(--ink);
+    color:var(--paper);
+    font-family:'Noto Sans TC', sans-serif;
+    line-height:1.6;
+    padding: 0 0 100px;
+  }
+  .mono{ font-family:'Roboto Mono', monospace; }
+
+  header{ max-width:980px; margin:0 auto; padding:30px 24px 12px; }
+  .crumb{ font-family:'Roboto Mono', monospace; font-size:12px; color:rgba(237,230,214,0.5); }
+  .crumb a{ color:var(--gold-soft); text-decoration:none; }
+  h1{ font-family:'Noto Serif TC', serif; font-weight:900; font-size: clamp(24px, 4vw, 32px); margin:8px 0 4px; }
+  .sub{ color:rgba(237,230,214,0.65); font-size:14px; }
+
+  main{ max-width:980px; margin:0 auto; padding:0 24px; }
+  section{ margin-top:30px; }
+  .section-title{ font-family:'Noto Serif TC', serif; font-weight:700; font-size:19px; margin-bottom:14px; }
+
+  .panel{ border:1px solid var(--line-strong); border-radius:var(--radius); padding:22px; background:rgba(237,230,214,0.03); }
+
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  label{ display:block; font-size:12.5px; color:rgba(237,230,214,0.6); margin-bottom:6px; font-family:'Roboto Mono', monospace; }
+  select, input[type=text], input[type=month]{
+    width:100%; background:var(--panel); border:1px solid var(--line-strong); color:var(--paper);
+    padding:10px 12px; border-radius:10px; font-family:'Noto Sans TC', sans-serif; font-size:14px;
+  }
+  select:focus, input:focus{ outline:none; border-color:var(--gold); }
+
+  .drop-zone{
+    border:2px dashed var(--line-strong); border-radius:14px; padding:36px 20px; text-align:center;
+    cursor:pointer; transition:all .15s ease; margin-bottom:6px;
+  }
+  .drop-zone:hover, .drop-zone.drag{ border-color:var(--gold); background:rgba(201,151,63,0.06); }
+  .drop-zone .icon{ font-size:28px; margin-bottom:8px; }
+  .drop-zone .hint{ font-size:12.5px; color:rgba(237,230,214,0.5); margin-top:6px; }
+  #file-input{ display:none; }
+  .file-chip{
+    display:inline-flex; align-items:center; gap:8px; margin-top:10px; font-size:13px;
+    background:var(--panel); border:1px solid var(--line-strong); padding:6px 12px; border-radius:999px;
+  }
+
+  .btn{
+    font-family:'Noto Sans TC', sans-serif; font-size:14px; font-weight:700; padding:12px 22px;
+    border-radius:10px; border:1px solid var(--line-strong); background:rgba(237,230,214,0.03);
+    color:var(--paper); cursor:pointer;
+  }
+  .btn.primary{ background:var(--gold); border-color:var(--gold); color:#1B1206; }
+  .btn.primary:hover{ background:var(--gold-soft); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
+
+  .status{ font-size:13px; color:var(--teal); margin-top:12px; font-family:'Roboto Mono', monospace; }
+  .status.error{ color:#E79684; }
+
+  .why{ font-size:12.5px; color:rgba(237,230,214,0.5); border-left:2px solid var(--teal); padding-left:12px; margin:16px 0 0; }
+
+  /* preview table */
+  table.preview{ width:100%; border-collapse:collapse; margin-top:10px; }
+  table.preview th{
+    text-align:left; font-family:'Roboto Mono', monospace; font-size:10.5px; letter-spacing:.05em;
+    color:rgba(237,230,214,0.5); text-transform:uppercase; padding:8px 6px; border-bottom:1px solid var(--line-strong);
+  }
+  table.preview td{ padding:6px; border-bottom:1px solid var(--line); vertical-align:middle; }
+  table.preview input{ padding:7px 8px; font-size:13px; }
+  table.preview input.date-input{ width:110px; }
+  table.preview input.amount-input{ width:100px; text-align:right; font-family:'Roboto Mono', monospace; }
+  .row-del{ background:none; border:none; color:#E79684; cursor:pointer; font-size:16px; padding:4px 8px; }
+  .add-row-btn{ margin-top:10px; font-size:12.5px; color:var(--teal); background:none; border:1px dashed var(--line-strong); border-radius:8px; padding:8px 14px; cursor:pointer; }
+
+  .empty-preview{ text-align:center; padding:30px; color:rgba(237,230,214,0.4); font-size:13px; }
+
+  footer{ max-width:980px; margin:60px auto 0; padding:24px 24px 0; border-top:1px solid var(--line); font-size:12px; color:rgba(237,230,214,0.4); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="crumb"><a href="expense-dashboard.html">← 回到支出儀表板</a></div>
+  <h1>上傳信用卡明細</h1>
+  <p class="sub">上傳 PDF 對帳單，系統會嘗試自動抓出每一筆交易，你確認無誤後再存進資料庫。</p>
+</header>
+
+<main>
+
+  <section>
+    <div class="section-title">1. 選擇卡片與帳單月份</div>
+    <div class="panel">
+      <div class="field-row">
+        <div>
+          <label>這份對帳單屬於哪張卡</label>
+          <select id="card-select"></select>
+        </div>
+        <div>
+          <label>帳單月份（選填，方便之後篩選）</label>
+          <input type="month" id="billing-period">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">2. 上傳 PDF 對帳單</div>
+    <div class="panel">
+      <div class="drop-zone" id="drop-zone">
+        <div class="icon">📄</div>
+        <div>點擊選擇檔案，或把 PDF 拖曳到這裡</div>
+        <div class="hint">目前僅支援 PDF；每次上傳一份對帳單</div>
+      </div>
+      <input type="file" id="file-input" accept="application/pdf">
+      <div id="file-chip-wrap"></div>
+      <div id="parse-status" class="status" style="display:none;"></div>
+      <div class="why">解析結果會因為各家銀行 PDF 格式不同而有落差，抓錯、漏抓都可能發生——所以下面一定要逐行核對，覺得不對就直接改，或刪掉/手動新增那一列，不會直接寫入資料庫。</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">3. 核對交易明細</div>
+    <div class="panel">
+      <div id="preview-wrap">
+        <div class="empty-preview">上傳 PDF 後，解析出來的交易會顯示在這裡讓你核對。</div>
+      </div>
+      <button class="add-row-btn" id="add-row-btn" style="display:none;">＋ 手動新增一列</button>
+    </div>
+  </section>
+
+  <div class="btn-row">
+    <button class="btn primary" id="save-btn" disabled>確認並存入資料庫</button>
+    <button class="btn" id="clear-btn">清空重來</button>
+  </div>
+  <div id="save-status" class="status" style="display:none;"></div>
+
+</main>
+
+<footer>金額請以帳單顯示為準；折讓、退款若為負數，金額欄可直接輸入負值（例如 -350）。</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* ---------- 卡片下拉選單 ---------- */
+const cardSelect = document.getElementById('card-select');
+CARD_LIST.forEach(c=>{
+  const opt = document.createElement('option');
+  opt.value = c.id;
+  opt.textContent = c.name;
+  cardSelect.appendChild(opt);
+});
+
+/* ---------- 拖放 / 選檔 ---------- */
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const fileChipWrap = document.getElementById('file-chip-wrap');
+const parseStatus = document.getElementById('parse-status');
+let currentFileName = '';
+
+dropZone.addEventListener('click', ()=> fileInput.click());
+dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.classList.add('drag'); });
+dropZone.addEventListener('dragleave', ()=> dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop', e=>{
+  e.preventDefault(); dropZone.classList.remove('drag');
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e=>{
+  if(e.target.files.length) handleFile(e.target.files[0]);
+});
+
+async function handleFile(file){
+  if(file.type !== 'application/pdf'){
+    showParseStatus('請上傳 PDF 檔案', true);
+    return;
+  }
+  currentFileName = file.name;
+  fileChipWrap.innerHTML = `<span class="file-chip">📄 ${file.name}</span>`;
+  showParseStatus('解析中…請稍候', false);
+
+  try{
+    const rows = await parsePdf(file);
+    if(rows.length === 0){
+      showParseStatus('沒有自動抓到任何交易列，可能是這份 PDF 格式跟預期的不一樣。你可以用下面「手動新增一列」自己補登。', true);
+    } else {
+      showParseStatus(`自動抓到 ${rows.length} 筆交易，請逐行核對，有錯就直接改。`, false);
+    }
+    renderPreview(rows);
+  } catch(err){
+    console.error(err);
+    showParseStatus('解析失敗：' + (err.message || err), true);
+  }
+}
+
+function showParseStatus(msg, isError){
+  parseStatus.style.display = 'block';
+  parseStatus.textContent = msg;
+  parseStatus.className = 'status' + (isError ? ' error' : '');
+}
+
+/* ---------- PDF 解析（啟發式：日期 + 摘要 + 金額）---------- */
+async function parsePdf(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const lines = [];
+
+  for(let p=1; p<=pdf.numPages; p++){
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+
+    // 依 y 座標把文字片段重組成一行一行
+    const byY = {};
+    content.items.forEach(item=>{
+      const y = Math.round(item.transform[5]);
+      if(!byY[y]) byY[y] = [];
+      byY[y].push(item);
+    });
+    const ys = Object.keys(byY).map(Number).sort((a,b)=> b-a);
+    ys.forEach(y=>{
+      const lineItems = byY[y].sort((a,b)=> a.transform[4] - b.transform[4]);
+      const text = lineItems.map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
+      if(text) lines.push(text);
+    });
+  }
+
+  // 抓「日期 ... 摘要 ... 金額」這種常見的帳單列格式
+  const lineRegex = /^(\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}|\d{1,2}[\/\-.]\d{1,2})\s+(.+?)\s+(-?[\d,]+(?:\.\d{1,2})?)\s*$/;
+  const rows = [];
+  lines.forEach(line=>{
+    const m = line.match(lineRegex);
+    if(m){
+      const amount = parseFloat(m[3].replace(/,/g,''));
+      if(!isNaN(amount)){
+        rows.push({ date: normalizeDate(m[1]), description: m[2].trim(), amount });
+      }
+    }
+  });
+  return rows;
+}
+
+function normalizeDate(raw){
+  const parts = raw.split(/[\/\-.]/);
+  const now = new Date();
+  if(parts.length === 2){
+    // MM/DD，補上年份（用帳單月份或今年）
+    const y = document.getElementById('billing-period').value ?
+      document.getElementById('billing-period').value.split('-')[0] : now.getFullYear();
+    return `${y}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
+  }
+  if(parts.length === 3){
+    let [y,m,d] = parts;
+    if(y.length === 2) y = '20'+y;
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  return raw;
+}
+
+/* ---------- 預覽表格（可編輯） ---------- */
+const previewWrap = document.getElementById('preview-wrap');
+const addRowBtn = document.getElementById('add-row-btn');
+const saveBtn = document.getElementById('save-btn');
+let previewRows = [];
+
+function renderPreview(rows){
+  previewRows = rows;
+  drawTable();
+  addRowBtn.style.display = 'inline-block';
+  saveBtn.disabled = previewRows.length === 0;
+}
+
+function drawTable(){
+  if(previewRows.length === 0){
+    previewWrap.innerHTML = `<div class="empty-preview">目前沒有任何列，點下面「手動新增一列」開始輸入。</div>`;
+    saveBtn.disabled = true;
+    return;
+  }
+  const rowsHtml = previewRows.map((r, i)=>`
+    <tr data-idx="${i}">
+      <td><input type="text" class="date-input" data-field="date" value="${r.date}" placeholder="YYYY-MM-DD"></td>
+      <td><input type="text" data-field="description" value="${escapeHtml(r.description)}" placeholder="消費摘要"></td>
+      <td><input type="text" class="amount-input" data-field="amount" value="${r.amount}" placeholder="0"></td>
+      <td><button class="row-del" data-idx="${i}">✕</button></td>
+    </tr>
+  `).join('');
+  previewWrap.innerHTML = `
+    <table class="preview">
+      <thead><tr><th>日期</th><th>摘要</th><th style="text-align:right;">金額</th><th></th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+  `;
+  previewWrap.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const tr = e.target.closest('tr');
+      const idx = Number(tr.dataset.idx);
+      const field = e.target.dataset.field;
+      previewRows[idx][field] = field === 'amount' ? parseFloat(e.target.value) || 0 : e.target.value;
+    });
+  });
+  previewWrap.querySelectorAll('.row-del').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const idx = Number(e.target.dataset.idx);
+      previewRows.splice(idx,1);
+      drawTable();
+    });
+  });
+  saveBtn.disabled = false;
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+addRowBtn.addEventListener('click', ()=>{
+  previewRows.push({ date:'', description:'', amount:0 });
+  drawTable();
+});
+
+document.getElementById('clear-btn').addEventListener('click', ()=>{
+  previewRows = [];
+  currentFileName = '';
+  fileChipWrap.innerHTML = '';
+  parseStatus.style.display = 'none';
+  fileInput.value = '';
+  drawTable();
+  addRowBtn.style.display = 'none';
+});
+
+/* ---------- 儲存到 Firestore ---------- */
+const saveStatus = document.getElementById('save-status');
+saveBtn.addEventListener('click', async ()=>{
+  if(FIREBASE_NOT_CONFIGURED){
+    saveStatus.style.display = 'block';
+    saveStatus.className = 'status error';
+    saveStatus.textContent = '⚠️ 還沒設定 Firebase（firebase-config.js 裡是預設值），沒辦法存入資料庫。請先完成設定。';
+    return;
+  }
+  if(previewRows.length === 0) return;
+
+  saveBtn.disabled = true;
+  saveStatus.style.display = 'block';
+  saveStatus.className = 'status';
+  saveStatus.textContent = `儲存中… 0 / ${previewRows.length}`;
+
+  const cardId = cardSelect.value;
+  const billingPeriod = document.getElementById('billing-period').value || null;
+  let done = 0;
+
+  try{
+    for(const row of previewRows){
+      await db.collection('transactions').add({
+        cardId,
+        billingPeriod,
+        date: row.date,
+        description: row.description,
+        amount: Number(row.amount) || 0,
+        sourceFile: currentFileName || null,
+        uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      done++;
+      saveStatus.textContent = `儲存中… ${done} / ${previewRows.length}`;
+    }
+    saveStatus.textContent = `✅ 已儲存 ${done} 筆交易到「${cardNameById(cardId)}」。`;
+    previewRows = [];
+    drawTable();
+    addRowBtn.style.display = 'none';
+  } catch(err){
+    console.error(err);
+    saveStatus.className = 'status error';
+    saveStatus.textContent = '儲存失敗：' + (err.message || err);
+    saveBtn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>
