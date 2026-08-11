@@ -337,24 +337,34 @@ async function parsePdf(file, password){
     });
   }
 
-  const dateStartRegex = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\b/;
+  // 一筆交易的開頭一定是「消費日 + 入帳起息日」兩個日期連在一起，
+  // 只有單一組數字/數字/數字（像頁尾點數到期提醒裡的日期）不算，可以避免誤判成新的一筆。
+  const dateStartRegex = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\s+\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}(?=\s|$)/;
+  // 抓「日期 日期 摘要 第一個獨立金額」；用「第一個」數字是因為外幣消費列後面還有
+  // 外幣折算日／幣別／外幣金額，真正要記的新臺幣金額一定排在摘要後面遇到的第一個獨立數字。
+  const rowRegex = /^(\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})\s+\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\s+(.+?)\s+(-?[\d,]+(?:\.\d{1,2})?)(?=\s|$)/;
+  const looksLikeHeader = line => line.includes('消費日') && (line.includes('消費明細') || line.includes('新臺幣金額'));
+  const hasAmount = text => rowRegex.test(text);
 
-  // 第一步：把「沒有以日期開頭」的換行摘要，併回上一筆以日期開頭的交易列
-  // （銀行帳單很常見：摘要太長會換行，換到下一行文字時前面沒有日期）
+  // 換行的摘要文字，在座標上有時候會比自己這筆的日期列還高，導致掃描順序上先讀到，
+  // 這種情況下先暫存起來，等真正遇到下一筆交易的日期列時，再接在它後面（而不是誤接回上一筆）。
   const blocks = [];
-  lines.forEach(line=>{
-    if(dateStartRegex.test(line)){
-      blocks.push(line);
-    } else if(blocks.length > 0){
-      blocks[blocks.length - 1] += ' ' + line;
-    }
-    // 如果連第一筆日期列都還沒出現，代表這行是表頭或其他說明文字，直接忽略
-  });
+  let pendingPrefix = '';
 
-  // 第二步：從合併後的每個區塊裡，抓「日期(可能兩個) + 摘要 + 第一個獨立金額欄位」
-  // 用「第一個」而不是「最後一個」數字，是因為外幣消費列後面還有外幣折算日／幣別／外幣金額，
-  // 真正要記的新臺幣金額一定是摘要後面遇到的第一個獨立數字。
-  const rowRegex = /^(\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})\s+(?:\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\s+)?(.+?)\s+(-?[\d,]+(?:\.\d{1,2})?)(?=\s|$)/;
+  lines.forEach(line=>{
+    if(looksLikeHeader(line)) return; // 表頭文字，直接跳過
+
+    if(dateStartRegex.test(line)){
+      blocks.push(pendingPrefix ? (line + ' ' + pendingPrefix) : line);
+      pendingPrefix = '';
+    } else if(blocks.length > 0 && !hasAmount(blocks[blocks.length - 1])){
+      // 上一筆還沒湊齊金額，代表這行還是屬於同一筆的延續內容
+      blocks[blocks.length - 1] += ' ' + line;
+    } else {
+      // 上一筆已經完整了（或還沒有任何一筆），這行文字視為「下一筆」提早出現的摘要，先暫存
+      pendingPrefix = pendingPrefix ? (pendingPrefix + ' ' + line) : line;
+    }
+  });
 
   const rows = [];
   blocks.forEach(block=>{
