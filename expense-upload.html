@@ -310,7 +310,7 @@ function askPassword(isRetry){
   });
 }
 
-/* ---------- PDF 解析（啟發式：日期 + 摘要 + 金額）---------- */
+/* ---------- PDF 解析（啟發式：日期起始行合併換行摘要 + 抓第一個獨立金額欄位）---------- */
 async function parsePdf(file, password){
   const buf = await file.arrayBuffer();
   const params = { data: buf };
@@ -337,11 +337,28 @@ async function parsePdf(file, password){
     });
   }
 
-  // 抓「日期 ... 摘要 ... 金額」這種常見的帳單列格式
-  const lineRegex = /^(\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}|\d{1,2}[\/\-.]\d{1,2})\s+(.+?)\s+(-?[\d,]+(?:\.\d{1,2})?)\s*$/;
-  const rows = [];
+  const dateStartRegex = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\b/;
+
+  // 第一步：把「沒有以日期開頭」的換行摘要，併回上一筆以日期開頭的交易列
+  // （銀行帳單很常見：摘要太長會換行，換到下一行文字時前面沒有日期）
+  const blocks = [];
   lines.forEach(line=>{
-    const m = line.match(lineRegex);
+    if(dateStartRegex.test(line)){
+      blocks.push(line);
+    } else if(blocks.length > 0){
+      blocks[blocks.length - 1] += ' ' + line;
+    }
+    // 如果連第一筆日期列都還沒出現，代表這行是表頭或其他說明文字，直接忽略
+  });
+
+  // 第二步：從合併後的每個區塊裡，抓「日期(可能兩個) + 摘要 + 第一個獨立金額欄位」
+  // 用「第一個」而不是「最後一個」數字，是因為外幣消費列後面還有外幣折算日／幣別／外幣金額，
+  // 真正要記的新臺幣金額一定是摘要後面遇到的第一個獨立數字。
+  const rowRegex = /^(\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})\s+(?:\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\s+)?(.+?)\s+(-?[\d,]+(?:\.\d{1,2})?)(?=\s|$)/;
+
+  const rows = [];
+  blocks.forEach(block=>{
+    const m = block.match(rowRegex);
     if(m){
       const amount = parseFloat(m[3].replace(/,/g,''));
       if(!isNaN(amount)){
@@ -363,8 +380,15 @@ function normalizeDate(raw){
   }
   if(parts.length === 3){
     let [y,m,d] = parts;
-    if(y.length === 2) y = '20'+y;
-    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+    let yNum = parseInt(y, 10);
+    if(y.length === 2){
+      // 兩位數，當作西元 20xx
+      yNum = 2000 + yNum;
+    } else if(y.length === 3){
+      // 三位數，台灣帳單常見的民國年，轉成西元（民國年 + 1911）
+      yNum = yNum + 1911;
+    }
+    return `${yNum}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
   }
   return raw;
 }
