@@ -148,7 +148,12 @@
   </section>
 
   <section>
-    <div class="section-title">最近交易（最新 20 筆）</div>
+    <div class="section-title">所有交易</div>
+    <div style="margin-bottom:14px;">
+      <select id="filter-card" style="background:var(--panel); border:1px solid var(--line-strong); color:var(--paper); padding:8px 12px; border-radius:8px; font-family:'Noto Sans TC', sans-serif; font-size:13px;">
+        <option value="">全部卡片</option>
+      </select>
+    </div>
     <div id="recent-wrap"></div>
   </section>
 
@@ -204,7 +209,9 @@ async function init(){
     document.getElementById('sum-cards').textContent = cardsWithData + ' / 9';
 
     renderWallet(byCard);
-    renderRecent(txs.slice(0,20));
+    window.__allTxs = txs;
+    populateFilterOptions();
+    renderRecent(applyFilter(txs));
 
   } catch(err){
     console.error(err);
@@ -242,6 +249,26 @@ function renderWallet(byCard){
     `;
     wallet.appendChild(el);
   });
+}
+
+function populateFilterOptions(){
+  const sel = document.getElementById('filter-card');
+  if(sel.dataset.populated) return; // 只需要建立一次選項
+  CARD_LIST.forEach(c=>{
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+  sel.dataset.populated = '1';
+  sel.addEventListener('change', ()=>{
+    renderRecent(applyFilter(window.__allTxs || []));
+  });
+}
+
+function applyFilter(txs){
+  const val = document.getElementById('filter-card').value;
+  return val ? txs.filter(tx=> tx.cardId === val) : txs;
 }
 
 function renderRecent(txs){
