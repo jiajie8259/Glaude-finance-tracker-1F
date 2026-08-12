@@ -93,6 +93,12 @@
   }
   .tx-table td{ padding:9px 10px; border-bottom:1px solid var(--line); color:rgba(237,230,214,0.85); }
   .tx-table tr:hover td{ background:rgba(237,230,214,0.02); }
+  .row-del-btn{
+    background:none; border:1px solid var(--line-strong); border-radius:8px;
+    color:#E79684; cursor:pointer; font-size:13px; padding:4px 9px;
+  }
+  .row-del-btn:hover{ border-color:#E79684; background:rgba(193,84,60,0.12); }
+  .row-del-btn:disabled{ opacity:.5; cursor:not-allowed; }
   .tag{ font-family:'Roboto Mono', monospace; font-size:11px; padding:3px 8px; border-radius:999px; border:1px solid var(--line-strong); white-space:nowrap; }
   .amount{ font-family:'Roboto Mono', monospace; font-weight:700; color:var(--gold-soft); text-align:right; }
   .empty-state{ text-align:center; padding:50px 20px; color:rgba(237,230,214,0.45); font-size:13.5px; border:1px dashed var(--line-strong); border-radius:14px; }
@@ -245,19 +251,37 @@ function renderRecent(txs){
     return;
   }
   const rows = txs.map(tx => `
-    <tr>
+    <tr data-id="${tx.id}">
       <td class="mono">${tx.date || '—'}</td>
       <td><span class="tag">${cardNameById(tx.cardId)}</span></td>
       <td>${tx.description || ''}</td>
       <td class="amount">NT$${(Number(tx.amount)||0).toLocaleString('zh-TW')}</td>
+      <td><button class="row-del-btn" data-id="${tx.id}" title="刪除這筆交易">🗑</button></td>
     </tr>
   `).join('');
   wrap.innerHTML = `
     <table class="tx-table">
-      <thead><tr><th>日期</th><th>卡片</th><th>摘要</th><th style="text-align:right;">金額</th></tr></thead>
+      <thead><tr><th>日期</th><th>卡片</th><th>摘要</th><th style="text-align:right;">金額</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
   `;
+  wrap.querySelectorAll('.row-del-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id = btn.dataset.id;
+      if(!confirm('確定要刪除這筆交易嗎？這個動作無法復原。')) return;
+      btn.disabled = true;
+      btn.textContent = '…';
+      try{
+        await db.collection('transactions').doc(id).delete();
+        init(); // 重新整理總覽、卡片統計跟這份列表
+      } catch(err){
+        console.error(err);
+        alert('刪除失敗：' + (err.message || err));
+        btn.disabled = false;
+        btn.textContent = '🗑';
+      }
+    });
+  });
 }
 
 initAuthGate(function(user){ init(); });
