@@ -408,9 +408,9 @@ async function extractPdfContent(file, password){
    不會因為調好台新的邏輯而影響其他還沒處理過的銀行。
    ---------------------------------------------------------------- */
 const BANK_PARSERS = {
-  taishin: parseTaishin
+  taishin: parseTaishin,
+  dawa: parseDawa
   // 之後調好其他銀行，例如：
-  // dawa: parseDawa,
   // fubonj: parseFubonJ,
 };
 
@@ -443,6 +443,80 @@ async function parsePdf(file, password, cardId){
 
 function parseGeneric(extracted){
   return parseFromFallbackLines(extracted.fallbackLines);
+}
+
+/* ---------- 永豐銀行（DaWay 卡）----------
+   跟台新不同的地方：
+   1. 消費日只有「月/日」，沒有年份（永豐用西元年，不是民國年，年份用帳單月份欄位補上即可）
+   2. 表頭文字分兩行、置中對齊，跟下面實際內容的 X 座標對不太準，
+      所以這裡不用「比對表頭文字」的方式抓欄位，改成直接用觀察到的欄位座標範圍。
+   3. 部分金額（像自動扣款/退款那一列）會用類似台新表頭的「字元中間夾空白」寫法，
+      例如 "- 2 , 4 9 9"，組合金額文字時要把空白拿掉。
+   ---------------------------------------------------------------- */
+function parseDawa(extracted, helpers){
+  const DATE_COL = [35, 80];   // 消費日欄位
+  const DESC_COL = [148, 320]; // 帳單說明欄位
+  const AMT_COL  = [320, 382]; // 臺幣金額欄位
+  const DATE_RE = /^\d{1,2}\/\d{1,2}$/;
+
+  if(helpers && helpers.setDebugColumnBounds){
+    helpers.setDebugColumnBounds([
+      { name: '消費日(固定範圍)', x: DATE_COL[0] },
+      { name: '帳單說明(固定範圍)', x: DESC_COL[0] },
+      { name: '臺幣金額(固定範圍)', x: AMT_COL[0] }
+    ]);
+  }
+
+  const rows = [];
+  extracted.pages.forEach(({ items })=>{
+    const anchors = [];
+    items.forEach(it=>{
+      if(it.x >= DATE_COL[0] && it.x < DATE_COL[1] && DATE_RE.test(it.str.trim())){
+        anchors.push({ y: it.y, dateText: it.str.trim() });
+      }
+    });
+    anchors.sort((a,b)=> b.y - a.y);
+    if(anchors.length === 0) return;
+
+    function nearestAnchorIndex(y){
+      let bestIdx = 0, bestDist = Infinity;
+      anchors.forEach((a,i)=>{
+        const d = Math.abs(a.y - y);
+        if(d < bestDist){ bestDist = d; bestIdx = i; }
+      });
+      return bestDist <= 8 ? bestIdx : -1;
+    }
+
+    const descByAnchor = anchors.map(()=> []);
+    const amtByAnchor = anchors.map(()=> []);
+    items.forEach(it=>{
+      let col = null;
+      if(it.x >= DESC_COL[0] && it.x < DESC_COL[1]) col = 'desc';
+      else if(it.x >= AMT_COL[0] && it.x < AMT_COL[1]) col = 'amt';
+      if(!col) return;
+      const idx = nearestAnchorIndex(it.y);
+      if(idx === -1) return;
+      (col === 'desc' ? descByAnchor : amtByAnchor)[idx].push(it);
+    });
+
+    anchors.forEach((a, i)=>{
+      const descText = descByAnchor[i]
+        .sort((x,y)=> y.y - x.y || x.x - y.x)
+        .map(it=>it.str).join(' ').replace(/\s+/g,' ').trim();
+      const amtText = amtByAnchor[i]
+        .sort((x,y)=> y.y - x.y || x.x - y.x)
+        .map(it=>it.str).join('')
+        .replace(/\s+/g,'') // 「- 2 , 4 9 9」這種字元間夾空白的寫法，去掉空白後再解析
+        .replace(/,/g,'')
+        .trim();
+      const amount = parseFloat(amtText);
+      if(descText && !isNaN(amount)){
+        rows.push({ date: normalizeDate(a.dateText), description: descText, amount });
+      }
+    });
+  });
+
+  return rows;
 }
 
 /* ---------- 台新銀行（座標式：用欄位標題的 X 座標分欄，用日期欄的 Y 座標分筆）---------- */
