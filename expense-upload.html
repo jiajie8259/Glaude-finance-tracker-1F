@@ -145,6 +145,7 @@
         <div>
           <label>這份對帳單屬於哪張卡</label>
           <select id="card-select"></select>
+          <div id="parser-status-hint" style="font-size:11.5px; color:rgba(237,230,214,0.5); margin-top:6px;"></div>
         </div>
         <div>
           <label>帳單月份（選填，方便之後篩選）</label>
@@ -213,6 +214,7 @@ CARD_LIST.forEach(c=>{
   opt.textContent = c.name;
   cardSelect.appendChild(opt);
 });
+cardSelect.addEventListener('change', updateParserHint);
 
 /* ---------- 拖放 / 選檔 ---------- */
 const dropZone = document.getElementById('drop-zone');
@@ -242,7 +244,8 @@ async function handleFile(file){
   showParseStatus('解析中…請稍候', false);
 
   try{
-    const rows = await parsePdfWithPasswordPrompt(file);
+    const cardId = cardSelect.value;
+    const rows = await parsePdfWithPasswordPrompt(file, cardId);
     if(rows === null) { // 使用者取消輸入密碼
       showParseStatus('已取消，這份 PDF 沒有解析。', true);
       return;
@@ -310,12 +313,12 @@ function showParseStatus(msg, isError){
 }
 
 /* ---------- 加密 PDF：偵測並跳出密碼輸入框 ---------- */
-async function parsePdfWithPasswordPrompt(file){
+async function parsePdfWithPasswordPrompt(file, cardId){
   let password = undefined;
   let wrongAttempt = false;
   while(true){
     try{
-      return await parsePdf(file, password);
+      return await parsePdf(file, password, cardId);
     } catch(err){
       if(err.name === 'PasswordException'){
         password = await askPassword(wrongAttempt);
@@ -362,20 +365,16 @@ function askPassword(isRetry){
   });
 }
 
-/* ---------- PDF 解析（座標式：用欄位標題的 X 座標分欄，用日期欄的 Y 座標分筆）---------- */
-const COLUMN_KEYWORDS = ['消費日','入帳起息日','消費明細','新臺幣金額','外幣折算日','消費地','幣別','外幣金額'];
-const DATE_PATTERN = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}/;
-
-async function parsePdf(file, password){
+/* ---------- 共用：把 PDF 每一頁的文字座標抓出來，不含任何銀行專屬的判斷邏輯 ---------- */
+async function extractPdfContent(file, password){
   const buf = await file.arrayBuffer();
   const params = { data: buf };
   if(password) params.password = password;
   const pdf = await pdfjsLib.getDocument(params).promise;
 
-  let columnBounds = null; // [{name, x}], 一旦在某一頁找到表頭就沿用到後面所有頁
-  const rows = [];
-  const fallbackLines = []; // 找不到表頭時，退回舊的整行文字清單當備援
-  const debugItems = []; // 除錯用：每個文字片段的原始座標，跟解析邏輯完全無關
+  const pages = [];
+  const fallbackLines = [];
+  const debugItems = [];
 
   for(let p=1; p<=pdf.numPages; p++){
     const page = await pdf.getPage(p);
@@ -388,7 +387,73 @@ async function parsePdf(file, password){
 
     items.forEach(it=> debugItems.push({ page: p, x: Math.round(it.x), y: it.y, str: it.str }));
 
-    // 依 y 座標重組整行文字，用來找表頭、以及當作備援解析來源
+    const byY = {};
+    items.forEach(it=>{ (byY[it.y] = byY[it.y] || []).push(it); });
+    Object.keys(byY).map(Number).sort((a,b)=> b-a).forEach(y=>{
+      const lineItems = byY[y].slice().sort((a,b)=> a.x - b.x);
+      const text = lineItems.map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
+      if(text) fallbackLines.push(text);
+    });
+
+    pages.push({ pageNum: p, items });
+  }
+
+  return { pages, fallbackLines, debugItems };
+}
+
+/* ---------- 銀行辨識邏輯登記表 ----------
+   每次幫某家銀行調好解析規則，就在這裡加一筆對應 cardId 的處理函式。
+   選單裡選了哪張卡，就會用哪家銀行的邏輯解析；還沒調過的銀行，
+   預設用最原始的「整行文字」通用解析方式（parseGeneric），
+   不會因為調好台新的邏輯而影響其他還沒處理過的銀行。
+   ---------------------------------------------------------------- */
+const BANK_PARSERS = {
+  taishin: parseTaishin
+  // 之後調好其他銀行，例如：
+  // dawa: parseDawa,
+  // fubonj: parseFubonJ,
+};
+
+function updateParserHint(){
+  const hint = document.getElementById('parser-status-hint');
+  if(!hint) return;
+  const tuned = !!BANK_PARSERS[cardSelect.value];
+  hint.textContent = tuned
+    ? '✓ 這張卡已經有調校過的專屬解析邏輯'
+    : '這張卡還沒有專屬解析邏輯，先用通用解析方式（準確度較低，需要更仔細核對）';
+}
+
+async function parsePdf(file, password, cardId){
+  const extracted = await extractPdfContent(file, password);
+
+  window.__lastDebug = {
+    columnBounds: null,
+    items: extracted.debugItems,
+    fallbackLines: extracted.fallbackLines
+  };
+
+  const bankParser = BANK_PARSERS[cardId];
+  if(bankParser){
+    const rows = bankParser(extracted, { setDebugColumnBounds: b=>{ window.__lastDebug.columnBounds = b; } });
+    if(rows.length > 0) return rows;
+    // 這家銀行的專屬邏輯這次沒抓到東西（可能格式跟平常不一樣），退回通用方式試試看
+  }
+  return parseGeneric(extracted);
+}
+
+function parseGeneric(extracted){
+  return parseFromFallbackLines(extracted.fallbackLines);
+}
+
+/* ---------- 台新銀行（座標式：用欄位標題的 X 座標分欄，用日期欄的 Y 座標分筆）---------- */
+const COLUMN_KEYWORDS = ['消費日','入帳起息日','消費明細','新臺幣金額','外幣折算日','消費地','幣別','外幣金額'];
+const DATE_PATTERN = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}/;
+
+function parseTaishin(extracted, helpers){
+  let columnBounds = null; // [{name, x}], 一旦在某一頁找到表頭就沿用到後面所有頁
+  const rows = [];
+
+  extracted.pages.forEach(({ items })=>{
     const byY = {};
     items.forEach(it=>{ (byY[it.y] = byY[it.y] || []).push(it); });
     const ys = Object.keys(byY).map(Number).sort((a,b)=> b-a);
@@ -396,8 +461,7 @@ async function parsePdf(file, password){
     ys.forEach(y=>{
       const lineItems = byY[y].slice().sort((a,b)=> a.x - b.x);
       const text = lineItems.map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
-      if(text) fallbackLines.push(text);
-      // 有些銀行的表頭文字，每個字中間會夾一個空白（例如「消 費 日」），
+      // 台新的表頭文字，每個字中間會夾一個空白（例如「消 費 日」），
       // 比對關鍵字前要先把空白拿掉，不然永遠比對不到。
       const compact = text.replace(/\s+/g,'');
       if(headerY === null && compact.includes('消費日') && (compact.includes('消費明細') || compact.includes('新臺幣金額'))){
@@ -415,10 +479,11 @@ async function parsePdf(file, password){
       });
       if(found.length >= 4){ // 至少抓到日期/摘要/金額這幾個關鍵欄位才算可信
         columnBounds = found.sort((a,b)=> a.x - b.x);
+        if(helpers && helpers.setDebugColumnBounds) helpers.setDebugColumnBounds(columnBounds);
       }
     }
 
-    if(!columnBounds) continue; // 這一頁還沒有可用的欄位資訊，先跳過，等備援機制處理
+    if(!columnBounds) return; // 這一頁還沒有可用的欄位資訊，先跳過
 
     // 下邊界稍微放寬（欄位內容常常比標題文字起始位置略靠左一點）；
     // 上邊界只留一點點緩衝，避免把下一欄的內容也吃進來，
@@ -443,7 +508,7 @@ async function parsePdf(file, password){
       }
     });
     anchors.sort((a,b)=> b.y - a.y);
-    if(anchors.length === 0) continue;
+    if(anchors.length === 0) return;
 
     function nearestAnchorIndex(y){
       let bestIdx = 0, bestDist = Infinity;
@@ -485,20 +550,12 @@ async function parsePdf(file, password){
         rows.push({ date: normalizeDate(a.dateText), description: descText, amount });
       }
     });
-  }
+  });
 
-  window.__lastDebug = {
-    columnBounds: columnBounds,
-    items: debugItems,
-    fallbackLines: fallbackLines
-  };
-
-  if(rows.length > 0) return rows;
-
-  // 備援：完全找不到表頭欄位資訊時（例如格式差異很大），退回舊的整行文字規則解析
-  return parseFromFallbackLines(fallbackLines);
+  return rows;
 }
 
+/* ---------- 通用備援（尚未個別調校的銀行都先用這個）---------- */
 function parseFromFallbackLines(lines){
   const dateStartRegex = /^\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\s+\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}(?=\s|$)/;
   const rowRegex = /^(\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})\s+\d{2,4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\s+(.+?)\s+(-?[\d,]+(?:\.\d{1,2})?)(?=\s|$)/;
@@ -675,6 +732,7 @@ saveBtn.addEventListener('click', async ()=>{
   }
 });
 
+updateParserHint();
 initAuthGate(function(user){ /* 這頁在按下「確認並存入」前不會寫入資料庫，這裡只需要擋住整個畫面 */ });
 </script>
 
