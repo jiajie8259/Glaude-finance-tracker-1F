@@ -190,21 +190,27 @@ async function init(){
     const txs = [];
     snap.forEach(doc => txs.push({ id: doc.id, ...doc.data() }));
 
-    // 依卡片彙整
+    // 依卡片彙整（同時依幣別分開加總，例如玉山熊本熊卡有台幣跟日圓兩種）
     const byCard = {};
-    CARD_LIST.forEach(c => byCard[c.id] = { total:0, count:0, lastDate:null, lastUpload:null });
-    let grandTotal = 0;
+    CARD_LIST.forEach(c => byCard[c.id] = { total:0, count:0, lastDate:null, lastUpload:null, byCurrency:{} });
+    let grandTotal = 0;   // 只加總台幣，避免跟日圓混在一起變成沒有意義的數字
+    let grandTotalJPY = 0;
     txs.forEach(tx => {
       const cid = tx.cardId;
-      if(!byCard[cid]) byCard[cid] = { total:0, count:0, lastDate:null, lastUpload:null };
-      byCard[cid].total += Number(tx.amount) || 0;
+      const cur = tx.currency || 'TWD';
+      const amt = Number(tx.amount) || 0;
+      if(!byCard[cid]) byCard[cid] = { total:0, count:0, lastDate:null, lastUpload:null, byCurrency:{} };
       byCard[cid].count += 1;
+      byCard[cid].byCurrency[cur] = (byCard[cid].byCurrency[cur] || 0) + amt;
+      if(cur === 'TWD') byCard[cid].total += amt;
       if(!byCard[cid].lastDate || tx.date > byCard[cid].lastDate) byCard[cid].lastDate = tx.date;
-      grandTotal += Number(tx.amount) || 0;
+      if(cur === 'TWD') grandTotal += amt;
+      else if(cur === 'JPY') grandTotalJPY += amt;
     });
 
     const cardsWithData = Object.values(byCard).filter(c => c.count > 0).length;
-    document.getElementById('sum-total').textContent = 'NT$' + grandTotal.toLocaleString('zh-TW');
+    document.getElementById('sum-total').textContent = 'NT$' + grandTotal.toLocaleString('zh-TW')
+      + (grandTotalJPY ? '　+　JPY ' + grandTotalJPY.toLocaleString('zh-TW') : '');
     document.getElementById('sum-count').textContent = txs.length.toLocaleString('zh-TW');
     document.getElementById('sum-cards').textContent = cardsWithData + ' / 9';
 
@@ -228,23 +234,64 @@ function renderWallet(byCard){
   const wallet = document.getElementById('wallet');
   wallet.innerHTML = '';
   CARD_LIST.forEach(card=>{
-    const data = byCard[card.id] || { total:0, count:0, lastDate:null };
+    const data = byCard[card.id] || { total:0, count:0, lastDate:null, byCurrency:{} };
     const hasData = data.count > 0;
+    const currencies = Object.keys(data.byCurrency || {}).filter(c=> data.byCurrency[c] !== 0 || c !== 'TWD');
+    const isMultiCurrency = currencies.length > 1; // 目前只有玉山熊本熊卡會同時有 TWD 跟 JPY
+
     const el = document.createElement('div');
     el.className = 'exp-card' + (hasData ? '' : ' empty');
     el.style.setProperty('--accent', card.accent);
+
+    let statRowHtml;
+    if(!hasData){
+      statRowHtml = `
+        <div class="stat-row">
+          <div class="stat-box">
+            <span class="stat-label">累計支出</span>
+            <span class="stat-value">尚無資料</span>
+          </div>
+          <div class="stat-box count">
+            <span class="stat-label">交易筆數</span>
+            <span class="stat-value">—</span>
+          </div>
+        </div>`;
+    } else if(isMultiCurrency){
+      // 分幣別顯示，這張卡不合併加總（單位不同，加在一起沒有意義）
+      const boxes = currencies.map(cur=>{
+        const label = cur === 'TWD' ? '台幣支出' : cur + ' 支出';
+        const prefix = cur === 'TWD' ? 'NT$' : cur + ' ';
+        return `
+          <div class="stat-box">
+            <span class="stat-label">${label}</span>
+            <span class="stat-value">${prefix}${data.byCurrency[cur].toLocaleString('zh-TW')}</span>
+          </div>`;
+      }).join('');
+      statRowHtml = `
+        <div class="stat-row" style="grid-template-columns:repeat(${currencies.length + 1}, 1fr);">
+          ${boxes}
+          <div class="stat-box count">
+            <span class="stat-label">交易筆數</span>
+            <span class="stat-value">${data.count} 筆</span>
+          </div>
+        </div>`;
+    } else {
+      statRowHtml = `
+        <div class="stat-row">
+          <div class="stat-box">
+            <span class="stat-label">累計支出</span>
+            <span class="stat-value">NT$${data.total.toLocaleString('zh-TW')}</span>
+          </div>
+          <div class="stat-box count">
+            <span class="stat-label">交易筆數</span>
+            <span class="stat-value">${data.count} 筆</span>
+          </div>
+        </div>`;
+    }
+
     el.innerHTML = `
       <h3>${card.name}</h3>
-      <div class="stat-row">
-        <div class="stat-box">
-          <span class="stat-label">累計支出</span>
-          <span class="stat-value">${hasData ? 'NT$'+data.total.toLocaleString('zh-TW') : '尚無資料'}</span>
-        </div>
-        <div class="stat-box count">
-          <span class="stat-label">交易筆數</span>
-          <span class="stat-value">${hasData ? data.count+' 筆' : '—'}</span>
-        </div>
-      </div>
+      ${statRowHtml}
       <div class="last-upload">${hasData ? '最新交易日期：'+data.lastDate : '尚未上傳過對帳單'}</div>
     `;
     wallet.appendChild(el);
@@ -282,7 +329,7 @@ function renderRecent(txs){
       <td class="mono">${tx.date || '—'}</td>
       <td><span class="tag">${cardNameById(tx.cardId)}</span></td>
       <td>${tx.description || ''}</td>
-      <td class="amount">NT$${(Number(tx.amount)||0).toLocaleString('zh-TW')}</td>
+      <td class="amount">${(tx.currency && tx.currency !== 'TWD') ? tx.currency + ' ' : 'NT$'}${(Number(tx.amount)||0).toLocaleString('zh-TW')}</td>
       <td><button class="row-del-btn" data-id="${tx.id}" title="刪除這筆交易">🗑</button></td>
     </tr>
   `).join('');

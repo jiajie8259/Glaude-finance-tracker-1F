@@ -85,6 +85,10 @@
   table.preview input{ padding:7px 8px; font-size:13px; }
   table.preview input.date-input{ width:110px; }
   table.preview input.amount-input{ width:100px; text-align:right; font-family:'Roboto Mono', monospace; }
+  table.preview select.currency-select{
+    padding:7px 8px; font-size:13px; width:78px;
+    background:var(--panel); border:1px solid var(--line-strong); color:var(--paper); border-radius:8px;
+  }
   .row-del{ background:none; border:none; color:#E79684; cursor:pointer; font-size:16px; padding:4px 8px; }
   .add-row-btn{ margin-top:10px; font-size:12.5px; color:var(--teal); background:none; border:1px dashed var(--line-strong); border-radius:8px; padding:8px 14px; cursor:pointer; }
 
@@ -609,11 +613,12 @@ function parseKumamon(extracted, helpers){
       }
 
       if(currency && currency !== 'TWD'){
-        descText = descText + ' [' + currency + ']';
+        // 幣別已經有獨立的 currency 欄位記錄，摘要不用重複加註
       }
 
+
       if(descText && amount !== null && !isNaN(amount)){
-        rows.push({ date: normalizeDate(a.dateText), description: descText.trim(), amount });
+        rows.push({ date: normalizeDate(a.dateText), description: descText.trim(), amount, currency: (currency || 'TWD') });
       }
     });
   });
@@ -815,22 +820,34 @@ function drawTable(){
     <tr data-idx="${i}">
       <td><input type="text" class="date-input" data-field="date" value="${r.date}" placeholder="YYYY-MM-DD"></td>
       <td><input type="text" data-field="description" value="${escapeHtml(r.description)}" placeholder="消費摘要"></td>
+      <td>
+        <select data-field="currency" class="currency-select">
+          <option value="TWD" ${((r.currency||'TWD')==='TWD') ? 'selected' : ''}>TWD</option>
+          <option value="JPY" ${(r.currency==='JPY') ? 'selected' : ''}>JPY</option>
+        </select>
+      </td>
       <td><input type="text" class="amount-input" data-field="amount" value="${r.amount}" placeholder="0"></td>
       <td><button class="row-del" data-idx="${i}">✕</button></td>
     </tr>
   `).join('');
   previewWrap.innerHTML = `
     <table class="preview">
-      <thead><tr><th>日期</th><th>摘要</th><th style="text-align:right;">金額</th><th></th></tr></thead>
+      <thead><tr><th>日期</th><th>摘要</th><th>幣別</th><th style="text-align:right;">金額</th><th></th></tr></thead>
       <tbody>${rowsHtml}</tbody>
     </table>
   `;
-  previewWrap.querySelectorAll('input').forEach(inp=>{
+  previewWrap.querySelectorAll('input, select').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const tr = e.target.closest('tr');
       const idx = Number(tr.dataset.idx);
       const field = e.target.dataset.field;
-      previewRows[idx][field] = field === 'amount' ? parseFloat(e.target.value) || 0 : e.target.value;
+      previewRows[idx][field] = field === 'amount' ? (parseFloat(e.target.value) || 0) : e.target.value;
+    });
+    inp.addEventListener('change', e=>{
+      const tr = e.target.closest('tr');
+      const idx = Number(tr.dataset.idx);
+      const field = e.target.dataset.field;
+      previewRows[idx][field] = field === 'amount' ? (parseFloat(e.target.value) || 0) : e.target.value;
     });
   });
   previewWrap.querySelectorAll('.row-del').forEach(btn=>{
@@ -848,7 +865,7 @@ function escapeHtml(str){
 }
 
 addRowBtn.addEventListener('click', ()=>{
-  previewRows.push({ date:'', description:'', amount:0 });
+  previewRows.push({ date:'', description:'', amount:0, currency:'TWD' });
   drawTable();
 });
 
@@ -890,6 +907,7 @@ saveBtn.addEventListener('click', async ()=>{
         date: row.date,
         description: row.description,
         amount: Number(row.amount) || 0,
+        currency: row.currency || 'TWD',
         sourceFile: currentFileName || null,
         uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
