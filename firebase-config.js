@@ -37,7 +37,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "YOUR_API_KEY";
 
 /* ⚠️ 白名單：只有這個 email 能登入成功（Google登入用任何帳號都能點進去，
    靠這個檢查擋掉非本人帳號）。請換成你自己實際會用來登入的 Gmail。 */
-const ALLOWED_EMAIL = "your-email@gmail.com";
+const ALLOWED_EMAIL = "jiajie8259@gmail.com";
 
 let db = null;
 let auth = null;
