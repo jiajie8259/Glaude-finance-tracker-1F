@@ -409,7 +409,8 @@ async function extractPdfContent(file, password){
    ---------------------------------------------------------------- */
 const BANK_PARSERS = {
   taishin: parseTaishin,
-  dawa: parseDawa
+  dawa: parseDawa,
+  kumamon: parseKumamon
   // 之後調好其他銀行，例如：
   // fubonj: parseFubonJ,
 };
@@ -512,6 +513,107 @@ function parseDawa(extracted, helpers){
       const amount = parseFloat(amtText);
       if(descText && !isNaN(amount)){
         rows.push({ date: normalizeDate(a.dateText), description: descText, amount });
+      }
+    });
+  });
+
+  return rows;
+}
+
+/* ---------- 玉山銀行（熊本熊雙幣卡）----------
+   跟其他銀行最大的不同：這是雙幣卡，同一列裡有「外幣金額」跟「繳款金額」兩組欄位。
+   - 一般消費／海外消費：繳款金額欄位有值（可能是台幣、也可能整筆用日圓結算），要記的是這一組。
+   - 自動扣繳、退款這種列：只有左邊那組「幣別+金額」有值，這種情況才退而求其次記那組。
+   - 消費日只有「月/日」沒有年份，跟永豐一樣用帳單月份欄位補上年份。
+   - 如果實際扣款是日圓（不是台幣），會在摘要後面加註 [JPY]，避免跟台幣金額搞混。
+   ---------------------------------------------------------------- */
+function parseKumamon(extracted, helpers){
+  const DATE_COL          = [20, 75];   // 消費日
+  const DESC_COL           = [95, 225];  // 消費明細
+  const LOCATION_COL       = [225, 290]; // 消費地
+  const CURRENCY_COL       = [360, 421]; // 幣別（外幣）
+  const AMT_FOREIGN_COL    = [421, 454]; // 金額（外幣，退款/自動扣繳列的金額也會落在這裡）
+  const SETTLE_CURRENCY_COL= [454, 477]; // 繳款幣別
+  const AMT_SETTLE_COL     = [477, 536]; // 金額（繳款，優先採用這一組）
+  const DATE_RE = /^\d{1,2}\/\d{1,2}$/;
+
+  if(helpers && helpers.setDebugColumnBounds){
+    helpers.setDebugColumnBounds([
+      { name: '消費日(固定範圍)', x: DATE_COL[0] },
+      { name: '消費明細(固定範圍)', x: DESC_COL[0] },
+      { name: '金額-外幣(固定範圍)', x: AMT_FOREIGN_COL[0] },
+      { name: '金額-繳款(固定範圍)', x: AMT_SETTLE_COL[0] }
+    ]);
+  }
+
+  const rows = [];
+  extracted.pages.forEach(({ items })=>{
+    const anchors = [];
+    items.forEach(it=>{
+      if(it.x >= DATE_COL[0] && it.x < DATE_COL[1] && DATE_RE.test(it.str.trim())){
+        anchors.push({ y: it.y, dateText: it.str.trim() });
+      }
+    });
+    anchors.sort((a,b)=> b.y - a.y);
+    if(anchors.length === 0) return;
+
+    function nearestAnchorIndex(y){
+      let bestIdx = 0, bestDist = Infinity;
+      anchors.forEach((a,i)=>{
+        const d = Math.abs(a.y - y);
+        if(d < bestDist){ bestDist = d; bestIdx = i; }
+      });
+      return bestDist <= 8 ? bestIdx : -1;
+    }
+
+    const buckets = anchors.map(()=> ({ desc:[], loc:[], cur:[], amtForeign:[], settleCur:[], amtSettle:[] }));
+    items.forEach(it=>{
+      let col = null;
+      if(it.x >= DESC_COL[0] && it.x < DESC_COL[1]) col = 'desc';
+      else if(it.x >= LOCATION_COL[0] && it.x < LOCATION_COL[1]) col = 'loc';
+      else if(it.x >= CURRENCY_COL[0] && it.x < CURRENCY_COL[1]) col = 'cur';
+      else if(it.x >= AMT_FOREIGN_COL[0] && it.x < AMT_FOREIGN_COL[1]) col = 'amtForeign';
+      else if(it.x >= SETTLE_CURRENCY_COL[0] && it.x < SETTLE_CURRENCY_COL[1]) col = 'settleCur';
+      else if(it.x >= AMT_SETTLE_COL[0] && it.x < AMT_SETTLE_COL[1]) col = 'amtSettle';
+      if(!col) return;
+      const idx = nearestAnchorIndex(it.y);
+      if(idx === -1) return;
+      buckets[idx][col].push(it);
+    });
+
+    function joinCol(list){
+      return list.sort((x,y)=> y.y - x.y || x.x - y.x).map(it=>it.str).join(' ').replace(/\s+/g,' ').trim();
+    }
+    function joinAmount(list){
+      return list.sort((x,y)=> y.y - x.y || x.x - y.x).map(it=>it.str).join('').replace(/\s+/g,'').replace(/,/g,'').trim();
+    }
+
+    anchors.forEach((a, i)=>{
+      const b = buckets[i];
+      let descText = joinCol(b.desc);
+      const locText = joinCol(b.loc);
+      if(locText) descText = (descText ? descText + ' ' : '') + locText;
+
+      // 優先用「繳款金額」那一組；沒有的話才退回「外幣金額」那一組（自動扣繳/退款列常是這樣）
+      let amount = null, currency = '';
+      const settleAmtText = joinAmount(b.amtSettle);
+      if(settleAmtText){
+        amount = parseFloat(settleAmtText);
+        currency = joinCol(b.settleCur);
+      } else {
+        const foreignAmtText = joinAmount(b.amtForeign);
+        if(foreignAmtText){
+          amount = parseFloat(foreignAmtText);
+          currency = joinCol(b.cur);
+        }
+      }
+
+      if(currency && currency !== 'TWD'){
+        descText = descText + ' [' + currency + ']';
+      }
+
+      if(descText && amount !== null && !isNaN(amount)){
+        rows.push({ date: normalizeDate(a.dateText), description: descText.trim(), amount });
       }
     });
   });
