@@ -105,15 +105,22 @@ function initAuthGate(onReady){
   googleBtn.addEventListener('click', async ()=>{
     errorBox.textContent = '';
     googleBtn.disabled = true;
+    googleBtn.textContent = '正在跳轉到 Google 登入…';
     try{
       const provider = new firebase.auth.GoogleAuthProvider();
-      await auth.signInWithPopup(provider);
-      // 白名單檢查在 onAuthStateChanged 裡統一處理
+      await auth.signInWithRedirect(provider);
+      // 這裡會直接離開頁面跳到 Google 登入畫面，
+      // 登入完成後會導回這頁，結果在下面 getRedirectResult 處理
     } catch(err){
       errorBox.textContent = translateAuthError(err);
-    } finally {
       googleBtn.disabled = false;
+      googleBtn.textContent = '🔵 使用 Google 帳號登入';
     }
+  });
+
+  // 從 Google 登入頁導轉回來後，確認這次導轉是否有登入結果／錯誤
+  auth.getRedirectResult().catch(err=>{
+    errorBox.textContent = translateAuthError(err);
   });
 
   auth.onAuthStateChanged(async user=>{
