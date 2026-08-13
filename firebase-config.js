@@ -37,7 +37,7 @@ const FIREBASE_NOT_CONFIGURED = firebaseConfig.apiKey === "YOUR_API_KEY";
 
 /* ⚠️ 白名單：只有這個 email 能登入成功（Google登入用任何帳號都能點進去，
    靠這個檢查擋掉非本人帳號）。請換成你自己實際會用來登入的 Gmail。 */
-const ALLOWED_EMAIL = "jiajie8259@gmail.com";
+const ALLOWED_EMAIL = "your-email@gmail.com";
 
 let db = null;
 let auth = null;
@@ -239,8 +239,7 @@ function injectAuthGateStyles(){
 const CARD_LIST = [
   { id: "taishin",  name: "台新 Richart 卡",       accent: "#C9973F" },
   { id: "dawa",     name: "永豐 DaWay 卡",          accent: "#4EA491" },
-  { id: "linebank", name: "聯邦 LINE BANK 熊大卡",  accent: "#8E6BC9" },
-  { id: "laidian",  name: "聯邦賴點卡",             accent: "#8E6BC9" },
+  { id: "ubot",     name: "聯邦信用卡（LINE BANK熊大卡＋賴點卡合併帳單）", accent: "#8E6BC9" },
   { id: "kumamon",  name: "玉山熊本熊卡",           accent: "#C1543C" },
   { id: "fubonj",   name: "富邦 J 卡",              accent: "#3F7FBF" },
   { id: "dbseco",   name: "星展 eco 永續極簡卡",    accent: "#C9973F" },

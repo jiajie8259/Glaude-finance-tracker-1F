@@ -180,7 +180,7 @@ async function init(){
     renderWallet({}); // 全部顯示空狀態
     document.getElementById('sum-total').textContent = 'NT$0';
     document.getElementById('sum-count').textContent = '0';
-    document.getElementById('sum-cards').textContent = '0 / 9';
+    document.getElementById('sum-cards').textContent = '0 / ' + CARD_LIST.length;
     document.getElementById('recent-wrap').innerHTML = `<div class="empty-state">尚未連接資料庫，無法顯示交易紀錄。</div>`;
     return;
   }
@@ -212,7 +212,7 @@ async function init(){
     document.getElementById('sum-total').textContent = 'NT$' + grandTotal.toLocaleString('zh-TW')
       + (grandTotalJPY ? '　+　JPY ' + grandTotalJPY.toLocaleString('zh-TW') : '');
     document.getElementById('sum-count').textContent = txs.length.toLocaleString('zh-TW');
-    document.getElementById('sum-cards').textContent = cardsWithData + ' / 9';
+    document.getElementById('sum-cards').textContent = cardsWithData + ' / ' + CARD_LIST.length;
 
     renderWallet(byCard);
     window.__allTxs = txs;

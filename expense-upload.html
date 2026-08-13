@@ -414,7 +414,8 @@ async function extractPdfContent(file, password){
 const BANK_PARSERS = {
   taishin: parseTaishin,
   dawa: parseDawa,
-  kumamon: parseKumamon
+  kumamon: parseKumamon,
+  ubot: parseUbot
   // 之後調好其他銀行，例如：
   // fubonj: parseFubonJ,
 };
@@ -530,6 +531,83 @@ function parseDawa(extracted, helpers){
    - 自動扣繳、退款這種列：只有左邊那組「幣別+金額」有值，這種情況才退而求其次記那組。
    - 消費日只有「月/日」沒有年份，跟永豐一樣用帳單月份欄位補上年份。
    - 如果實際扣款是日圓（不是台幣），會在摘要後面加註 [JPY]，避免跟台幣金額搞混。
+   ---------------------------------------------------------------- */
+/* ---------- 聯邦銀行（LINE BANK熊大卡＋賴點卡合併帳單）----------
+   這份帳單把兩張卡的消費明細印在同一份 PDF 裡，用「XX卡－正卡 卡號末四碼」
+   這種分隔列隔開兩段，但因為使用者選單上已經合併成一個「聯邦信用卡」，
+   這裡就不特別區分是哪張卡，兩段的交易都一起抓進來。
+   欄位順序是 入帳日、消費日（跟其他銀行相反），我們記錄的日期用「消費日」（實際刷卡日）。
+   表頭文字位置跟實際內容對不太準，所以一樣用觀察到的固定座標範圍。
+   ---------------------------------------------------------------- */
+function parseUbot(extracted, helpers){
+  const DATE_COL = [55, 95];   // 消費日（入帳日在它左邊，不使用）
+  const DESC_COL = [95, 360];  // 消費明細
+  const AMT_COL  = [515, 570]; // 新臺幣金額
+  const DATE_RE = /^\d{1,2}\/\d{1,2}$/;
+
+  if(helpers && helpers.setDebugColumnBounds){
+    helpers.setDebugColumnBounds([
+      { name: '消費日(固定範圍)', x: DATE_COL[0] },
+      { name: '消費明細(固定範圍)', x: DESC_COL[0] },
+      { name: '新臺幣金額(固定範圍)', x: AMT_COL[0] }
+    ]);
+  }
+
+  const rows = [];
+  extracted.pages.forEach(({ items })=>{
+    const anchors = [];
+    items.forEach(it=>{
+      if(it.x >= DATE_COL[0] && it.x < DATE_COL[1] && DATE_RE.test(it.str.trim())){
+        anchors.push({ y: it.y, dateText: it.str.trim() });
+      }
+    });
+    anchors.sort((a,b)=> b.y - a.y);
+    if(anchors.length === 0) return;
+
+    function nearestAnchorIndex(y){
+      let bestIdx = 0, bestDist = Infinity;
+      anchors.forEach((a,i)=>{
+        const d = Math.abs(a.y - y);
+        if(d < bestDist){ bestDist = d; bestIdx = i; }
+      });
+      return bestDist <= 8 ? bestIdx : -1;
+    }
+
+    const descByAnchor = anchors.map(()=> []);
+    const amtByAnchor = anchors.map(()=> []);
+    items.forEach(it=>{
+      let col = null;
+      if(it.x >= DESC_COL[0] && it.x < DESC_COL[1]) col = 'desc';
+      else if(it.x >= AMT_COL[0] && it.x < AMT_COL[1]) col = 'amt';
+      if(!col) return;
+      const idx = nearestAnchorIndex(it.y);
+      if(idx === -1) return;
+      (col === 'desc' ? descByAnchor : amtByAnchor)[idx].push(it);
+    });
+
+    anchors.forEach((a, i)=>{
+      const descText = descByAnchor[i]
+        .sort((x,y)=> y.y - x.y || x.x - y.x)
+        .map(it=>it.str).join(' ').replace(/\s+/g,' ').trim();
+      const amtText = amtByAnchor[i]
+        .sort((x,y)=> y.y - x.y || x.x - y.x)
+        .map(it=>it.str).join('').replace(/\s+/g,'').replace(/,/g,'').trim();
+      const amount = parseFloat(amtText);
+      if(descText && !isNaN(amount)){
+        rows.push({ date: normalizeDate(a.dateText), description: descText, amount, currency: 'TWD' });
+      }
+    });
+  });
+
+  return rows;
+}
+
+/* ---------- 玉山銀行（熊本熊雙幣卡）----------
+   跟其他銀行最大的不同：這是雙幣卡，同一列裡有「外幣金額」跟「繳款金額」兩組欄位。
+   - 一般消費／海外消費：繳款金額欄位有值（可能是台幣、也可能整筆用日圓結算），要記的是這一組。
+   - 自動扣繳、退款這種列：只有左邊那組「幣別+金額」有值，這種情況才退而求其次記那組。
+   - 消費日只有「月/日」沒有年份，跟永豐一樣用帳單月份欄位補上年份。
+   - 幣別會存進獨立的 currency 欄位，日圓消費不會跟台幣混在一起加總。
    ---------------------------------------------------------------- */
 function parseKumamon(extracted, helpers){
   const DATE_COL          = [20, 75];   // 消費日
