@@ -29,7 +29,19 @@
   .mono{ font-family:'Roboto Mono', monospace; }
 
   header{ max-width:1400px; margin:0 auto; padding:30px 24px 12px; }
-  .header-top{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+  .header-top{ display:flex; justify-content:space-between; align-items:stretch; flex-wrap:wrap; gap:16px; }
+  .header-title-block{ flex:0 0 auto; }
+  .header-actions{ flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
+
+  .year-chart-panel{
+    flex:1 1 320px; min-width:280px; max-width:640px;
+    border:1px solid var(--line-strong); border-radius:14px;
+    padding:16px 20px; background:rgba(237,230,214,0.03);
+  }
+  .year-chart-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; flex-wrap:wrap; gap:6px; }
+  .year-chart-title{ font-family:'Roboto Mono', monospace; font-size:11px; letter-spacing:.08em; color:rgba(237,230,214,0.5); text-transform:uppercase; }
+  .year-chart-total{ font-family:'Roboto Mono', monospace; font-weight:700; font-size:20px; color:var(--gold-soft); }
+  .year-chart-svg{ width:100%; height:70px; display:block; overflow:visible; }
   .crumb{ font-family:'Roboto Mono', monospace; font-size:12px; color:rgba(237,230,214,0.5); }
   .crumb a{ color:var(--gold-soft); text-decoration:none; }
   h1{ font-family:'Noto Serif TC', serif; font-weight:900; font-size: clamp(26px, 4vw, 36px); margin:8px 0 4px; }
@@ -75,7 +87,7 @@
     border:1px solid var(--line); overflow:hidden;
   }
   .exp-card::before{ content:""; position:absolute; top:0; left:0; right:0; height:5px; background:var(--accent, var(--gold)); }
-  .exp-card h3{ font-family:'Noto Serif TC', serif; font-size:17px; margin:0 0 12px; white-space:nowrap; }
+  .exp-card h3{ font-family:'Noto Serif TC', serif; font-size:15px; margin:0 0 12px; line-height:1.35; white-space:normal; word-break:break-word; }
   .exp-card .stat-row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
   .exp-card .stat-box{ border:1px solid var(--line-strong); border-radius:10px; padding:8px 10px; background:rgba(201,151,63,0.08); }
   .exp-card .stat-box.count{ background:rgba(78,164,145,0.08); }
@@ -113,35 +125,28 @@
 <header>
   <div class="crumb"><a href="credit-card-dashboard.html">← 回到信用卡優惠儀表板</a></div>
   <div class="header-top">
-    <div>
+    <div class="header-title-block">
       <h1>各信用卡支出紀錄</h1>
       <p class="sub">上傳每期對帳單，追蹤每張卡實際刷了多少、刷了什麼。</p>
     </div>
-    <a class="btn-link" href="expense-upload.html">＋ 上傳新明細</a>
+
+    <div class="year-chart-panel">
+      <div class="year-chart-head">
+        <span class="year-chart-title" id="year-chart-title">本年度刷卡金額</span>
+        <span class="year-chart-total" id="year-chart-total">NT$0</span>
+      </div>
+      <svg class="year-chart-svg" id="year-chart-svg" viewBox="0 0 600 70" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="header-actions">
+      <a class="btn-link" href="expense-upload.html">＋ 上傳新明細</a>
+    </div>
   </div>
 </header>
 
 <main>
 
   <div id="setup-banner"></div>
-
-  <section>
-    <div class="section-title">總覽</div>
-    <div class="summary-row">
-      <div class="summary-box">
-        <div class="summary-label">累計總支出</div>
-        <div class="summary-value" id="sum-total">—</div>
-      </div>
-      <div class="summary-box">
-        <div class="summary-label">交易筆數</div>
-        <div class="summary-value" id="sum-count">—</div>
-      </div>
-      <div class="summary-box">
-        <div class="summary-label">已有資料的卡片</div>
-        <div class="summary-value" id="sum-cards">—</div>
-      </div>
-    </div>
-  </section>
 
   <section>
     <div class="section-title">各卡片使用狀況</div>
@@ -179,9 +184,7 @@ async function init(){
         Firebase 專案的設定值，並開好 Firestore 資料庫和存取規則後，重新整理這個頁面。
       </div>`;
     renderWallet({}); // 全部顯示空狀態
-    document.getElementById('sum-total').textContent = 'NT$0';
-    document.getElementById('sum-count').textContent = '0';
-    document.getElementById('sum-cards').textContent = '0 / ' + CARD_LIST.length;
+    renderYearChart([]);
     document.getElementById('recent-wrap').innerHTML = `<div class="empty-state">尚未連接資料庫，無法顯示交易紀錄。</div>`;
     return;
   }
@@ -194,8 +197,6 @@ async function init(){
     // 依卡片彙整（同時依幣別分開加總，例如玉山熊本熊卡有台幣跟日圓兩種）
     const byCard = {};
     CARD_LIST.forEach(c => byCard[c.id] = { total:0, count:0, lastDate:null, lastUpload:null, byCurrency:{} });
-    let grandTotal = 0;   // 只加總台幣，避免跟日圓混在一起變成沒有意義的數字
-    let grandTotalJPY = 0;
     txs.forEach(tx => {
       const cid = tx.cardId;
       const cur = tx.currency || 'TWD';
@@ -205,15 +206,9 @@ async function init(){
       byCard[cid].byCurrency[cur] = (byCard[cid].byCurrency[cur] || 0) + amt;
       if(cur === 'TWD') byCard[cid].total += amt;
       if(!byCard[cid].lastDate || tx.date > byCard[cid].lastDate) byCard[cid].lastDate = tx.date;
-      if(cur === 'TWD') grandTotal += amt;
-      else if(cur === 'JPY') grandTotalJPY += amt;
     });
 
-    const cardsWithData = Object.values(byCard).filter(c => c.count > 0).length;
-    document.getElementById('sum-total').textContent = 'NT$' + grandTotal.toLocaleString('zh-TW')
-      + (grandTotalJPY ? '　+　JPY ' + grandTotalJPY.toLocaleString('zh-TW') : '');
-    document.getElementById('sum-count').textContent = txs.length.toLocaleString('zh-TW');
-    document.getElementById('sum-cards').textContent = cardsWithData + ' / ' + CARD_LIST.length;
+    renderYearChart(txs);
 
     renderWallet(byCard);
     window.__allTxs = txs;
@@ -229,6 +224,51 @@ async function init(){
       </div>`;
     renderWallet({});
   }
+}
+
+/* ============ 本年度刷卡金額走勢圖（1-12月，虛線折線圖）============ */
+function renderYearChart(txs){
+  const year = new Date().getFullYear();
+  const monthly = new Array(12).fill(0);
+
+  txs.forEach(tx=>{
+    const cur = tx.currency || 'TWD';
+    const amt = Number(tx.amount) || 0;
+    // 只加總台幣的正項消費：不計入退款/繳費/回饋（負數），也不把日圓混進來算
+    if(cur !== 'TWD' || amt <= 0) return;
+    if(!tx.date || !tx.date.startsWith(String(year) + '-')) return;
+    const m = parseInt(tx.date.split('-')[1], 10) - 1;
+    if(m >= 0 && m < 12) monthly[m] += amt;
+  });
+
+  const yearTotal = monthly.reduce((a,b)=> a+b, 0);
+  document.getElementById('year-chart-title').textContent = year + ' 年度刷卡金額（1–12月）';
+  document.getElementById('year-chart-total').textContent = 'NT$' + yearTotal.toLocaleString('zh-TW');
+
+  const svg = document.getElementById('year-chart-svg');
+  const W = 600, H = 70, padTop = 14, padBottom = 16, padSide = 6;
+  const maxVal = Math.max(...monthly, 1);
+  const stepX = (W - padSide*2) / 11;
+
+  const points = monthly.map((v,i)=>{
+    const x = padSide + stepX * i;
+    const y = H - padBottom - (v / maxVal) * (H - padTop - padBottom);
+    return { x, y, v };
+  });
+
+  const linePath = points.map(p=> `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const monthLabels = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+  const dots = points.map((p,i)=> `
+    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.6" fill="#C9973F" />
+    ${p.v > 0 ? `<text x="${p.x.toFixed(1)}" y="${(p.y-6).toFixed(1)}" font-size="8" fill="#E7C888" text-anchor="middle" font-family="Roboto Mono, monospace">${Math.round(p.v/1000)}k</text>` : ''}
+    <text x="${p.x.toFixed(1)}" y="${H-3}" font-size="7.5" fill="rgba(237,230,214,0.4)" text-anchor="middle" font-family="Noto Sans TC, sans-serif">${monthLabels[i]}</text>
+  `).join('');
+
+  svg.innerHTML = `
+    <polyline points="${linePath}" fill="none" stroke="#4EA491" stroke-width="1.6" stroke-dasharray="4 3" />
+    ${dots}
+  `;
 }
 
 function renderWallet(byCard){
