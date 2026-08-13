@@ -416,7 +416,8 @@ const BANK_PARSERS = {
   taishin: parseTaishin,
   dawa: parseDawa,
   kumamon: parseKumamon,
-  ubot: parseUbot
+  ubot: parseUbot,
+  dbseco: parseDBSEco
   // 之後調好其他銀行，例如：
   // fubonj: parseFubonJ,
 };
@@ -533,6 +534,95 @@ function parseDawa(extracted, helpers){
    - 消費日只有「月/日」沒有年份，跟永豐一樣用帳單月份欄位補上年份。
    - 如果實際扣款是日圓（不是台幣），會在摘要後面加註 [JPY]，避免跟台幣金額搞混。
    ---------------------------------------------------------------- */
+/* ---------- 聯邦銀行（LINE BANK熊大卡＋賴點卡合併帳單）----------
+   這份帳單把兩張卡的消費明細印在同一份 PDF 裡，用「XX卡－正卡 卡號末四碼」
+   這種分隔列隔開兩段，但因為使用者選單上已經合併成一個「聯邦信用卡」，
+   這裡就不特別區分是哪張卡，兩段的交易都一起抓進來。
+   欄位順序是 入帳日、消費日（跟其他銀行相反），我們記錄的日期用「消費日」（實際刷卡日）。
+   表頭文字位置跟實際內容對不太準，所以一樣用觀察到的固定座標範圍。
+   ---------------------------------------------------------------- */
+/* ---------- 星展銀行（eco永續極簡卡）----------
+   1. 第一頁是「帳務明細」摘要（信用額度、循環利率、結帳日等），裡面剛好也有日期格式
+      的文字，很容易被誤判成交易列，所以只掃描真的有「消費日／消費明細」表頭的那一頁，
+      其他頁完全跳過。
+   2. 消費日已經是西元年（YYYY/MM/DD），不用轉換。
+   3. 有些列（像自動轉帳繳款）的兩個日期會跟摘要開頭黏在同一個文字片段裡
+      （例如「2026/07/10 2026/07/10 ATM/」），要先把日期切開，剩下的部分要接回摘要，
+      不能整段被當成日期忽略掉。
+   ---------------------------------------------------------------- */
+function parseDBSEco(extracted, helpers){
+  const DATE_COL = [20, 95];   // 消費日／入帳起息日
+  const DESC_COL = [95, 360];  // 消費明細（含消費地）
+  const AMT_COL  = [520, 570]; // 新台幣金額
+  const DATE_LEADING_RE = /^(\d{4}\/\d{1,2}\/\d{1,2})(?:\s+\d{4}\/\d{1,2}\/\d{1,2})?\s*(.*)$/;
+
+  if(helpers && helpers.setDebugColumnBounds){
+    helpers.setDebugColumnBounds([
+      { name: '消費日(固定範圍，僅限有表頭的頁面)', x: DATE_COL[0] },
+      { name: '消費明細(固定範圍)', x: DESC_COL[0] },
+      { name: '新台幣金額(固定範圍)', x: AMT_COL[0] }
+    ]);
+  }
+
+  const rows = [];
+  extracted.pages.forEach(({ items })=>{
+    // 這一頁如果沒有「消費日」+「消費明細」表頭，就當作不是交易明細頁，整頁跳過
+    const byY = {};
+    items.forEach(it=>{ (byY[it.y] = byY[it.y] || []).push(it); });
+    const hasHeader = Object.keys(byY).some(y=>{
+      const text = byY[y].slice().sort((a,b)=> a.x-b.x).map(i=>i.str).join('').replace(/\s+/g,'');
+      return text.includes('消費日') && text.includes('消費明細');
+    });
+    if(!hasHeader) return;
+
+    const anchors = [];
+    items.forEach(it=>{
+      if(it.x < DATE_COL[0] || it.x >= DATE_COL[1]) return;
+      const m = it.str.trim().match(DATE_LEADING_RE);
+      if(m){
+        anchors.push({ y: it.y, dateText: m[1], leftoverDesc: (m[2] || '').trim() });
+      }
+    });
+    anchors.sort((a,b)=> b.y - a.y);
+    if(anchors.length === 0) return;
+
+    function nearestAnchorIndex(y){
+      let bestIdx = 0, bestDist = Infinity;
+      anchors.forEach((a,i)=>{
+        const d = Math.abs(a.y - y);
+        if(d < bestDist){ bestDist = d; bestIdx = i; }
+      });
+      return bestDist <= 8 ? bestIdx : -1;
+    }
+
+    const descByAnchor = anchors.map(a=> a.leftoverDesc ? [a.leftoverDesc] : []);
+    const amtByAnchor = anchors.map(()=> []);
+    items.forEach(it=>{
+      let col = null;
+      if(it.x >= DESC_COL[0] && it.x < DESC_COL[1]) col = 'desc';
+      else if(it.x >= AMT_COL[0] && it.x < AMT_COL[1]) col = 'amt';
+      if(!col) return;
+      const idx = nearestAnchorIndex(it.y);
+      if(idx === -1) return;
+      if(col === 'desc') descByAnchor[idx].push(it.str);
+      else amtByAnchor[idx].push(it);
+    });
+
+    anchors.forEach((a, i)=>{
+      const descText = descByAnchor[i].join(' ').replace(/\s+/g,' ').trim();
+      const amtText = amtByAnchor[i]
+        .sort((x,y)=> y.y - x.y || x.x - y.x)
+        .map(it=>it.str).join('').replace(/\s+/g,'').replace(/,/g,'').trim();
+      const amount = parseFloat(amtText);
+      if(descText && !isNaN(amount)){
+        rows.push({ date: normalizeDate(a.dateText), description: descText, amount, currency: 'TWD' });
+      }
+    });
+  });
+
+  return rows;
+}
+
 /* ---------- 聯邦銀行（LINE BANK熊大卡＋賴點卡合併帳單）----------
    這份帳單把兩張卡的消費明細印在同一份 PDF 裡，用「XX卡－正卡 卡號末四碼」
    這種分隔列隔開兩段，但因為使用者選單上已經合併成一個「聯邦信用卡」，
