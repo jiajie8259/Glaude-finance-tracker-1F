@@ -417,9 +417,8 @@ const BANK_PARSERS = {
   dawa: parseDawa,
   kumamon: parseKumamon,
   ubot: parseUbot,
-  dbseco: parseDBSEco
-  // 之後調好其他銀行，例如：
-  // fubonj: parseFubonJ,
+  dbseco: parseDBSEco,
+  fubonj: parseFubonJ
 };
 
 function updateParserHint(){
@@ -541,6 +540,93 @@ function parseDawa(extracted, helpers){
    欄位順序是 入帳日、消費日（跟其他銀行相反），我們記錄的日期用「消費日」（實際刷卡日）。
    表頭文字位置跟實際內容對不太準，所以一樣用觀察到的固定座標範圍。
    ---------------------------------------------------------------- */
+/* ---------- 星展銀行（eco永續極簡卡）----------
+   1. 第一頁是「帳務明細」摘要（信用額度、循環利率、結帳日等），裡面剛好也有日期格式
+      的文字，很容易被誤判成交易列，所以只掃描真的有「消費日／消費明細」表頭的那一頁，
+      其他頁完全跳過。
+   2. 消費日已經是西元年（YYYY/MM/DD），不用轉換。
+   3. 有些列（像自動轉帳繳款）的兩個日期會跟摘要開頭黏在同一個文字片段裡
+      （例如「2026/07/10 2026/07/10 ATM/」），要先把日期切開，剩下的部分要接回摘要，
+      不能整段被當成日期忽略掉。
+   ---------------------------------------------------------------- */
+/* ---------- 台北富邦銀行（J卡）----------
+   相對單純：不管原始消費是哪種幣別（像日圓消費），「台幣金額」欄位本身
+   就已經是換算好的台幣值，不用像玉山那樣分開處理雙幣結算。
+   一樣只掃描有「消費日期／消費說明」表頭的那一頁，避免帳單摘要頁、
+   繳款單頁面上剛好長得像日期的數字被誤判成交易。
+   ---------------------------------------------------------------- */
+function parseFubonJ(extracted, helpers){
+  const DATE_COL = [15, 70];   // 消費日期
+  const DESC_COL = [70, 280];  // 消費說明
+  const AMT_COL  = [520, 580]; // 台幣金額
+  const DATE_RE = /^\d{2,4}\/\d{1,2}\/\d{1,2}$/;
+
+  if(helpers && helpers.setDebugColumnBounds){
+    helpers.setDebugColumnBounds([
+      { name: '消費日期(固定範圍，僅限有表頭的頁面)', x: DATE_COL[0] },
+      { name: '消費說明(固定範圍)', x: DESC_COL[0] },
+      { name: '台幣金額(固定範圍)', x: AMT_COL[0] }
+    ]);
+  }
+
+  const rows = [];
+  extracted.pages.forEach(({ items })=>{
+    // 只處理真的有「消費日期」+「消費說明」表頭的頁面，避免帳單摘要頁、繳款單頁面誤判
+    const byY = {};
+    items.forEach(it=>{ (byY[it.y] = byY[it.y] || []).push(it); });
+    const hasHeader = Object.keys(byY).some(y=>{
+      const text = byY[y].slice().sort((a,b)=> a.x-b.x).map(i=>i.str).join('').replace(/\s+/g,'');
+      return text.includes('消費日期') && text.includes('消費說明');
+    });
+    if(!hasHeader) return;
+
+    const anchors = [];
+    items.forEach(it=>{
+      if(it.x >= DATE_COL[0] && it.x < DATE_COL[1] && DATE_RE.test(it.str.trim())){
+        anchors.push({ y: it.y, dateText: it.str.trim() });
+      }
+    });
+    anchors.sort((a,b)=> b.y - a.y);
+    if(anchors.length === 0) return;
+
+    function nearestAnchorIndex(y){
+      let bestIdx = 0, bestDist = Infinity;
+      anchors.forEach((a,i)=>{
+        const d = Math.abs(a.y - y);
+        if(d < bestDist){ bestDist = d; bestIdx = i; }
+      });
+      return bestDist <= 8 ? bestIdx : -1;
+    }
+
+    const descByAnchor = anchors.map(()=> []);
+    const amtByAnchor = anchors.map(()=> []);
+    items.forEach(it=>{
+      let col = null;
+      if(it.x >= DESC_COL[0] && it.x < DESC_COL[1]) col = 'desc';
+      else if(it.x >= AMT_COL[0] && it.x < AMT_COL[1]) col = 'amt';
+      if(!col) return;
+      const idx = nearestAnchorIndex(it.y);
+      if(idx === -1) return;
+      (col === 'desc' ? descByAnchor : amtByAnchor)[idx].push(it);
+    });
+
+    anchors.forEach((a, i)=>{
+      const descText = descByAnchor[i]
+        .sort((x,y)=> y.y - x.y || x.x - y.x)
+        .map(it=>it.str).join(' ').replace(/\s+/g,' ').trim();
+      const amtText = amtByAnchor[i]
+        .sort((x,y)=> y.y - x.y || x.x - y.x)
+        .map(it=>it.str).join('').replace(/\s+/g,'').replace(/,/g,'').trim();
+      const amount = parseFloat(amtText);
+      if(descText && !isNaN(amount)){
+        rows.push({ date: normalizeDate(a.dateText), description: descText, amount, currency: 'TWD' });
+      }
+    });
+  });
+
+  return rows;
+}
+
 /* ---------- 星展銀行（eco永續極簡卡）----------
    1. 第一頁是「帳務明細」摘要（信用額度、循環利率、結帳日等），裡面剛好也有日期格式
       的文字，很容易被誤判成交易列，所以只掃描真的有「消費日／消費明細」表頭的那一頁，
