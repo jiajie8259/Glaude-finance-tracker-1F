@@ -62,6 +62,17 @@
   main{ max-width:1400px; margin:0 auto; padding:0 24px; }
   section{ margin-top:36px; }
   .section-title{ font-family:'Noto Serif TC', serif; font-weight:700; font-size:20px; margin-bottom:14px; }
+  .section-title-row{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+  .section-title-row .section-title{ margin-bottom:0; }
+  .wallet-toggle{ display:flex; gap:6px; border:1px solid var(--line-strong); border-radius:999px; padding:3px; }
+  .toggle-btn{
+    font-family:'Noto Sans TC', sans-serif; font-size:12.5px; font-weight:500;
+    background:transparent; border:none; color:rgba(237,230,214,0.6);
+    padding:7px 16px; border-radius:999px; cursor:pointer;
+  }
+  .toggle-btn.active{ background:var(--gold); color:#1B1206; font-weight:700; }
+  .toggle-btn:hover:not(.active){ color:var(--gold-soft); }
+  .exp-card .period-label{ font-size:11px; color:rgba(78,164,145,0.85); font-family:'Roboto Mono', monospace; margin-top:2px; }
 
   /* setup banner */
   .banner{
@@ -149,7 +160,13 @@
   <div id="setup-banner"></div>
 
   <section>
-    <div class="section-title">各卡片使用狀況</div>
+    <div class="section-title-row">
+      <div class="section-title">各卡片使用狀況</div>
+      <div class="wallet-toggle">
+        <button id="toggle-latest" class="toggle-btn active">最近一期帳單</button>
+        <button id="toggle-year" class="toggle-btn">年度累計</button>
+      </div>
+    </div>
     <div class="wallet" id="wallet"></div>
   </section>
 
@@ -197,24 +214,9 @@ async function init(){
     const txs = [];
     snap.forEach(doc => txs.push({ id: doc.id, ...doc.data() }));
 
-    // 依卡片彙整（同時依幣別分開加總，例如玉山熊本熊卡有台幣跟日圓兩種）
-    const byCard = {};
-    CARD_LIST.forEach(c => byCard[c.id] = { total:0, count:0, lastDate:null, lastUpload:null, byCurrency:{} });
-    txs.forEach(tx => {
-      const cid = tx.cardId;
-      const cur = tx.currency || 'TWD';
-      const amt = Number(tx.amount) || 0;
-      if(!byCard[cid]) byCard[cid] = { total:0, count:0, lastDate:null, lastUpload:null, byCurrency:{} };
-      byCard[cid].count += 1;
-      byCard[cid].byCurrency[cur] = (byCard[cid].byCurrency[cur] || 0) + amt;
-      if(cur === 'TWD') byCard[cid].total += amt;
-      if(!byCard[cid].lastDate || tx.date > byCard[cid].lastDate) byCard[cid].lastDate = tx.date;
-    });
-
-    renderYearChart(txs);
-
-    renderWallet(byCard);
     window.__allTxs = txs;
+    renderYearChart(txs);
+    renderWalletForCurrentMode();
     populateFilterOptions();
     renderRecent(applyFilter(txs));
 
@@ -228,6 +230,64 @@ async function init(){
     renderWallet({});
   }
 }
+
+/* ============ 各卡片使用狀況：最近一期帳單／年度累計 切換 ============ */
+window.__walletMode = 'latest'; // 預設顯示最近一期帳單
+
+function computeByCard(txs, mode){
+  const byCard = {};
+  CARD_LIST.forEach(c => byCard[c.id] = { total:0, count:0, lastDate:null, byCurrency:{}, periodLabel:null });
+
+  // 每張卡「最近一期」的判斷基準：優先用上傳時填的帳單月份，沒填的話退回消費日期的年月
+  const latestPeriodByCard = {};
+  txs.forEach(tx=>{
+    const cid = tx.cardId;
+    const period = tx.billingPeriod || (tx.date ? tx.date.slice(0,7) : null);
+    if(!period) return;
+    if(!latestPeriodByCard[cid] || period > latestPeriodByCard[cid]) latestPeriodByCard[cid] = period;
+  });
+
+  txs.forEach(tx=>{
+    const cid = tx.cardId;
+    if(!byCard[cid]) byCard[cid] = { total:0, count:0, lastDate:null, byCurrency:{}, periodLabel:null };
+
+    if(mode === 'latest'){
+      const period = tx.billingPeriod || (tx.date ? tx.date.slice(0,7) : null);
+      if(!period || period !== latestPeriodByCard[cid]) return; // 不是這張卡最近一期的交易，跳過
+    }
+
+    const cur = tx.currency || 'TWD';
+    const amt = Number(tx.amount) || 0;
+    byCard[cid].count += 1;
+    byCard[cid].byCurrency[cur] = (byCard[cid].byCurrency[cur] || 0) + amt;
+    if(cur === 'TWD') byCard[cid].total += amt;
+    if(!byCard[cid].lastDate || tx.date > byCard[cid].lastDate) byCard[cid].lastDate = tx.date;
+  });
+
+  Object.keys(latestPeriodByCard).forEach(cid=>{
+    if(byCard[cid]) byCard[cid].periodLabel = latestPeriodByCard[cid];
+  });
+
+  return byCard;
+}
+
+function renderWalletForCurrentMode(){
+  const byCard = computeByCard(window.__allTxs || [], window.__walletMode);
+  renderWallet(byCard, window.__walletMode);
+}
+
+document.getElementById('toggle-latest').addEventListener('click', ()=>{
+  window.__walletMode = 'latest';
+  document.getElementById('toggle-latest').classList.add('active');
+  document.getElementById('toggle-year').classList.remove('active');
+  renderWalletForCurrentMode();
+});
+document.getElementById('toggle-year').addEventListener('click', ()=>{
+  window.__walletMode = 'year';
+  document.getElementById('toggle-year').classList.add('active');
+  document.getElementById('toggle-latest').classList.remove('active');
+  renderWalletForCurrentMode();
+});
 
 /* ============ 本年度刷卡金額走勢圖（1-12月，虛線折線圖）============ */
 function renderYearChart(txs){
@@ -274,11 +334,13 @@ function renderYearChart(txs){
   `;
 }
 
-function renderWallet(byCard){
+function renderWallet(byCard, mode){
+  mode = mode || 'latest';
+  const amountLabel = mode === 'latest' ? '本期支出' : '累計支出';
   const wallet = document.getElementById('wallet');
   wallet.innerHTML = '';
   CARD_LIST.forEach(card=>{
-    const data = byCard[card.id] || { total:0, count:0, lastDate:null, byCurrency:{} };
+    const data = byCard[card.id] || { total:0, count:0, lastDate:null, byCurrency:{}, periodLabel:null };
     const hasData = data.count > 0;
     const currencies = Object.keys(data.byCurrency || {}).filter(c=> data.byCurrency[c] !== 0 || c !== 'TWD');
     const isMultiCurrency = currencies.length > 1; // 目前只有玉山熊本熊卡會同時有 TWD 跟 JPY
@@ -292,7 +354,7 @@ function renderWallet(byCard){
       statRowHtml = `
         <div class="stat-row">
           <div class="stat-box">
-            <span class="stat-label">累計支出</span>
+            <span class="stat-label">${amountLabel}</span>
             <span class="stat-value">尚無資料</span>
           </div>
           <div class="stat-box count">
@@ -303,7 +365,7 @@ function renderWallet(byCard){
     } else if(isMultiCurrency){
       // 分幣別顯示，這張卡不合併加總（單位不同，加在一起沒有意義）
       const boxes = currencies.map(cur=>{
-        const label = cur === 'TWD' ? '台幣支出' : cur + ' 支出';
+        const label = (cur === 'TWD' ? '台幣' : cur) + (mode === 'latest' ? '本期' : '累計');
         const prefix = cur === 'TWD' ? 'NT$' : cur + ' ';
         return `
           <div class="stat-box">
@@ -323,7 +385,7 @@ function renderWallet(byCard){
       statRowHtml = `
         <div class="stat-row">
           <div class="stat-box">
-            <span class="stat-label">累計支出</span>
+            <span class="stat-label">${amountLabel}</span>
             <span class="stat-value">NT$${data.total.toLocaleString('zh-TW')}</span>
           </div>
           <div class="stat-box count">
@@ -333,10 +395,14 @@ function renderWallet(byCard){
         </div>`;
     }
 
+    const periodLine = (mode === 'latest' && hasData && data.periodLabel)
+      ? `<div class="period-label">帳單期間：${data.periodLabel}</div>` : '';
+
     el.innerHTML = `
       <h3>${card.name.replace(/（/g, '<br>（')}</h3>
       ${statRowHtml}
       <div class="last-upload">${hasData ? '最新交易日期：'+data.lastDate : '尚未上傳過對帳單'}</div>
+      ${periodLine}
     `;
     wallet.appendChild(el);
   });
