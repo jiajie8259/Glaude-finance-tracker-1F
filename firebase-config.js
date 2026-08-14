@@ -242,8 +242,7 @@ const CARD_LIST = [
   { id: "ubot",     name: "聯邦信用卡（LINE BANK熊大卡＋賴點卡合併帳單）", accent: "#8E6BC9" },
   { id: "kumamon",  name: "玉山熊本熊卡",           accent: "#C1543C" },
   { id: "fubonj",   name: "富邦 J 卡",              accent: "#3F7FBF" },
-  { id: "dbseco",   name: "星展 eco 永續極簡卡",    accent: "#C9973F" },
-  { id: "dbsfly",   name: "星展飛行卡",             accent: "#4EA491" },
+  { id: "dbs",      name: "星展信用卡（eco永續極簡卡＋飛行卡合併帳單）", accent: "#C9973F" },
   { id: "ctbc",     name: "中國信託中華電信聯名卡", accent: "#3F7FBF" }
 ];
 
