@@ -155,9 +155,12 @@
 
   <section>
     <div class="section-title">所有交易</div>
-    <div style="margin-bottom:14px;">
+    <div style="margin-bottom:14px; display:flex; gap:10px; flex-wrap:wrap;">
       <select id="filter-card" style="background:var(--panel); border:1px solid var(--line-strong); color:var(--paper); padding:8px 12px; border-radius:8px; font-family:'Noto Sans TC', sans-serif; font-size:13px;">
         <option value="">全部卡片</option>
+      </select>
+      <select id="filter-month" style="background:var(--panel); border:1px solid var(--line-strong); color:var(--paper); padding:8px 12px; border-radius:8px; font-family:'Roboto Mono', monospace; font-size:13px;">
+        <option value="">全部年/月</option>
       </select>
     </div>
     <div id="recent-wrap"></div>
@@ -331,7 +334,7 @@ function renderWallet(byCard){
     }
 
     el.innerHTML = `
-      <h3>${card.name}</h3>
+      <h3>${card.name.replace(/（/g, '<br>（')}</h3>
       ${statRowHtml}
       <div class="last-upload">${hasData ? '最新交易日期：'+data.lastDate : '尚未上傳過對帳單'}</div>
     `;
@@ -341,22 +344,51 @@ function renderWallet(byCard){
 
 function populateFilterOptions(){
   const sel = document.getElementById('filter-card');
-  if(sel.dataset.populated) return; // 只需要建立一次選項
-  CARD_LIST.forEach(c=>{
-    const opt = document.createElement('option');
-    opt.value = c.id;
-    opt.textContent = c.name;
-    sel.appendChild(opt);
+  const monthSel = document.getElementById('filter-month');
+
+  if(!sel.dataset.populated){
+    CARD_LIST.forEach(c=>{
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      sel.appendChild(opt);
+    });
+    sel.dataset.populated = '1';
+    sel.addEventListener('change', ()=>{
+      renderRecent(applyFilter(window.__allTxs || []));
+    });
+  }
+
+  // 年/月選項要依實際資料重新產生（每次資料變動，例如刪除交易後，可用的年月也可能變化）
+  const months = new Set();
+  (window.__allTxs || []).forEach(tx=>{
+    if(tx.date && /^\d{4}-\d{2}/.test(tx.date)) months.add(tx.date.slice(0,7));
   });
-  sel.dataset.populated = '1';
-  sel.addEventListener('change', ()=>{
-    renderRecent(applyFilter(window.__allTxs || []));
-  });
+  const sortedMonths = Array.from(months).sort().reverse(); // 新到舊
+
+  const currentVal = monthSel.value;
+  monthSel.innerHTML = '<option value="">全部年/月</option>' +
+    sortedMonths.map(m=>{
+      const [y,mo] = m.split('-');
+      return `<option value="${m}">${y}年${mo}月</option>`;
+    }).join('');
+  if(sortedMonths.includes(currentVal)) monthSel.value = currentVal;
+
+  if(!monthSel.dataset.bound){
+    monthSel.addEventListener('change', ()=>{
+      renderRecent(applyFilter(window.__allTxs || []));
+    });
+    monthSel.dataset.bound = '1';
+  }
 }
 
 function applyFilter(txs){
-  const val = document.getElementById('filter-card').value;
-  return val ? txs.filter(tx=> tx.cardId === val) : txs;
+  const cardVal = document.getElementById('filter-card').value;
+  const monthVal = document.getElementById('filter-month').value;
+  return txs.filter(tx=>
+    (cardVal ? tx.cardId === cardVal : true) &&
+    (monthVal ? (tx.date || '').startsWith(monthVal) : true)
+  );
 }
 
 function renderRecent(txs){
