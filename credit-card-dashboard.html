@@ -319,9 +319,8 @@
     color:rgba(237,230,214,0.5);
     text-transform:uppercase;
     margin-bottom:3px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    white-space:normal;
+    word-break:break-word;
   }
   .card .stat-value{
     display:block;
@@ -334,7 +333,10 @@
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  .card .stat-box.cap .stat-value{ color:var(--teal); font-size:12.5px; }
+  .card .stat-box.cap .stat-value{
+    color:var(--teal); font-size:12.5px;
+    white-space:normal; overflow:visible; text-overflow:clip; word-break:break-word;
+  }
   .card .stat-sub{
     display:block;
     font-size:11px;
@@ -781,6 +783,18 @@ function selectCategory(cat, btnEl){
 
 /* ============ 卡片總覽 wallet ============ */
 const wallet = document.getElementById('wallet');
+
+/* 回饋上限的精簡顯示：只留金額數字（不重複顯示「回饋上限」字樣），
+   如果這個上限只適用於「加碼」的那一部分（不是整體回饋都有這個上限），
+   會在數字前面加註「部分加碼」，提醒這不是全部回饋的上限。 */
+function computeCapShort(capFull){
+  if(!capFull || capFull === '無上限') return capFull || '無上限';
+  const amtMatch = capFull.match(/NT\$[\d,]+(?:\/[^\s（)]+)?/);
+  const amtText = amtMatch ? amtMatch[0] : capFull.split('（')[0].trim();
+  const isBonusOnly = /加碼/.test(capFull);
+  return isBonusOnly ? ('部分加碼 ' + amtText) : amtText;
+}
+
 cards.forEach(card=>{
   const el = document.createElement('div');
   el.className = 'card';
@@ -795,7 +809,7 @@ cards.forEach(card=>{
   const bestPayShort = categoryShort[bestScenario.cat] || bestScenario.cat;
   const bestPayFull = `${categoryLabels[bestScenario.cat] || bestScenario.cat} ${bestScenario.label}`;
   const capFull = bestScenario.cap ? bestScenario.cap : '無上限';
-  const capShort = capFull.split('（')[0].trim();
+  const capShort = computeCapShort(capFull);
 
   el.innerHTML = `
     <div class="card-head">
@@ -808,7 +822,7 @@ cards.forEach(card=>{
         <span class="stat-value">${bestPayShort} ${bestScenario.label}</span>
       </div>
       <div class="stat-box cap" title="${capFull}">
-        <span class="stat-label">月封頂</span>
+        <span class="stat-label">回饋上限/月</span>
         <span class="stat-value">${capShort}</span>
       </div>
     </div>
@@ -819,7 +833,6 @@ cards.forEach(card=>{
       <summary>看完整權益與備註</summary>
       <div class="note-block">${scenarioLines}\n\n${card.fullNote}</div>
     </details>
-    <br>
     <a class="official-link" href="${card.official}" target="_blank" rel="noopener">前往官方權益頁面 ↗</a>
   `;
   wallet.appendChild(el);
