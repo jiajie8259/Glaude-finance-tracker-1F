@@ -511,24 +511,13 @@
 </head>
 <body>
 
-<header>
-  <div class="header-top">
-    <div class="meta-row">
-      <span class="meta-pill">收錄卡片 <b>9</b> 張</span>
-      <span class="meta-pill">資料建立 <b id="build-date"></b></span>
-      <span class="meta-pill">上次核對 <b id="last-checked">讀取中…</b></span>
-    </div>
-    <a class="btn-link" href="expense-dashboard.html" target="_blank" rel="noopener">📊 各信用卡支出紀錄</a>
-  </div>
-</header>
-
 <main>
 
   <!-- ================= 卡片總覽 ================= -->
   <section>
-    <div class="section-head narrow">
+    <div class="section-head">
       <div class="section-title">我的卡片總覽</div>
-      <div class="section-note">FULL REFERENCE</div>
+      <a class="btn-link" href="expense-dashboard.html" target="_blank" rel="noopener">📊 各信用卡支出紀錄</a>
     </div>
     <div class="wallet" id="wallet"></div>
   </section>
@@ -567,6 +556,10 @@
       <div class="section-note">KEEP THIS CURRENT</div>
     </div>
     <div class="update-panel">
+      <div class="meta-row" style="margin-bottom:16px;">
+        <span class="meta-pill">資料建立 <b id="build-date"></b></span>
+        <span class="meta-pill">上次核對 <b id="last-checked">讀取中…</b></span>
+      </div>
       <p><b>老實說在前面：</b>這是一個純網頁檔案，瀏覽器基於安全限制，沒辦法自動連到各家銀行網站抓資料（銀行網站也大多會擋這種請求），所以沒有真正的「一鍵自動更新」按鈕。但下面兩顆按鈕可以幫你把「請 Claude 查」跟「記錄核對日期」這兩件事變得更省力。</p>
 
       <div class="action-row">
