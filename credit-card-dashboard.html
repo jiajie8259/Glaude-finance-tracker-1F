@@ -600,16 +600,18 @@ const cards = [
       {cat:"overseas", rate:3.3, label:"3.3%", note:"切換「玩旅刷」：海外消費(含線上及實體)、華航、長榮、星宇、虎航、國泰、Klook、KKday、多家旅行社"},
       {cat:"mall", rate:3.3, label:"3.3%", note:"切換「大筆刷」：所有百貨(環球除外)、兩大Outlet、特力屋、HOLA、宜得利、UNIQLO"},
       {cat:"dining", rate:3.3, label:"3.3%", note:"切換「好食刷」：全台餐飲(不含餐券)、Uber Eats、展演票券、飯店"},
-      {cat:"holiday", rate:2, label:"2%", note:"切換「假日刷」：國定假日不限通路消費(含保費)"}
+      {cat:"holiday", rate:2, label:"2%", note:"切換「假日刷」：國定假日不限通路消費(含保費)"},
+      {cat:"chill", rate:10, label:"10%", note:"切換「Chill刷」(2026下半年新增)：指定飲料/餐廳通路，需切換方案"}
     ],
-    fullNote:"每日限切換權益方案一次；7 大權益需在 Richart Life App 切換，未切換對應方案時僅一般消費 0.3% 回饋。"
+    fullNote:"每日限切換權益方案一次；7 大權益需在 Richart Life App 切換，未切換對應方案時僅一般消費 0.3% 回饋。2026新增「Chill刷」最高10%方案。點數折抵帳單規則已於2026/1/6起從「100%折抵」改為「逐筆消費即時折抵，每筆上限30%」，兌換時請留意。"
   },
   {
     id:"dawa", bank:"永豐銀行", name:"永豐 DaWay 卡", accent:"#4EA491",
     mode:"LinePay", settle:"結算日 16 / 回饋結算 13日–次月14日",
     deadline:"優惠至 2026/12/31（舊戶2%不變）", official:"https://bank.sinopac.com/sinopacbt/personal/credit-card/introduction/bankcard/DAWAY.html",
     scenarios:[
-      {cat:"linepay", rate:2, label:"2%", note:"舊戶 LINE Pay 綁定消費，單筆需滿 NT$100", cap:"回饋上限 NT$20,000/月"}
+      {cat:"linepay", rate:2, label:"2%", note:"舊戶 LINE Pay 綁定消費，單筆需滿 NT$100", cap:"回饋上限 NT$20,000/月"},
+      {cat:"overseas", rate:2.5, label:"2.5%", note:"海外消費(消費地與幣別皆須為國外/外幣)，無上限", cap:"無上限"}
     ],
     fullNote:"部分連鎖店的刷卡機屬「聯合信用卡處理中心」小額支付平台特約商店(如停車場、連鎖速食店、手搖飲料店等)，這類消費無回饋。若額外完成「DAWAY GO」升等任務(自動扣繳+電子帳單+投資屬性問卷)，2026/7/1–12/31期間LINE Pay消費可再拉高至國內最高8%，有興趣可上官網確認條件。"
   },
@@ -632,6 +634,8 @@ const cards = [
     scenarios:[
       {cat:"evenday", rate:5, label:"5%", note:"偶數日 + 指定通路：三商集團、王品集團、春水堂、壽司郎、八方雲集、麥當勞、肯德基、摩斯、屈臣氏、寶雅等，需LINE Pay付款", cap:"回饋上限 NT$3,000/月（歸戶150點）"},
       {cat:"linepay", rate:2, label:"2%", note:"LINE Pay 綁定消費，單筆需滿 NT$100（基本1%+LINE Pay加碼1%）", cap:"回饋上限 NT$20,000/月"},
+      {cat:"overseas", rate:3, label:"3%", note:"海外消費，無上限", cap:"無上限"},
+      {cat:"insurance", rate:1, label:"1%", note:"保費，無上限", cap:"無上限"},
       {cat:"daily", rate:1, label:"1%", note:"一般消費，無上限"}
     ],
     fullNote:"偶數日(2/4/6…日)在指定連鎖餐飲及藥妝通路以LINE Pay消費才享5%加碼，單數日恢復一般費率。萊爾富另有5%無上限回饋（不需偶數日）。"
@@ -649,23 +653,25 @@ const cards = [
   {
     id:"fubonj", bank:"台北富邦銀行", name:"富邦 J 卡", accent:"#3F7FBF",
     mode:"—", settle:"結算日 8 / 回饋結算 9日–次月8日",
-    deadline:"優惠至 12/31", official:"https://cardpromote.taipeifubon.com.tw/promotion/Detail?sn=D000217",
+    deadline:"優惠至 12/31（2026權益轉型：主力移至海外，日韓泰最高6%）", official:"https://cardpromote.taipeifubon.com.tw/promotion/Detail?sn=D000217",
     scenarios:[
+      {cat:"overseasjkt", rate:6, label:"6%", note:"日本／韓國／泰國指定實體店面消費，最高6%（原權益+活動加碼疊加）", cap:"依活動公告，詳官網"},
+      {cat:"suica", rate:10, label:"10%", note:"綁定日本Suica西瓜卡儲值，最高10%回饋", cap:"依活動公告，詳官網"},
       {cat:"taxi", rate:0, label:"現折$50", note:"LINE GO TAXI 單筆滿 $250 現折 $50，每月需登錄"},
-      {cat:"daily", rate:1, label:"1%", note:"一般消費"}
+      {cat:"daily", rate:1, label:"1%", note:"一般消費（2026年已從LINE Pay神卡定位轉為海外導向，國內僅剩1%）"}
     ],
-    fullNote:"LINE GO TAXI 現折優惠每個月要重新登錄才有效，忘記登錄就沒有折扣。"
+    fullNote:"2026年權益大轉型：國內一般消費回歸1%，主力轉往海外——日韓泰實體店面最高6%、綁定Suica儲值最高10%，是目前最值得關注的權益，記得依官網公告確認活動期間與登錄方式。LINE GO TAXI 現折優惠每個月要重新登錄才有效，忘記登錄就沒有折扣。"
   },
   {
     id:"dbseco", bank:"星展銀行", name:"星展 eco 永續極簡卡", accent:"#C9973F",
     mode:"實體卡片・Apple Pay", settle:"結算日 23",
     deadline:"優惠至 12/31", official:"https://www.dbs.com.tw/personal-zh/cards/dbs-credit-cards/eco-ez",
     scenarios:[
-      {cat:"japan", rate:5, label:"5%", note:"日本指定地區實體消費(1%基本+4%加碼)", cap:"加碼上限 NT$15,000/月"},
+      {cat:"overseas", rate:5, label:"5%", note:"日本／韓國／泰國／美洲／新加坡指定地區實體消費(1%基本+4%加碼)，需實體卡或Apple Pay/Samsung Pay當地刷卡", cap:"加碼上限 NT$15,000/月"},
       {cat:"insurance", rate:1, label:"1%", note:"保費，與一般消費同享，無上限"},
       {cat:"daily", rate:1, label:"1%", note:"國內外一般消費，含超商、街口支付，無上限"}
     ],
-    fullNote:"「保費」與「超商街口支付」和一般消費同享 1% 無上限回饋。星巴克門市刷卡消費調製飲品，可免費更換為燕麥奶或杏仁堅果奶（非現金回饋，屬門市優惠）。"
+    fullNote:"「保費」與「超商街口支付」和一般消費同享 1% 無上限回饋。星巴克門市刷卡消費調製飲品，可免費更換為燕麥奶或杏仁堅果奶（非現金回饋，屬門市優惠）。⚠️「星展eco永續極簡卡」海外加碼範圍不含歐洲地區實體消費，歐洲加碼要用「星展eco永續卡」（無「極簡」二字，是不同的卡），辦卡時容易搞混，請以卡片全名為準。"
   },
   {
     id:"dbsfly", bank:"星展銀行", name:"星展飛行卡", accent:"#4EA491",
@@ -702,7 +708,10 @@ const categoryLabels = {
   evenday:  "偶數日連鎖餐飲藥妝",
   taxi:     "LINE GO TAXI 叫車",
   telecom:  "電信費",
-  movie:    "威秀影城"
+  movie:    "威秀影城",
+  chill:    "Chill刷指定通路",
+  overseasjkt: "日韓泰實體消費",
+  suica:    "日本交通卡儲值"
 };
 
 /* 卡片徽章用的精簡版分類名稱，避免長文字換行 */
@@ -719,7 +728,10 @@ const categoryShort = {
   evenday:  "偶數日通路",
   taxi:     "叫車",
   telecom:  "電信費",
-  movie:    "電影票"
+  movie:    "電影票",
+  chill:    "Chill刷",
+  overseasjkt: "日韓泰消費",
+  suica:    "交通卡儲值"
 };
 
 /* ============ 建立日期 ============ */
