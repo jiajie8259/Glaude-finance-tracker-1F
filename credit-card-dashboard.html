@@ -799,7 +799,7 @@ function computeCapShort(capFull){
     return capFull.split('（')[0].trim();
   }
   const isBonusOnly = /加碼/.test(capFull);
-  const lines = isBonusOnly ? ['部分加碼', '最多可刷', amtMatch[0]] : ['最多可刷', amtMatch[0]];
+  const lines = isBonusOnly ? ['部分加碼，最多可刷', amtMatch[0]] : ['最多可刷', amtMatch[0]];
   return lines.join('<br>');
 }
 
