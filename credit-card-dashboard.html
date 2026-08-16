@@ -610,7 +610,7 @@ const cards = [
     mode:"LinePay", settle:"結算日 16 / 回饋結算 13日–次月14日",
     deadline:"優惠至 2026/12/31（舊戶2%不變）", official:"https://bank.sinopac.com/sinopacbt/personal/credit-card/introduction/bankcard/DAWAY.html",
     scenarios:[
-      {cat:"linepay", rate:2, label:"2%", note:"舊戶 LINE Pay 綁定消費，單筆需滿 NT$100", cap:"回饋上限 NT$20,000/月"},
+      {cat:"linepay", rate:2, label:"2%", note:"舊戶 LINE Pay 綁定消費，單筆需滿 NT$100", cap:"最多可刷NT$20,000/月"},
       {cat:"overseas", rate:2.5, label:"2.5%", note:"海外消費(消費地與幣別皆須為國外/外幣)，無上限", cap:"無上限"}
     ],
     fullNote:"部分連鎖店的刷卡機屬「聯合信用卡處理中心」小額支付平台特約商店(如停車場、連鎖速食店、手搖飲料店等)，這類消費無回饋。若額外完成「DAWAY GO」升等任務(自動扣繳+電子帳單+投資屬性問卷)，2026/7/1–12/31期間LINE Pay消費可再拉高至國內最高8%，有興趣可上官網確認條件。"
@@ -620,7 +620,7 @@ const cards = [
     mode:"網購", settle:"回饋結算 10日–次月9日",
     deadline:"優惠至 2027/7/31（權益續延，指定通路加碼上限降至$300/月）", official:"https://card.ubot.com.tw/CardDetail/cardDetail601",
     scenarios:[
-      {cat:"online", rate:4, label:"4%", note:"指定通路(1%基本+3%加碼)：momo、PChome、蝦皮、淘寶、酷澎，及Netflix/Disney+/LINE TV/KKTV、Spotify/KKBOX、Steam/PS/Nintendo/Blizzard/Garena、tixCraft/KKTIX", cap:"月上限 NT$300（原NT$9,000已於2026/8/1調降）"},
+      {cat:"online", rate:4, label:"4%", note:"指定通路(1%基本+3%加碼)：momo、PChome、蝦皮、淘寶、酷澎，及Netflix/Disney+/LINE TV/KKTV、Spotify/KKBOX、Steam/PS/Nintendo/Blizzard/Garena、tixCraft/KKTIX", cap:"回饋上限NT$300（換算：加碼3%部分最多可刷NT$10,000/月，原NT$9,000已於2026/8/1調降）"},
       {cat:"overseas", rate:2.5, label:"2.5%", note:"國外消費，無上限"},
       {cat:"insurance", rate:1, label:"1%", note:"保費，無上限"},
       {cat:"daily", rate:1, label:"1%", note:"一般消費，無上限"}
@@ -632,8 +632,8 @@ const cards = [
     mode:"偶數日指定通路", settle:"結算日 9 / 回饋結算 10日–次月9日",
     deadline:"優惠至 2026/12/31", official:"https://card.ubot.com.tw/CardDetail/cardDetail201",
     scenarios:[
-      {cat:"evenday", rate:5, label:"5%", note:"偶數日 + 指定通路：三商集團、王品集團、春水堂、壽司郎、八方雲集、麥當勞、肯德基、摩斯、屈臣氏、寶雅等，需LINE Pay付款", cap:"回饋上限 NT$3,000/月（歸戶150點）"},
-      {cat:"linepay", rate:2, label:"2%", note:"LINE Pay 綁定消費，單筆需滿 NT$100（基本1%+LINE Pay加碼1%）", cap:"回饋上限 NT$20,000/月"},
+      {cat:"evenday", rate:5, label:"5%", note:"偶數日 + 指定通路：三商集團、王品集團、春水堂、壽司郎、八方雲集、麥當勞、肯德基、摩斯、屈臣氏、寶雅等，需LINE Pay付款", cap:"最多可刷NT$3,000/月（歸戶上限150點）"},
+      {cat:"linepay", rate:2, label:"2%", note:"LINE Pay 綁定消費，單筆需滿 NT$100（基本1%+LINE Pay加碼1%）", cap:"最多可刷NT$20,000/月"},
       {cat:"overseas", rate:3, label:"3%", note:"海外消費，無上限", cap:"無上限"},
       {cat:"insurance", rate:1, label:"1%", note:"保費，無上限", cap:"無上限"},
       {cat:"daily", rate:1, label:"1%", note:"一般消費，無上限"}
@@ -645,7 +645,7 @@ const cards = [
     mode:"實體卡片", settle:"—",
     deadline:"優惠至 2026/12/31（8.5%不變）", official:"https://event.esunbank.com.tw/credit/kumamon-card/japan-discount.html",
     scenarios:[
-      {cat:"japan", rate:8.5, label:"8.5%", note:"日本指定商店加碼(2.5%一般消費 + 6%加碼)：交通卡儲值、藥妝、電器、租車、住宿等", cap:"加碼部分每期回饋上限 NT$500"},
+      {cat:"japan", rate:8.5, label:"8.5%", note:"日本指定商店加碼(2.5%一般消費 + 6%加碼)：交通卡儲值、藥妝、電器、租車、住宿等", cap:"回饋上限NT$500（換算：加碼6%部分每期最多可刷約NT$8,333）"},
       {cat:"daily", rate:0.5, label:"0.5%", note:"國內一般消費"}
     ],
     fullNote:"日本一般消費 2.5% 無上限；指定商店加碼 6% 有上限。百貨公司、車站及美食街內的店家不列入加碼計算。不適用國外訂房網站。"
@@ -667,7 +667,7 @@ const cards = [
     mode:"實體卡片・Apple Pay", settle:"結算日 23",
     deadline:"優惠至 12/31", official:"https://www.dbs.com.tw/personal-zh/cards/dbs-credit-cards/eco-ez",
     scenarios:[
-      {cat:"overseas", rate:5, label:"5%", note:"日本／韓國／泰國／美洲／新加坡指定地區實體消費(1%基本+4%加碼)，需實體卡或Apple Pay/Samsung Pay當地刷卡", cap:"加碼上限 NT$15,000/月"},
+      {cat:"overseas", rate:5, label:"5%", note:"日本／韓國／泰國／美洲／新加坡指定地區實體消費(1%基本+4%加碼)，需實體卡或Apple Pay/Samsung Pay當地刷卡", cap:"加碼部分最多可刷NT$15,000/月"},
       {cat:"insurance", rate:1, label:"1%", note:"保費，與一般消費同享，無上限"},
       {cat:"daily", rate:1, label:"1%", note:"國內外一般消費，含超商、街口支付，無上限"}
     ],
@@ -789,15 +789,19 @@ function selectCategory(cat, btnEl){
 /* ============ 卡片總覽 wallet ============ */
 const wallet = document.getElementById('wallet');
 
-/* 回饋上限的精簡顯示：只留金額數字（不重複顯示「回饋上限」字樣），
-   如果這個上限只適用於「加碼」的那一部分（不是整體回饋都有這個上限），
-   會在數字前面加註「部分加碼」，提醒這不是全部回饋的上限。 */
+/* 卡片上「最多可刷/月」的精簡顯示：只留金額數字，統一用「最多可刷 NTxxx/月」呈現，
+   如果這個上限只適用於「加碼」的那一部分（超過之後基本回饋還是繼續有，只是沒有加碼），
+   會加註「部分加碼」，提醒這不是完全刷爆就沒回饋的意思。 */
 function computeCapShort(capFull){
   if(!capFull || capFull === '無上限') return capFull || '無上限';
   const amtMatch = capFull.match(/NT\$[\d,]+(?:\/[^\s（)]+)?/);
-  const amtText = amtMatch ? amtMatch[0] : capFull.split('（')[0].trim();
+  if(!amtMatch){
+    // 沒有金額（例如「每日限切換方案一次」「依活動公告」），沒辦法換算成刷卡金額，就照原樣簡短顯示
+    return capFull.split('（')[0].trim();
+  }
   const isBonusOnly = /加碼/.test(capFull);
-  return isBonusOnly ? ('部分加碼 ' + amtText) : amtText;
+  const spendText = '最多可刷 ' + amtMatch[0];
+  return isBonusOnly ? ('部分加碼 ' + spendText) : spendText;
 }
 
 cards.forEach(card=>{
@@ -827,7 +831,7 @@ cards.forEach(card=>{
         <span class="stat-value">${bestPayShort} ${bestScenario.label}</span>
       </div>
       <div class="stat-box cap" title="${capFull}">
-        <span class="stat-label">回饋上限/月</span>
+        <span class="stat-label">最多可刷/月</span>
         <span class="stat-value">${capShort}</span>
       </div>
     </div>
