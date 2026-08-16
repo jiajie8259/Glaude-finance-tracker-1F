@@ -334,7 +334,7 @@
     text-overflow:ellipsis;
   }
   .card .stat-box.cap .stat-value{
-    color:var(--teal); font-size:12.5px;
+    color:var(--teal); font-size:12.5px; line-height:1.5;
     white-space:normal; overflow:visible; text-overflow:clip; word-break:break-word;
   }
   .card .stat-sub{
@@ -789,19 +789,18 @@ function selectCategory(cat, btnEl){
 /* ============ 卡片總覽 wallet ============ */
 const wallet = document.getElementById('wallet');
 
-/* 卡片上「最多可刷/月」的精簡顯示：只留金額數字，統一用「最多可刷 NTxxx/月」呈現，
-   如果這個上限只適用於「加碼」的那一部分（超過之後基本回饋還是繼續有，只是沒有加碼），
-   會加註「部分加碼」，提醒這不是完全刷爆就沒回饋的意思。 */
+/* 卡片上這個欄位的精簡顯示：把「部分加碼」「最多可刷」「NT$xxx/月」拆成三行呈現，
+   不是加碼限定的話，就只有「最多可刷」+ 金額兩行。 */
 function computeCapShort(capFull){
-  if(!capFull || capFull === '無上限') return capFull || '無上限';
+  if(!capFull || capFull === '無上限') return '無上限';
   const amtMatch = capFull.match(/NT\$[\d,]+(?:\/[^\s（)]+)?/);
   if(!amtMatch){
     // 沒有金額（例如「每日限切換方案一次」「依活動公告」），沒辦法換算成刷卡金額，就照原樣簡短顯示
     return capFull.split('（')[0].trim();
   }
   const isBonusOnly = /加碼/.test(capFull);
-  const spendText = '最多可刷 ' + amtMatch[0];
-  return isBonusOnly ? ('部分加碼 ' + spendText) : spendText;
+  const lines = isBonusOnly ? ['部分加碼', '最多可刷', amtMatch[0]] : ['最多可刷', amtMatch[0]];
+  return lines.join('<br>');
 }
 
 cards.forEach(card=>{
@@ -831,7 +830,6 @@ cards.forEach(card=>{
         <span class="stat-value">${bestPayShort} ${bestScenario.label}</span>
       </div>
       <div class="stat-box cap" title="${capFull}">
-        <span class="stat-label">最多可刷/月</span>
         <span class="stat-value">${capShort}</span>
       </div>
     </div>
