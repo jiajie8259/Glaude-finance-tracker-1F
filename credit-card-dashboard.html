@@ -793,7 +793,10 @@ const wallet = document.getElementById('wallet');
    不是加碼限定的話，就只有「最多可刷」+ 金額兩行。 */
 function computeCapShort(capFull){
   if(!capFull || capFull === '無上限') return '無上限';
-  const amtMatch = capFull.match(/NT\$[\d,]+(?:\/[^\s（)]+)?/);
+  // 有些備註文字裡會同時出現「回饋上限NTxxx」跟「最多可刷約NTxxx」兩個金額，
+  // 真正要顯示的是「最多可刷」後面那個換算過的刷卡金額，不是最先出現的那個
+  const spendMatch = capFull.match(/最多可刷約?\s*(NT\$[\d,]+(?:\/[^\s（)]+)?)/);
+  const amtMatch = spendMatch ? { 0: spendMatch[1] } : capFull.match(/NT\$[\d,]+(?:\/[^\s（)]+)?/);
   if(!amtMatch){
     // 沒有金額（例如「每日限切換方案一次」「依活動公告」），沒辦法換算成刷卡金額，就照原樣簡短顯示
     return capFull.split('（')[0].trim();
