@@ -250,16 +250,26 @@ async function handleFile(file){
 
   try{
     const cardId = cardSelect.value;
+    window.__suggestedBillingPeriod = null; // 每次上傳重新偵測，避免沿用上一份檔案的結果
     const rows = await parsePdfWithPasswordPrompt(file, cardId);
     if(rows === null) { // 使用者取消輸入密碼
       showParseStatus('已取消，這份 PDF 沒有解析。', true);
       return;
     }
-    if(rows.length === 0){
-      showParseStatus('沒有自動抓到任何交易列，可能是這份 PDF 格式跟預期的不一樣。你可以用下面「手動新增一列」自己補登。', true);
-    } else {
-      showParseStatus(`自動抓到 ${rows.length} 筆交易，請逐行核對，有錯就直接改。`, false);
+
+    const periodInput = document.getElementById('billing-period');
+    if(window.__suggestedBillingPeriod && !periodInput.value){
+      periodInput.value = window.__suggestedBillingPeriod;
     }
+
+    let statusMsg = rows.length === 0
+      ? '沒有自動抓到任何交易列，可能是這份 PDF 格式跟預期的不一樣。你可以用下面「手動新增一列」自己補登。'
+      : `自動抓到 ${rows.length} 筆交易，請逐行核對，有錯就直接改。`;
+    if(window.__suggestedBillingPeriod){
+      statusMsg += `　已自動偵測帳單月份為 ${window.__suggestedBillingPeriod}，請確認無誤。`;
+    }
+    showParseStatus(statusMsg, rows.length === 0);
+
     renderPreview(rows);
     populateDebugPanel();
   } catch(err){
@@ -540,6 +550,26 @@ function parseDawa(extracted, helpers){
    欄位順序是 入帳日、消費日（跟其他銀行相反），我們記錄的日期用「消費日」（實際刷卡日）。
    表頭文字位置跟實際內容對不太準，所以一樣用觀察到的固定座標範圍。
    ---------------------------------------------------------------- */
+/* ---------- 共用：從 PDF 內文找「帳單年月」之類的標籤，自動抓出帳單所屬月份 ----------
+   有些銀行的 PDF 裡會直接印出「帳單年月：115/08」這種資訊，抓得到的話就自動幫
+   使用者把上傳頁面的「帳單月份」欄位填好，不用手動輸入、也比較不會選錯。
+   （注意：這是帳單本身認定的月份，不是消費日期，兩者常常對不上——例如帳單月
+   份是8月，裡面消費日期卻大多落在7月，因為帳單结算週期本來就會跨月。） */
+function extractRocYearMonthNearLabel(pages, labelText){
+  for(const { items } of pages){
+    const labelItem = items.find(it=> it.str.trim() === labelText);
+    if(!labelItem) continue;
+    const candidates = items.filter(it=> /^\d{2,3}\/\d{1,2}$/.test(it.str.trim()));
+    if(candidates.length === 0) continue;
+    candidates.sort((a,b)=> Math.abs(a.y - labelItem.y) - Math.abs(b.y - labelItem.y));
+    const val = candidates[0].str.trim();
+    const [rocY, m] = val.split('/');
+    const year = parseInt(rocY,10) + (rocY.length === 3 ? 1911 : (rocY.length === 2 ? 2000 : 0));
+    return `${year}-${String(parseInt(m,10)).padStart(2,'0')}`;
+  }
+  return null;
+}
+
 /* ---------- 台北富邦銀行（J卡）----------
    相對單純：不管原始消費是哪種幣別（像日圓消費），「台幣金額」欄位本身
    就已經是換算好的台幣值，不用像玉山那樣分開處理雙幣結算。
@@ -559,6 +589,10 @@ function parseFubonJ(extracted, helpers){
       { name: '台幣金額(固定範圍)', x: AMT_COL[0] }
     ]);
   }
+
+  // 富邦帳單第一頁會直接印「帳單年月」，自動抓出來，比較不會跟消費日期搞混
+  const suggestedPeriod = extractRocYearMonthNearLabel(extracted.pages, '帳單年月');
+  if(suggestedPeriod) window.__suggestedBillingPeriod = suggestedPeriod;
 
   const rows = [];
   extracted.pages.forEach(({ items })=>{
