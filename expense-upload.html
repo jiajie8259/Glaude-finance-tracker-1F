@@ -449,6 +449,12 @@ async function parsePdf(file, password, cardId){
     fallbackLines: extracted.fallbackLines
   };
 
+  const periodDetector = BILLING_PERIOD_DETECTORS[cardId];
+  if(periodDetector){
+    const period = periodDetector(extracted.pages);
+    if(period) window.__suggestedBillingPeriod = period;
+  }
+
   const bankParser = BANK_PARSERS[cardId];
   if(bankParser){
     const rows = bankParser(extracted, { setDebugColumnBounds: b=>{ window.__lastDebug.columnBounds = b; } });
@@ -460,6 +466,47 @@ async function parsePdf(file, password, cardId){
 
 function parseGeneric(extracted){
   return parseFromFallbackLines(extracted.fallbackLines);
+}
+
+/* ---------- 帳單月份偵測器登記表 ----------
+   有些銀行的解析函式（像富邦）自己會在解析過程中順便偵測帳單年月；
+   對於還沒有專屬解析邏輯的銀行（像中國信託目前只能用通用解析法抓交易），
+   也可以只單獨加一個帳單月份偵測器，先解決「篩選帳單月份」這個需求，
+   之後有空再補完整的交易解析邏輯。
+   ---------------------------------------------------------------- */
+const BILLING_PERIOD_DETECTORS = {
+  ctbc: (pages)=> extractStandaloneRocYearMonth(pages, 1),
+  dawa: (pages)=> extractYearMonthTitle(pages, 1)
+};
+
+/* 找頁面裡「2026年8月」這種西元年+月的標題文字（永豐帳單第一頁的大標題會直接這樣寫），
+   比民國年月的格式更明確好判斷，直接用西元年不用再轉換。 */
+function extractYearMonthTitle(pages, pageLimit){
+  for(const { pageNum, items } of pages){
+    if(pageLimit && pageNum > pageLimit) continue;
+    const hit = items.find(it=> /^\d{4}年\d{1,2}月$/.test(it.str.trim()));
+    if(hit){
+      const m = hit.str.trim().match(/^(\d{4})年(\d{1,2})月$/);
+      return `${m[1]}-${String(parseInt(m[2],10)).padStart(2,'0')}`;
+    }
+  }
+  return null;
+}
+
+/* 找頁面裡「單獨一個文字片段，內容剛好是民國年/月（沒有日）」的格式，例如「115/08」。
+   跟一般的完整日期（115/08/16 這種三段式）不同，這種兩段式格式在帳單裡通常
+   只會用來標示「這是第幾年幾月的帳單」，所以拿第一頁第一個符合的當作帳單年月。 */
+function extractStandaloneRocYearMonth(pages, pageLimit){
+  for(const { pageNum, items } of pages){
+    if(pageLimit && pageNum > pageLimit) continue;
+    const hit = items.find(it=> /^\d{3}\/\d{1,2}$/.test(it.str.trim()));
+    if(hit){
+      const [rocY, m] = hit.str.trim().split('/');
+      const year = parseInt(rocY,10) + 1911;
+      return `${year}-${String(parseInt(m,10)).padStart(2,'0')}`;
+    }
+  }
+  return null;
 }
 
 /* ---------- 永豐銀行（DaWay 卡）----------
@@ -1059,9 +1106,10 @@ function normalizeDate(raw){
   const parts = raw.split(/[\/\-.]/);
   const now = new Date();
   if(parts.length === 2){
-    // MM/DD，補上年份（用帳單月份或今年）
-    const y = document.getElementById('billing-period').value ?
-      document.getElementById('billing-period').value.split('-')[0] : now.getFullYear();
+    // MM/DD，補上年份：優先用使用者填的帳單月份，其次用自動偵測到的帳單月份，最後才退回今年
+    const inputVal = document.getElementById('billing-period').value;
+    const y = inputVal ? inputVal.split('-')[0]
+      : (window.__suggestedBillingPeriod ? window.__suggestedBillingPeriod.split('-')[0] : now.getFullYear());
     return `${y}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
   }
   if(parts.length === 3){
