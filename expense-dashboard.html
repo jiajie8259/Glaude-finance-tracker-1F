@@ -293,6 +293,13 @@ document.getElementById('toggle-year').addEventListener('click', ()=>{
 });
 
 /* ============ 本年度刷卡金額走勢圖（1-12月，虛線折線圖）============ */
+/* 把金額換算成「萬」為單位的簡短標籤，例如 147000 -> "14.7萬"，180000 -> "18萬"（整數不顯示小數） */
+function formatWanLabel(v){
+  const wan = v / 10000;
+  const rounded = Math.round(wan * 10) / 10;
+  return (Number.isInteger(rounded) ? rounded : rounded.toFixed(1)) + '萬';
+}
+
 function renderYearChart(txs){
   const year = new Date().getFullYear();
   const monthly = new Array(12).fill(0);
@@ -327,7 +334,7 @@ function renderYearChart(txs){
 
   const dots = points.map((p,i)=> `
     <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.6" fill="#C9973F" />
-    ${p.v > 0 ? `<text x="${p.x.toFixed(1)}" y="${(p.y-6).toFixed(1)}" font-size="8" fill="#E7C888" text-anchor="middle" font-family="Roboto Mono, monospace">${Math.round(p.v/1000)}k</text>` : ''}
+    ${p.v > 0 ? `<text x="${p.x.toFixed(1)}" y="${(p.y-6).toFixed(1)}" font-size="8" fill="#E7C888" text-anchor="middle" font-family="Roboto Mono, monospace">${formatWanLabel(p.v)}</text>` : ''}
     <text x="${p.x.toFixed(1)}" y="${H-3}" font-size="7.5" fill="rgba(237,230,214,0.4)" text-anchor="middle" font-family="Noto Sans TC, sans-serif">${monthLabels[i]}</text>
   `).join('');
 
