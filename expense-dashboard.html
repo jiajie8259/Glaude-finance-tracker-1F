@@ -259,8 +259,11 @@ function computeByCard(txs, mode){
     const cur = tx.currency || 'TWD';
     const amt = Number(tx.amount) || 0;
     byCard[cid].count += 1;
-    byCard[cid].byCurrency[cur] = (byCard[cid].byCurrency[cur] || 0) + amt;
-    if(cur === 'TWD') byCard[cid].total += amt;
+    // 「支出」只算正向的消費金額，繳款/退款這種負數不列入，只是純粹的金流調整，不是花費
+    if(amt > 0){
+      byCard[cid].byCurrency[cur] = (byCard[cid].byCurrency[cur] || 0) + amt;
+      if(cur === 'TWD') byCard[cid].total += amt;
+    }
     if(!byCard[cid].lastDate || tx.date > byCard[cid].lastDate) byCard[cid].lastDate = tx.date;
   });
 
