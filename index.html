@@ -924,6 +924,7 @@ select option{background:var(--card)}
       </select>
       <select id="rec-month" onchange="loadRecords()" style="padding:6px 10px;font-size:16px"></select>
       <select id="rec-year"  onchange="loadRecords()" style="padding:6px 10px;font-size:16px"></select>
+      <button class="btn btn-ghost btn-sm" onclick="migratePharmaCatRecords()" title="把家庭支出／家傑代買裡類別是「藥局-現金／藥局-支票」的資料，搬去藥局支出">🔧 修正藥局類別資料</button>
     </div>
   </div>
   <div id="records-total" style="display:none;margin-bottom:14px;font-size:16px;color:var(--muted);font-weight:700"></div>
@@ -1292,7 +1293,7 @@ const OCR_WORKER_URL = "https://finance-ocr-proxy.jiajie8259.workers.dev";
 
 const FAMILY_CATS = [
   '家用支出','爸爸支出','醫療','稅務','第四台費','公共支出',
-  '網路費+健保費','送禮','藥局-現金','藥局-支票'
+  '網路費+健保費','送禮'
 ];
 const PHARMA_EXP_CATS = ['家用支出','藥局-現金','藥局-支票','醫療','爸爸支出','公共支出','保險費用','稅務','第四台費','網路費+健保費','送禮'];
 const PAYMENT_TYPES = ['現金','信用卡','轉帳','支票','其他'];
@@ -1796,6 +1797,51 @@ async function confirmDeleteTopupInRecords(id) {
   await deleteJiajieTopup(id).catch(() => {});
   toast('已刪除', 'success');
   loadRecords();
+}
+
+// 一次性資料修正：把「家庭支出／家傑代買」裡類別選到「藥局-現金／藥局-支票」的舊資料，
+// 類型改成「藥局支出」。這兩個類別已經從家庭支出的類別清單移除，此功能主要用來清理歷史資料。
+async function migratePharmaCatRecords() {
+  if (!confirm('這會把「家庭支出」與「家傑代買」裡，類別包含「藥局-現金」或「藥局-支票」的資料，類型改成「藥局支出」。確定要執行嗎？')) return;
+
+  if (window._demoMode) {
+    let count = 0;
+    window._demoData = (window._demoData || []).map(r => {
+      if ((r.type === 'family-expense' || r.type === 'jiajie-expense') &&
+          (r.categories || []).some(c => c === '藥局-現金' || c === '藥局-支票')) {
+        count++;
+        return { ...r, type: 'pharma-expense' };
+      }
+      return r;
+    });
+    toast(count ? `✅ 已修正 ${count} 筆（demo）` : '沒有找到需要修正的資料', 'success');
+    loadRecords();
+    return;
+  }
+
+  try {
+    const { collection, getDocs, query, where, doc, updateDoc } = fbFns;
+    const snap = await getDocs(query(collection(db, 'records'), where('type', 'in', ['family-expense', 'jiajie-expense'])));
+    const targets = snap.docs.filter(d => {
+      const cats = d.data().categories || [];
+      return cats.includes('藥局-現金') || cats.includes('藥局-支票');
+    });
+
+    if (!targets.length) {
+      toast('沒有找到需要修正的資料', 'success');
+      return;
+    }
+
+    for (const d of targets) {
+      await updateDoc(doc(db, 'records', d.id), { type: 'pharma-expense' });
+    }
+
+    toast(`✅ 已將 ${targets.length} 筆資料搬移到「藥局支出」`, 'success');
+    loadRecords();
+  } catch (e) {
+    console.error('migratePharmaCatRecords error:', e);
+    toast('❌ 修正失敗：' + e.message, 'error');
+  }
 }
 
 async function confirmDelete(id) {
