@@ -920,11 +920,13 @@ select option{background:var(--card)}
         <option value="pharma-expense">藥局支出</option>
         <option value="family-expense">家庭支出</option>
         <option value="jiajie-expense">家傑代買</option>
+        <option value="topup">媽媽儲值</option>
       </select>
       <select id="rec-month" onchange="loadRecords()" style="padding:6px 10px;font-size:16px"></select>
       <select id="rec-year"  onchange="loadRecords()" style="padding:6px 10px;font-size:16px"></select>
     </div>
   </div>
+  <div id="records-total" style="display:none;margin-bottom:14px;font-size:16px;color:var(--muted);font-weight:700"></div>
   <div class="table-wrap">
     <table>
       <thead><tr>
@@ -1687,8 +1689,24 @@ function confirmCategories() {
 // ══════════════════════════════════════════════════════
 // RECORDS PAGE
 // ══════════════════════════════════════════════════════
+async function fetchTopupsFiltered(year, month) {
+  const topups = await fetchJiajieTopups().catch(() => []);
+  return topups
+    .filter(r => {
+      if (!r.date) return false;
+      const [y, m] = r.date.split('-');
+      if (year && +y !== +year) return false;
+      if (month && +m !== +month) return false;
+      return true;
+    })
+    .map(r => ({ ...r, type: 'topup' }))
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+}
+
 async function loadRecords() {
   const tbody = document.getElementById('records-tbody');
+  const totalEl = document.getElementById('records-total');
+  totalEl.style.display = 'none';
   tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:30px;color:var(--muted)"><div class="spinner"></div></td></tr>';
 
   const type  = document.getElementById('rec-type').value;
@@ -1699,13 +1717,23 @@ async function loadRecords() {
   if (type)  filters.type  = type;
   if (month) filters.month = month;
 
+  // 媽媽儲值存在另一個 collection（jiajie_topup），不屬於 records，選「全部類型」或「媽媽儲值」時才需要一併撈
+  const wantRecords = type !== 'topup';
+  const wantTopups  = !type || type === 'topup';
+
   // 查詢逾時保護：避免 Firestore 請求卡住時畫面永遠轉圈、看不到任何錯誤訊息
   // 「全部類型」沒有 type 篩選條件，抓取的資料量較大，逾時秒數拉長一些
   const timeoutMs = type ? 10000 : 18000;
   const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs));
-  let records;
+  let records = [], topups = [];
   try {
-    records = await Promise.race([fetchRecords(filters), timeout]);
+    [records, topups] = await Promise.race([
+      Promise.all([
+        wantRecords ? fetchRecords(filters) : Promise.resolve([]),
+        wantTopups  ? fetchTopupsFiltered(year, month) : Promise.resolve([]),
+      ]),
+      timeout,
+    ]);
   } catch (e) {
     console.error('loadRecords error:', e);
     const hint = e.message === 'timeout'
@@ -1720,12 +1748,32 @@ async function loadRecords() {
     return;
   }
 
-  if (!records.length) {
+  const all = [...records, ...topups].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  if (!all.length) {
     tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:30px;color:var(--muted)">無記錄</td></tr>';
     return;
   }
 
-  tbody.innerHTML = records.map(r => {
+  // 選了特定類型（或全部類型）時，顯示這批篩選結果的總計金額
+  const isIncome = r => r.type === 'pharma-income' || r.type === 'topup';
+  const total = all.reduce((s, r) => s + (isIncome(r) ? +r.amount : -(+r.amount || 0)), 0);
+  totalEl.style.display = '';
+  totalEl.innerHTML = `共 ${all.length} 筆　總計：<span class="mono" style="color:${total>=0?'var(--income)':'var(--expense)'};font-size:18px">${total>=0?'＋':'－'}${fmt(Math.abs(total))}</span>`;
+
+  tbody.innerHTML = all.map(r => {
+    if (r.type === 'topup') {
+      return `<tr>
+        <td class="mono" style="font-size:14px">${r.date} <span class="badge badge-income" style="font-size:12px;padding:2px 8px">媽媽儲值</span></td>
+        <td style="display:none"></td>
+        <td style="font-size:17px;max-width:160px">–</td>
+        <td class="mono amount-pos">＋${fmt(r.amount)}</td>
+        <td>–</td>
+        <td style="color:var(--muted);font-size:17px">–</td>
+        <td style="color:var(--muted);font-size:15px;white-space:nowrap">–</td>
+        <td><button class="btn btn-danger btn-sm" onclick="confirmDeleteTopupInRecords('${r.id}')">刪除</button></td>
+      </tr>`;
+    }
     const typeLabel = { 'pharma-income':'藥局收入','pharma-expense':'藥局支出','family-expense':'家庭支出','jiajie-expense':'家傑代買' }[r.type] || r.type;
     const typeBadge = { 'pharma-income':'income','pharma-expense':'expense','family-expense':'family','jiajie-expense':'family' }[r.type] || '';
     const cats = r.categories?.join('、') || r.category || '–';
@@ -1741,6 +1789,13 @@ async function loadRecords() {
       <td><button class="btn btn-danger btn-sm" onclick="confirmDelete('${r.id}')">刪除</button></td>
     </tr>`;
   }).join('');
+}
+
+async function confirmDeleteTopupInRecords(id) {
+  if (!confirm('確定刪除這筆儲值記錄？')) return;
+  await deleteJiajieTopup(id).catch(() => {});
+  toast('已刪除', 'success');
+  loadRecords();
 }
 
 async function confirmDelete(id) {
