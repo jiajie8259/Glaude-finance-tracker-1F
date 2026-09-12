@@ -627,42 +627,69 @@ async function deleteStock(id){
 }
 window.deleteStock = deleteStock;
 
+// 依序嘗試：① 直接呼叫官方 API　② 若被瀏覽器 CORS 擋下，改走公開 CORS 代理重試一次
+async function fetchJsonWithFallback(url, label){
+  try{
+    const r = await fetch(url);
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    console.log(`[資產抓價] ${label} 直接連線成功，共 ${Array.isArray(data)?data.length:'?'} 筆`);
+    return data;
+  }catch(directErr){
+    console.warn(`[資產抓價] ${label} 直接連線失敗（可能是 CORS 被擋）：`, directErr.message, '，改用備援代理重試…');
+    try{
+      const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+      const r2 = await fetch(proxyUrl);
+      if(!r2.ok) throw new Error('HTTP ' + r2.status);
+      const data2 = await r2.json();
+      console.log(`[資產抓價] ${label} 透過備援代理成功，共 ${Array.isArray(data2)?data2.length:'?'} 筆`);
+      return data2;
+    }catch(proxyErr){
+      console.error(`[資產抓價] ${label} 備援代理也失敗：`, proxyErr.message);
+      return null;
+    }
+  }
+}
+
 async function refreshStockPrices(){
   if(!stocks.length){ toast('尚未建立任何股票資產','error'); return; }
   const btn = document.getElementById('btn-refresh-price');
   btn.disabled = true;
   btn.textContent = '⏳ 抓取中…';
   const priceMap = {};
-  try{
-    const [twseRes, tpexRes] = await Promise.allSettled([
-      fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL').then(r=>r.json()),
-      fetch('https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes').then(r=>r.json())
-    ]);
-    if(twseRes.status==='fulfilled' && Array.isArray(twseRes.value)){
-      twseRes.value.forEach(row=>{
-        const code = (row.Code||'').trim();
-        const close = parseFloat(String(row.ClosingPrice||'').replace(/,/g,''));
-        if(code && !isNaN(close)) priceMap[code] = close;
-      });
-    }
-    if(tpexRes.status==='fulfilled' && Array.isArray(tpexRes.value)){
-      tpexRes.value.forEach(row=>{
-        const code = (row.SecuritiesCompanyCode||row.Code||'').trim();
-        const close = parseFloat(String(row.Close||'').replace(/,/g,''));
-        if(code && !isNaN(close)) priceMap[code] = close;
-      });
-    }
-  }catch(e){
-    console.error(e);
+  let twseOk = false, tpexOk = false;
+
+  const twseData = await fetchJsonWithFallback('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL', '證交所(上市)');
+  if(Array.isArray(twseData)){
+    twseOk = true;
+    twseData.forEach(row=>{
+      const code = (row.Code||'').trim();
+      const close = parseFloat(String(row.ClosingPrice||'').replace(/,/g,''));
+      if(code && !isNaN(close)) priceMap[code] = close;
+    });
   }
-  const foundCount = Object.keys(priceMap).length;
-  if(foundCount===0){
-    toast('股價資料來源目前無法連線，請稍後再試或手動輸入現價','error');
-    btn.disabled = false;
-    btn.textContent = '🔄 重新整理股價';
+
+  const tpexData = await fetchJsonWithFallback('https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes', '櫃買中心(上櫃)');
+  if(Array.isArray(tpexData)){
+    tpexOk = true;
+    tpexData.forEach(row=>{
+      const code = (row.SecuritiesCompanyCode||row.Code||'').trim();
+      const close = parseFloat(String(row.Close||'').replace(/,/g,''));
+      if(code && !isNaN(close)) priceMap[code] = close;
+    });
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔄 重新整理股價';
+
+  if(!twseOk && !tpexOk){
+    toast('股價資料來源目前完全無法連線（直接連線與備援代理皆失敗），請按 F12 開啟主控台查看詳細錯誤，或先手動輸入現價', 'error');
+    console.error('[資產抓價] 兩個資料源皆失敗，請檢查瀏覽器主控台的 CORS / 網路錯誤訊息');
     return;
   }
-  let updated = 0, missed = 0;
+
+  let updated = 0;
+  const missedSymbols = [];
   for(const s of stocks){
     const price = priceMap[s.symbol];
     if(price !== undefined){
@@ -671,13 +698,16 @@ async function refreshStockPrices(){
         updated++;
       }catch(e){ console.error(e); }
     } else {
-      missed++;
+      missedSymbols.push(s.symbol);
     }
   }
   await loadStocks();
-  btn.disabled = false;
-  btn.textContent = '🔄 重新整理股價';
-  toast(`股價更新完成：成功 ${updated} 檔${missed?`，查無資料 ${missed} 檔（請手動輸入）`:''}`);
+
+  let msg = `股價更新完成：成功 ${updated} 檔`;
+  if(!twseOk) msg += '（⚠️ 上市資料源連線失敗）';
+  if(!tpexOk) msg += '（⚠️ 上櫃資料源連線失敗）';
+  if(missedSymbols.length) msg += `，查無資料：${missedSymbols.join('、')}（請手動輸入現價）`;
+  toast(msg, missedSymbols.length || !twseOk || !tpexOk ? 'error' : 'success');
 }
 window.refreshStockPrices = refreshStockPrices;
 
