@@ -293,11 +293,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>代號</th><th class="text-right">持有(張)</th><th class="text-right">買入價格</th><th class="text-right">投入成本</th>
+              <th>代號</th><th>名稱</th><th class="text-right">持有(張)</th><th class="text-right">買入價格</th><th class="text-right">投入成本</th>
               <th class="text-right">現價</th><th class="text-right">現值</th><th class="text-right">損益</th>
               <th>證券公司</th><th>管理人</th><th></th>
             </tr></thead>
-            <tbody id="stocks-tbody"><tr><td colspan="10" class="text-center" style="padding:30px"><div class="spinner"></div></td></tr></tbody>
+            <tbody id="stocks-tbody"><tr><td colspan="11" class="text-center" style="padding:30px"><div class="spinner"></div></td></tr></tbody>
           </table>
         </div>
         <div class="note">📌 現價來源為證交所／櫃買中心公開資訊，每日收盤後更新一次，非盤中即時價。若查無資料，請於編輯畫面手動輸入現價。</div>
@@ -313,9 +313,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
           <table>
             <thead><tr>
               <th>代號</th><th>名稱</th><th class="text-right">持有(張)</th><th>配息週期</th>
-              <th class="text-right">每張配息</th><th class="text-right">每次總額</th><th class="text-right">月約當金額</th><th></th>
+              <th class="text-right">每單位配息</th><th class="text-right">每張配息</th><th class="text-right">每次總額</th><th class="text-right">月約當金額</th><th></th>
             </tr></thead>
-            <tbody id="dividends-tbody"><tr><td colspan="8" class="text-center" style="padding:30px"><div class="spinner"></div></td></tr></tbody>
+            <tbody id="dividends-tbody"><tr><td colspan="9" class="text-center" style="padding:30px"><div class="spinner"></div></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -556,7 +556,7 @@ function priceSource(s){
 function renderStocks(){
   const tbody = document.getElementById('stocks-tbody');
   if(!stocks.length){
-    tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state">尚未建立任何股票資產</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state">尚未建立任何股票資產</div></td></tr>';
     return;
   }
   tbody.innerHTML = stocks.map(s=>{
@@ -574,6 +574,7 @@ function renderStocks(){
     return `
     <tr>
       <td class="mono">${escapeHtml(s.symbol)}</td>
+      <td>${escapeHtml(s.name||s.symbol)}</td>
       <td class="text-right mono">${fmtNum(lots,2)}</td>
       <td class="text-right mono">${buyPrice?fmtNum(buyPrice,2):'–'}</td>
       <td class="text-right mono">${fmtMoney(cost)}</td>
@@ -624,7 +625,7 @@ function openStockModal(id){
         </select>
       </div>
     </div>
-    <div class="note">💡 投入成本會由系統自動計算（買入價格 × 張數，並估算券商手續費 0.1425%，最低20元），不需手動輸入。</div>
+    <div class="note">💡 投入成本會由系統自動計算（買入價格 × 張數，並估算券商手續費 0.1425%，最低20元），不需手動輸入。股票名稱也會在您按「重新整理股價」時自動帶入，新增後記得去股票資產頁按一次更新。</div>
     <div class="flex gap-8" style="justify-content:flex-end;margin-top:6px">
       <button class="btn btn-ghost" onclick="closeModal()">取消</button>
       <button class="btn btn-primary" onclick="saveStock(${s?`'${s.id}'`:'null'})">💾 儲存</button>
@@ -702,6 +703,12 @@ function extractLatestClose(json){
   const close = parseFloat(String(last[6]).replace(/,/g,''));
   return isNaN(close) ? null : close;
 }
+// TWSE 的 title 格式為「公司全名 各日成交資訊」，例如「臺灣積體電路製造股份有限公司 各日成交資訊」
+function extractNameFromTitle(title){
+  if(!title) return null;
+  const m = String(title).match(/^(.*?)\s*各日成交資訊\s*$/);
+  return m && m[1] ? m[1].trim() : null;
+}
 
 async function fetchSingleStockPrice(symbol){
   const now = new Date();
@@ -714,7 +721,7 @@ async function fetchSingleStockPrice(symbol){
   const twseData = await fetchJsonWithFallback(twseUrl, `TWSE ${symbol}`);
   if(twseData && (twseData.stat==='OK' || twseData.stat==='ok')){
     const price = extractLatestClose(twseData);
-    if(price !== null) return { price, source: 'twse' };
+    if(price !== null) return { price, source: 'twse', name: extractNameFromTitle(twseData.title) };
   }
 
   // ② 查不到再當作上櫃股票查詢（TPEX，日期為民國年）
@@ -723,7 +730,7 @@ async function fetchSingleStockPrice(symbol){
   const tpexData = await fetchJsonWithFallback(tpexUrl, `TPEX ${symbol}`);
   if(tpexData){
     const price = extractLatestClose(tpexData);
-    if(price !== null) return { price, source: 'tpex' };
+    if(price !== null) return { price, source: 'tpex', name: extractNameFromTitle(tpexData.title) };
   }
 
   return null;
@@ -736,6 +743,7 @@ async function refreshStockPrices(){
 
   const symbols = [...new Set(stocks.map(s=>s.symbol))];
   const priceMap = {};
+  const nameMap = {};
   let anyConnectionOk = false;
 
   for(let i=0;i<symbols.length;i++){
@@ -745,6 +753,7 @@ async function refreshStockPrices(){
       const result = await fetchSingleStockPrice(symbol);
       if(result){
         priceMap[symbol] = result.price;
+        if(result.name) nameMap[symbol] = result.name;
         anyConnectionOk = true;
       }
     }catch(e){
@@ -767,7 +776,9 @@ async function refreshStockPrices(){
     const price = priceMap[s.symbol];
     if(price !== undefined){
       try{
-        await fb.updateDoc(fb.doc(db,'asset_stocks', s.id), { fetchedPrice: price, fetchedAt: fb.Timestamp.now() });
+        const updateData = { fetchedPrice: price, fetchedAt: fb.Timestamp.now() };
+        if(nameMap[s.symbol]) updateData.name = nameMap[s.symbol];
+        await fb.updateDoc(fb.doc(db,'asset_stocks', s.id), updateData);
         updated++;
       }catch(e){ console.error(e); }
     } else {
@@ -788,23 +799,24 @@ window.refreshStockPrices = refreshStockPrices;
 function renderDividends(){
   const tbody = document.getElementById('dividends-tbody');
   if(!dividends.length){
-    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">尚未建立任何固定配息紀錄</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">尚未建立任何固定配息紀錄</div></td></tr>';
     return;
   }
   tbody.innerHTML = dividends.map(d=>{
     const lots = parseFloat(d.lots)||0;
-    const amountPerUnit = parseFloat(d.amountPerUnit)||0;
-    const totalPerPayout = amountPerUnit * lots * 1000 / 1000; // 每張配息金額已是「每張」單位，故乘上張數即可
-    const actualTotal = amountPerUnit * lots;
-    const monthly = d.frequency==='月' ? actualTotal : actualTotal/3;
+    const perShare = parseFloat(d.amountPerUnit)||0; // 每單位（每股）配息金額
+    const perLot = perShare * 1000; // 每張配息 = 每股配息 × 1000（系統自動計算）
+    const totalPerPayout = perLot * lots; // 每次總額
+    const monthly = d.frequency==='月' ? totalPerPayout : totalPerPayout/3;
     return `
     <tr>
       <td class="mono">${escapeHtml(d.symbol)}</td>
       <td>${escapeHtml(d.name)}</td>
       <td class="text-right mono">${fmtNum(lots,2)}</td>
       <td>${escapeHtml(d.frequency)}</td>
-      <td class="text-right mono">${fmtMoney(amountPerUnit)}</td>
-      <td class="text-right mono">${fmtMoney(actualTotal)}</td>
+      <td class="text-right mono">${fmtNum(perShare,2)}</td>
+      <td class="text-right mono">${fmtMoney(perLot)}</td>
+      <td class="text-right mono">${fmtMoney(totalPerPayout)}</td>
       <td class="text-right mono">${fmtMoney(monthly)}</td>
       <td>
         <div style="display:flex;gap:6px;justify-content:flex-end">
@@ -835,7 +847,7 @@ function openDividendModal(id){
       </div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>每張配息金額 (NT$)</label><input id="df-amount" type="number" step="1" value="${d?d.amountPerUnit:''}" placeholder="例：300"></div>
+      <div class="form-group"><label>每單位配息金額（每股，元）</label><input id="df-amount" type="number" step="0.01" min="0" value="${d?d.amountPerUnit:''}" placeholder="例：0.3"></div>
     </div>
     <div class="flex gap-8" style="justify-content:flex-end;margin-top:6px">
       <button class="btn btn-ghost" onclick="closeModal()">取消</button>
@@ -894,7 +906,7 @@ function computeTotals(){
     }
   });
   const monthlyDividend = dividends.reduce((sum,d)=>{
-    const total = (parseFloat(d.amountPerUnit)||0) * (parseFloat(d.lots)||0);
+    const total = (parseFloat(d.amountPerUnit)||0) * (parseFloat(d.lots)||0) * 1000; // 每股配息 × 張數 × 1000
     return sum + (d.frequency==='月' ? total : total/3);
   }, 0);
   return { totalBankBalance, totalStockCost, totalStockValue, valueKnown, monthlyDividend };
