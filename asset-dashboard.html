@@ -35,7 +35,7 @@ try {
 </script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
@@ -103,7 +103,8 @@ a{color:var(--accent);text-decoration:none}
 
 .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
 .card-title{font-size:16px;color:var(--muted);font-weight:700;letter-spacing:.03em;margin-bottom:9px}
-.card-value{font-family:'Space Mono',monospace;font-size:32px;font-weight:700}
+.card-value{font-family:'Fredoka',sans-serif;font-size:32px;font-weight:600}
+.card-cn{font-family:'Noto Sans TC',sans-serif;font-size:15px;color:var(--muted);font-weight:600;margin-top:2px;min-height:19px}
 .card-value.bank{color:var(--bank)}
 .card-value.stock{color:var(--stock)}
 .card-value.dividend{color:var(--dividend)}
@@ -139,7 +140,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 .bar-label{width:100px;text-align:right;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar-track{flex:1;background:var(--surface);border-radius:9px;height:20px;overflow:hidden;border:1px solid var(--border)}
 .bar-fill{height:100%;border-radius:9px;transition:.5s}
-.bar-val{width:120px;font-family:'Space Mono',monospace;font-size:15px;text-align:right;font-weight:700}
+.bar-val{width:120px;font-family:'Fredoka',sans-serif;font-size:15px;text-align:right;font-weight:600}
 
 .overlay{display:none;position:fixed;inset:0;background:rgba(74,63,53,.35);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
 .overlay.open{display:flex}
@@ -157,7 +158,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
 .flex{display:flex}.items-center{align-items:center}.justify-between{justify-content:space-between}
 .gap-8{gap:8px}.gap-12{gap:12px}
 .text-right{text-align:right}.text-center{text-align:center}
-.mono{font-family:'Space Mono',monospace}
+.mono{font-family:'Fredoka',sans-serif;font-weight:600}
 .spinner{display:inline-block;width:20px;height:20px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty-state{text-align:center;padding:36px 20px;color:var(--muted);font-size:17px}
@@ -236,11 +237,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
       <!-- ══════════ OVERVIEW ══════════ -->
       <div class="page active" id="page-overview">
         <div class="stats-grid">
-          <div class="card"><div class="card-title">🏦 銀行總餘額</div><div class="card-value bank mono" id="ov-bank-total">–</div></div>
-          <div class="card"><div class="card-title">📈 股票投入成本</div><div class="card-value stock mono" id="ov-stock-cost">–</div></div>
-          <div class="card"><div class="card-title">💹 股票現值</div><div class="card-value stock mono" id="ov-stock-value">–</div></div>
-          <div class="card"><div class="card-title">📊 股票損益</div><div class="card-value mono" id="ov-stock-pl">–</div></div>
-          <div class="card"><div class="card-title">💰 每月約當配息</div><div class="card-value dividend mono" id="ov-dividend-monthly">–</div></div>
+          <div class="card"><div class="card-title">🏦 銀行總餘額</div><div class="card-value bank mono" id="ov-bank-total">–</div><div class="card-cn" id="ov-bank-total-cn"></div></div>
+          <div class="card"><div class="card-title">📈 股票投入成本</div><div class="card-value stock mono" id="ov-stock-cost">–</div><div class="card-cn" id="ov-stock-cost-cn"></div></div>
+          <div class="card"><div class="card-title">💹 股票現值</div><div class="card-value stock mono" id="ov-stock-value">–</div><div class="card-cn" id="ov-stock-value-cn"></div></div>
+          <div class="card"><div class="card-title">📊 股票損益</div><div class="card-value mono" id="ov-stock-pl">–</div><div class="card-cn" id="ov-stock-pl-cn"></div></div>
+          <div class="card"><div class="card-title">💰 每月約當配息</div><div class="card-value dividend mono" id="ov-dividend-monthly">–</div><div class="card-cn" id="ov-dividend-monthly-cn"></div></div>
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px" id="ov-charts-wrap">
@@ -251,6 +252,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
           <div class="card">
             <div class="card-title">💎 總資產（銀行＋股票現值）</div>
             <div class="card-value mono" id="ov-total-asset" style="font-size:38px">–</div>
+            <div class="card-cn" id="ov-total-asset-cn" style="font-size:17px"></div>
             <div class="note">總資產 = 銀行總餘額 ＋ 股票現值（股票現值未知時以成本估算）</div>
           </div>
         </div>
@@ -273,7 +275,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>銀行名稱</th><th>用途說明</th><th class="text-right">餘額 (NT$)</th><th></th></tr></thead>
+            <thead><tr><th>銀行名稱</th><th>用途說明</th><th class="text-right">餘額</th><th></th></tr></thead>
             <tbody id="banks-tbody"><tr><td colspan="4" class="text-center" style="padding:30px"><div class="spinner"></div></td></tr></tbody>
           </table>
         </div>
@@ -291,7 +293,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>代號</th><th>名稱</th><th class="text-right">持有(張)</th><th class="text-right">投入成本</th>
+              <th>代號</th><th class="text-right">持有(張)</th><th class="text-right">買入價格</th><th class="text-right">投入成本</th>
               <th class="text-right">現價</th><th class="text-right">現值</th><th class="text-right">損益</th>
               <th>證券公司</th><th>管理人</th><th></th>
             </tr></thead>
@@ -362,7 +364,22 @@ const PAGES = ['overview','banks','stocks','dividends'];
 // ══════════════════════════════════════════
 function fmtMoney(n){
   if(n===null || n===undefined || isNaN(n)) return '–';
-  return 'NT$ ' + Math.round(n).toLocaleString();
+  return Math.round(n).toLocaleString();
+}
+// 將金額轉換為口語化國字金額，如 263200 -> "26萬3千2百元"（未滿萬元不轉換，回傳空字串）
+function toChineseAmount(n){
+  const abs = Math.round(Math.abs(n));
+  if(abs < 10000) return '';
+  const units = [[100000000,'億'],[10000,'萬'],[1000,'千'],[100,'百'],[10,'十']];
+  let remainder = abs;
+  let parts = [];
+  for(const [value,label] of units){
+    const count = Math.floor(remainder/value);
+    if(count>0){ parts.push(count+label); remainder -= count*value; }
+  }
+  if(remainder>0) parts.push(remainder);
+  parts.push('元');
+  return (n<0?'-':'') + parts.join('');
 }
 function fmtNum(n, decimals){
   if(n===null || n===undefined || isNaN(n)) return '–';
@@ -475,7 +492,7 @@ function openBankModal(id){
       <div class="form-group"><label>帳戶用途說明</label><input id="bf-purpose" value="${b?escapeHtml(b.purpose||''):''}" placeholder="例：日常週轉、緊急預備金"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>餘額 (NT$)</label><input id="bf-balance" type="number" step="1" value="${b?b.balance:''}" placeholder="0"></div>
+      <div class="form-group"><label>餘額</label><input id="bf-balance" type="number" step="1" value="${b?b.balance:''}" placeholder="0"></div>
     </div>
     <div class="flex gap-8" style="justify-content:flex-end;margin-top:6px">
       <button class="btn btn-ghost" onclick="closeModal()">取消</button>
@@ -517,6 +534,15 @@ window.deleteBank = deleteBank;
 // ══════════════════════════════════════════
 // STOCKS
 // ══════════════════════════════════════════
+// 標準券商手續費率估算（買入不收證交稅，僅估算手續費，實際依券商折扣略有差異）
+const BROKERAGE_FEE_RATE = 0.001425;
+const BROKERAGE_MIN_FEE = 20;
+function computeCostAmount(buyPrice, lots){
+  const principal = (parseFloat(buyPrice)||0) * (parseFloat(lots)||0) * 1000;
+  if(principal <= 0) return 0;
+  const fee = Math.max(Math.round(principal * BROKERAGE_FEE_RATE), BROKERAGE_MIN_FEE);
+  return Math.round(principal + fee);
+}
 function effectivePrice(s){
   if(s.overridePrice !== undefined && s.overridePrice !== null && s.overridePrice !== '') return parseFloat(s.overridePrice);
   if(s.fetchedPrice !== undefined && s.fetchedPrice !== null) return parseFloat(s.fetchedPrice);
@@ -535,6 +561,7 @@ function renderStocks(){
   }
   tbody.innerHTML = stocks.map(s=>{
     const lots = parseFloat(s.lots)||0;
+    const buyPrice = parseFloat(s.buyPrice)||0;
     const cost = parseFloat(s.costAmount)||0;
     const price = effectivePrice(s);
     const value = price!==null ? price * lots * 1000 : null;
@@ -547,8 +574,8 @@ function renderStocks(){
     return `
     <tr>
       <td class="mono">${escapeHtml(s.symbol)}</td>
-      <td>${escapeHtml(s.name)}</td>
       <td class="text-right mono">${fmtNum(lots,2)}</td>
+      <td class="text-right mono">${buyPrice?fmtNum(buyPrice,2):'–'}</td>
       <td class="text-right mono">${fmtMoney(cost)}</td>
       <td class="text-right mono">${price!==null?fmtNum(price,2):'–'} ${priceBadge}</td>
       <td class="text-right mono">${value!==null?fmtMoney(value):'–'}</td>
@@ -572,19 +599,32 @@ function openStockModal(id){
     <div class="modal-title">📈 ${s?'編輯':'新增'}股票資產</div>
     <div class="form-row">
       <div class="form-group"><label>股票代號</label><input id="sf-symbol" value="${s?escapeHtml(s.symbol):''}" placeholder="例：2330"></div>
-      <div class="form-group"><label>股票名稱</label><input id="sf-name" value="${s?escapeHtml(s.name):''}" placeholder="例：台積電"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>持有部位（張，可小數2位）</label><input id="sf-lots" type="number" step="0.01" value="${s?s.lots:''}" placeholder="例：1.5"></div>
-      <div class="form-group"><label>投入成本 (NT$)</label><input id="sf-cost" type="number" step="1" value="${s?s.costAmount:''}" placeholder="0"></div>
+      <div class="form-group"><label>持有部位（張，上下鍵以整數調整，可手動輸入至小數2位）</label><input id="sf-lots" type="number" step="1" min="0" value="${s?s.lots:''}" placeholder="例：1.5" oninput="if(this.value<0)this.value=0"></div>
+      <div class="form-group"><label>買入價格（每股）</label><input id="sf-buyprice" type="number" step="0.01" min="0" value="${s&&s.buyPrice!=null?s.buyPrice:''}" placeholder="0" oninput="if(this.value<0)this.value=0"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>手動現價（選填，留空則用自動抓取價）</label><input id="sf-override" type="number" step="0.01" value="${s&&s.overridePrice!=null?s.overridePrice:''}" placeholder="留空＝自動抓取"></div>
+      <div class="form-group"><label>手動現價（選填，留空則用自動抓取價）</label><input id="sf-override" type="number" step="0.01" min="0" value="${s&&s.overridePrice!=null?s.overridePrice:''}" placeholder="留空＝自動抓取" oninput="if(this.value<0)this.value=0"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>歸屬證券公司</label><input id="sf-broker" value="${s?escapeHtml(s.broker||''):''}" placeholder="例：元大證券"></div>
-      <div class="form-group"><label>管理人</label><input id="sf-manager" value="${s?escapeHtml(s.manager||''):''}" placeholder="例：爸爸"></div>
+      <div class="form-group"><label>歸屬證券公司</label>
+        <select id="sf-broker">
+          <option value="" ${!s||!s.broker?'selected':''}>請選擇</option>
+          <option value="元大" ${s&&s.broker==='元大'?'selected':''}>元大</option>
+          <option value="富邦" ${s&&s.broker==='富邦'?'selected':''}>富邦</option>
+          <option value="凱基" ${s&&s.broker==='凱基'?'selected':''}>凱基</option>
+        </select>
+      </div>
+      <div class="form-group"><label>管理人</label>
+        <select id="sf-manager">
+          <option value="" ${!s||!s.manager?'selected':''}>請選擇</option>
+          <option value="媽媽" ${s&&s.manager==='媽媽'?'selected':''}>媽媽</option>
+          <option value="哥哥" ${s&&s.manager==='哥哥'?'selected':''}>哥哥</option>
+        </select>
+      </div>
     </div>
+    <div class="note">💡 投入成本會由系統自動計算（買入價格 × 張數，並估算券商手續費 0.1425%，最低20元），不需手動輸入。</div>
     <div class="flex gap-8" style="justify-content:flex-end;margin-top:6px">
       <button class="btn btn-ghost" onclick="closeModal()">取消</button>
       <button class="btn btn-primary" onclick="saveStock(${s?`'${s.id}'`:'null'})">💾 儲存</button>
@@ -595,15 +635,16 @@ window.openStockModal = openStockModal;
 
 async function saveStock(id){
   const symbol = document.getElementById('sf-symbol').value.trim();
-  const name = document.getElementById('sf-name').value.trim();
-  const lots = parseFloat(document.getElementById('sf-lots').value) || 0;
-  const costAmount = parseFloat(document.getElementById('sf-cost').value) || 0;
+  const lots = Math.max(parseFloat(document.getElementById('sf-lots').value) || 0, 0);
+  const buyPrice = Math.max(parseFloat(document.getElementById('sf-buyprice').value) || 0, 0);
   const overrideRaw = document.getElementById('sf-override').value;
   const overridePrice = overrideRaw==='' ? null : parseFloat(overrideRaw);
-  const broker = document.getElementById('sf-broker').value.trim();
-  const manager = document.getElementById('sf-manager').value.trim();
-  if(!symbol || !name){ toast('請輸入股票代號與名稱','error'); return; }
-  const data = { symbol, name, lots, costAmount, overridePrice, broker, manager, updatedAt: fb.Timestamp.now() };
+  const broker = document.getElementById('sf-broker').value;
+  const manager = document.getElementById('sf-manager').value;
+  if(!symbol){ toast('請輸入股票代號','error'); return; }
+  const costAmount = computeCostAmount(buyPrice, lots);
+  const data = { symbol, lots, buyPrice, costAmount, overridePrice, broker, manager, updatedAt: fb.Timestamp.now() };
+  if(!id) data.name = symbol; // 新增時預設以代號作為顯示名稱
   try{
     if(id){
       await fb.updateDoc(fb.doc(db,'asset_stocks',id), data);
@@ -862,14 +903,21 @@ function computeTotals(){
 function renderOverview(){
   const { totalBankBalance, totalStockCost, totalStockValue, monthlyDividend } = computeTotals();
   document.getElementById('ov-bank-total').textContent = fmtMoney(totalBankBalance);
+  document.getElementById('ov-bank-total-cn').textContent = toChineseAmount(totalBankBalance);
   document.getElementById('ov-stock-cost').textContent = fmtMoney(totalStockCost);
+  document.getElementById('ov-stock-cost-cn').textContent = toChineseAmount(totalStockCost);
   document.getElementById('ov-stock-value').textContent = fmtMoney(totalStockValue);
+  document.getElementById('ov-stock-value-cn').textContent = toChineseAmount(totalStockValue);
   const pl = totalStockValue - totalStockCost;
   const plEl = document.getElementById('ov-stock-pl');
   plEl.textContent = (pl>=0?'+':'') + fmtMoney(pl);
   plEl.className = 'card-value mono ' + (pl>=0?'pos':'neg');
+  document.getElementById('ov-stock-pl-cn').textContent = (pl>=0&&Math.abs(pl)>=10000?'+':'') + toChineseAmount(pl);
   document.getElementById('ov-dividend-monthly').textContent = fmtMoney(monthlyDividend);
-  document.getElementById('ov-total-asset').textContent = fmtMoney(totalBankBalance + totalStockValue);
+  document.getElementById('ov-dividend-monthly-cn').textContent = toChineseAmount(monthlyDividend);
+  const totalAsset = totalBankBalance + totalStockValue;
+  document.getElementById('ov-total-asset').textContent = fmtMoney(totalAsset);
+  document.getElementById('ov-total-asset-cn').textContent = toChineseAmount(totalAsset);
 
   // allocation bars
   const total = totalBankBalance + totalStockValue;
