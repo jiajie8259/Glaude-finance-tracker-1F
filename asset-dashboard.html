@@ -651,40 +651,72 @@ async function fetchJsonWithFallback(url, label){
   }
 }
 
+// 解析 TWSE / TPEX 「單一股票、單一月份」回傳格式，取最後一筆交易日的收盤價
+// 兩者欄位順序相同：[日期, 成交股數, 成交金額, 開盤價, 最高價, 最低價, 收盤價, 漲跌價差, 成交筆數]
+function extractLatestClose(json){
+  const rows = json && (json.data || json.aaData);
+  if(!Array.isArray(rows) || rows.length===0) return null;
+  const last = rows[rows.length-1];
+  if(!Array.isArray(last) || last.length < 7) return null;
+  const close = parseFloat(String(last[6]).replace(/,/g,''));
+  return isNaN(close) ? null : close;
+}
+
+async function fetchSingleStockPrice(symbol){
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const dd = String(now.getDate()).padStart(2,'0');
+
+  // ① 先當作上市股票查詢（TWSE）
+  const twseUrl = `https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=${yyyy}${mm}${dd}&stockNo=${encodeURIComponent(symbol)}`;
+  const twseData = await fetchJsonWithFallback(twseUrl, `TWSE ${symbol}`);
+  if(twseData && (twseData.stat==='OK' || twseData.stat==='ok')){
+    const price = extractLatestClose(twseData);
+    if(price !== null) return { price, source: 'twse' };
+  }
+
+  // ② 查不到再當作上櫃股票查詢（TPEX，日期為民國年）
+  const rocYear = yyyy - 1911;
+  const tpexUrl = `https://www.tpex.org.tw/web/stock/aftertrading/daily_trading_info/st43_result.php?d=${rocYear}/${mm}&stkno=${encodeURIComponent(symbol)}`;
+  const tpexData = await fetchJsonWithFallback(tpexUrl, `TPEX ${symbol}`);
+  if(tpexData){
+    const price = extractLatestClose(tpexData);
+    if(price !== null) return { price, source: 'tpex' };
+  }
+
+  return null;
+}
+
 async function refreshStockPrices(){
   if(!stocks.length){ toast('尚未建立任何股票資產','error'); return; }
   const btn = document.getElementById('btn-refresh-price');
   btn.disabled = true;
-  btn.textContent = '⏳ 抓取中…';
+
+  const symbols = [...new Set(stocks.map(s=>s.symbol))];
   const priceMap = {};
-  let twseOk = false, tpexOk = false;
+  let anyConnectionOk = false;
 
-  const twseData = await fetchJsonWithFallback('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL', '證交所(上市)');
-  if(Array.isArray(twseData)){
-    twseOk = true;
-    twseData.forEach(row=>{
-      const code = (row.Code||'').trim();
-      const close = parseFloat(String(row.ClosingPrice||'').replace(/,/g,''));
-      if(code && !isNaN(close)) priceMap[code] = close;
-    });
-  }
-
-  const tpexData = await fetchJsonWithFallback('https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes', '櫃買中心(上櫃)');
-  if(Array.isArray(tpexData)){
-    tpexOk = true;
-    tpexData.forEach(row=>{
-      const code = (row.SecuritiesCompanyCode||row.Code||'').trim();
-      const close = parseFloat(String(row.Close||'').replace(/,/g,''));
-      if(code && !isNaN(close)) priceMap[code] = close;
-    });
+  for(let i=0;i<symbols.length;i++){
+    const symbol = symbols[i];
+    btn.textContent = `⏳ 抓取中… (${i+1}/${symbols.length})`;
+    try{
+      const result = await fetchSingleStockPrice(symbol);
+      if(result){
+        priceMap[symbol] = result.price;
+        anyConnectionOk = true;
+      }
+    }catch(e){
+      console.error(`[資產抓價] ${symbol} 發生例外：`, e);
+    }
   }
 
   btn.disabled = false;
   btn.textContent = '🔄 重新整理股價';
 
-  if(!twseOk && !tpexOk){
-    toast('股價資料來源目前完全無法連線（直接連線與備援代理皆失敗），請按 F12 開啟主控台查看詳細錯誤，或先手動輸入現價', 'error');
-    console.error('[資產抓價] 兩個資料源皆失敗，請檢查瀏覽器主控台的 CORS / 網路錯誤訊息');
+  if(!anyConnectionOk){
+    toast('股價資料來源目前完全無法連線，請按 F12 開啟主控台查看詳細錯誤，或先手動輸入現價', 'error');
+    console.error('[資產抓價] 所有股票皆抓取失敗，請檢查瀏覽器主控台的 CORS / 網路錯誤訊息');
     return;
   }
 
@@ -704,10 +736,8 @@ async function refreshStockPrices(){
   await loadStocks();
 
   let msg = `股價更新完成：成功 ${updated} 檔`;
-  if(!twseOk) msg += '（⚠️ 上市資料源連線失敗）';
-  if(!tpexOk) msg += '（⚠️ 上櫃資料源連線失敗）';
-  if(missedSymbols.length) msg += `，查無資料：${missedSymbols.join('、')}（請手動輸入現價）`;
-  toast(msg, missedSymbols.length || !twseOk || !tpexOk ? 'error' : 'success');
+  if(missedSymbols.length) msg += `，查無資料：${missedSymbols.join('、')}（請手動輸入現價，或截圖 Console 錯誤給我）`;
+  toast(msg, missedSymbols.length ? 'error' : 'success');
 }
 window.refreshStockPrices = refreshStockPrices;
 
