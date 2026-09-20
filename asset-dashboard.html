@@ -427,8 +427,10 @@ window.navigate = navigate;
 // ══════════════════════════════════════════
 // MODAL HELPERS
 // ══════════════════════════════════════════
-function openModal(html){
-  document.getElementById('modal-box').innerHTML = html;
+function openModal(html, opts){
+  const box = document.getElementById('modal-box');
+  box.innerHTML = html;
+  box.style.width = (opts && opts.wide) ? 'min(95vw, 1080px)' : '';
   document.getElementById('modal-overlay').classList.add('open');
 }
 function closeModal(){
@@ -935,6 +937,7 @@ function renderImportPreview(diff){
     </div>` : ''}
     <div class="table-wrap" style="max-height:340px;overflow-y:auto;margin-bottom:10px">
       <table>
+        <colgroup><col style="width:90px"><col style="width:140px"><col style="width:70px"><col></colgroup>
         <thead><tr><th>代號</th><th>名稱</th><th>狀態</th><th>異動內容</th></tr></thead>
         <tbody>${rowsHtml.join('') || '<tr><td colspan="4" class="text-center">沒有可匯入的資料列</td></tr>'}</tbody>
       </table>
@@ -944,7 +947,7 @@ function renderImportPreview(diff){
       <button class="btn btn-ghost" onclick="closeModal()">取消</button>
       <button class="btn btn-primary" onclick="confirmImport()" ${(diff.toCreate.length+diff.toUpdate.length)===0?'disabled':''}>💾 確認匯入</button>
     </div>
-  `);
+  `, { wide: true });
 }
 
 async function handleImportFile(event){
@@ -1056,6 +1059,7 @@ function viewLastImportDiff(){
     <div class="modal-title">📋 最近一次匯入差異（${fmtDateTime(dt)}）</div>
     <div class="table-wrap" style="max-height:400px;overflow-y:auto">
       <table>
+        <colgroup><col style="width:90px"><col style="width:140px"><col style="width:70px"><col></colgroup>
         <thead><tr><th>代號</th><th>名稱</th><th>狀態</th><th>異動內容</th></tr></thead>
         <tbody>${rowsHtml.join('') || '<tr><td colspan="4" class="text-center">無資料</td></tr>'}</tbody>
       </table>
@@ -1063,7 +1067,7 @@ function viewLastImportDiff(){
     <div class="flex gap-8" style="justify-content:flex-end;margin-top:14px">
       <button class="btn btn-ghost" onclick="closeModal()">關閉</button>
     </div>
-  `);
+  `, { wide: true });
 }
 window.viewLastImportDiff = viewLastImportDiff;
 
