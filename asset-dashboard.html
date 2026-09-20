@@ -287,8 +287,14 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
           <span class="section-title">📈 股票資產</span>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-ghost btn-sm" onclick="refreshStockPrices()" id="btn-refresh-price">🔄 重新整理股價</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('import-file-input').click()">📥 匯入庫存(HTS2)</button>
+            <input type="file" id="import-file-input" accept=".csv" style="display:none" onchange="handleImportFile(event)">
             <button class="btn btn-primary btn-sm" onclick="openStockModal()">＋ 新增股票</button>
           </div>
+        </div>
+        <div class="flex items-center gap-8" style="margin-bottom:12px;font-size:15px;color:var(--muted);flex-wrap:wrap">
+          <span id="stocks-last-import">尚無匯入紀錄</span>
+          <button class="btn btn-ghost btn-sm" id="btn-view-last-diff" style="display:none" onclick="viewLastImportDiff()">查看差異紀錄</button>
         </div>
         <div class="table-wrap">
           <table>
@@ -794,6 +800,274 @@ async function refreshStockPrices(){
 window.refreshStockPrices = refreshStockPrices;
 
 // ══════════════════════════════════════════
+// IMPORT (HTS2 庫存 CSV)
+// ══════════════════════════════════════════
+let _pendingImport = null; // { toCreate, toUpdate, toSkip, unmatchedExisting }
+
+function fmtDateTime(d){
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function readFileAsText(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).replace(/^\uFEFF/, '')); // 去除 BOM
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+// 解析 HTS2「庫存損益試算」匯出 CSV：只挑出真正的資料列（含「現股」關鍵字），
+// 欄位順序：市場別,商品(名稱(代號)),類別,庫存數量(股),現價,資產市值,即時淨值試算,持有成本,庫存均價,損益試算,報酬率試算,調整成本
+function parseHtsCsv(text){
+  const lines = text.split(/\r?\n/);
+  const rows = [];
+  for(const line of lines){
+    if(!line || line.indexOf('現股') === -1) continue;
+    const cols = line.split(',');
+    if(cols.length < 9) continue;
+    const productRaw = (cols[1]||'').trim();
+    const m = productRaw.match(/^(.*?)\(([A-Za-z0-9]+)\)$/);
+    if(!m) continue;
+    const name = m[1].trim();
+    const symbol = m[2].trim();
+    const qtyShares = parseFloat(cols[3]) || 0;
+    const price = parseFloat(cols[4]) || 0;
+    const marketValue = parseFloat(cols[5]) || 0;
+    const totalCost = parseFloat(cols[7]) || 0;   // 持有成本(不扣息成本)
+    const avgCost = parseFloat(cols[8]) || 0;     // 庫存均價(不扣息成本)
+    rows.push({ symbol, name, qtyShares, price, marketValue, totalCost, avgCost });
+  }
+  return rows;
+}
+
+function buildImportDiff(parsedRows){
+  const existingBySymbol = {};
+  stocks.forEach(s=>{ existingBySymbol[s.symbol] = s; });
+  const seenSymbols = new Set();
+  const toCreate = [], toUpdate = [], toSkip = [];
+
+  parsedRows.forEach(r=>{
+    if(!r.symbol || (r.price===0 && r.marketValue===0)){
+      toSkip.push({ ...r, reason: '現價與市值皆為 0，可能非可交易部位' });
+      return;
+    }
+    seenSymbols.add(r.symbol);
+    const newLots = Math.round((r.qtyShares/1000)*100)/100;
+    const existing = existingBySymbol[r.symbol];
+    if(existing){
+      const oldLots = parseFloat(existing.lots)||0;
+      const oldBuyPrice = parseFloat(existing.buyPrice)||0;
+      const oldCost = parseFloat(existing.costAmount)||0;
+      const oldPrice = parseFloat(existing.fetchedPrice)||0;
+      const changed = Math.abs(oldLots-newLots)>0.001 || Math.abs(oldBuyPrice-r.avgCost)>0.01
+        || Math.abs(oldCost-r.totalCost)>1 || Math.abs(oldPrice-r.price)>0.01;
+      if(changed){
+        toUpdate.push({ existing, symbol:r.symbol, name:r.name,
+          oldLots, newLots, oldBuyPrice, newBuyPrice:r.avgCost,
+          oldCost, newCost:r.totalCost, oldPrice, newPrice:r.price });
+      }
+    } else {
+      toCreate.push({ symbol:r.symbol, name:r.name, lots:newLots, buyPrice:r.avgCost, costAmount:r.totalCost, price:r.price });
+    }
+  });
+
+  const unmatchedExisting = stocks.filter(s=>!seenSymbols.has(s.symbol));
+  return { toCreate, toUpdate, toSkip, unmatchedExisting };
+}
+
+function diffRowHtml(type, symbol, name, detail){
+  const badge = type==='create' ? '<span class="badge badge-ok">新增</span>'
+              : type==='update' ? '<span class="badge badge-manual">更新</span>'
+              : '<span class="badge badge-err">略過</span>';
+  return `<tr><td class="mono">${escapeHtml(symbol)}</td><td>${escapeHtml(name||'')}</td><td>${badge}</td><td style="white-space:normal">${detail}</td></tr>`;
+}
+
+function renderImportPreview(diff){
+  const rowsHtml = [];
+  diff.toCreate.forEach(r=>{
+    rowsHtml.push(diffRowHtml('create', r.symbol, r.name, `持有 ${fmtNum(r.lots,2)} 張、買入價 ${fmtNum(r.buyPrice,2)}、成本 ${fmtMoney(r.costAmount)}`));
+  });
+  diff.toUpdate.forEach(r=>{
+    const parts = [];
+    if(Math.abs(r.oldLots-r.newLots)>0.001) parts.push(`持有 ${fmtNum(r.oldLots,2)}→${fmtNum(r.newLots,2)} 張`);
+    if(Math.abs(r.oldBuyPrice-r.newBuyPrice)>0.01) parts.push(`買入價 ${fmtNum(r.oldBuyPrice,2)}→${fmtNum(r.newBuyPrice,2)}`);
+    if(Math.abs(r.oldCost-r.newCost)>1) parts.push(`成本 ${fmtMoney(r.oldCost)}→${fmtMoney(r.newCost)}`);
+    if(Math.abs(r.oldPrice-r.newPrice)>0.01) parts.push(`現價 ${fmtNum(r.oldPrice,2)}→${fmtNum(r.newPrice,2)}`);
+    rowsHtml.push(diffRowHtml('update', r.symbol, r.name, parts.join('、') || '（資料相同）'));
+  });
+  diff.toSkip.forEach(r=>{
+    rowsHtml.push(diffRowHtml('skip', r.symbol, r.name, escapeHtml(r.reason)));
+  });
+
+  const unmatchedNote = diff.unmatchedExisting.length
+    ? `<div class="note">📎 本次匯入未包含以下既有持股（不會刪除，仍保留在系統中）：${diff.unmatchedExisting.map(s=>escapeHtml(s.symbol)).join('、')}</div>`
+    : '';
+
+  const needsBrokerPicker = diff.toCreate.length > 0;
+
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">📥 匯入預覽</div>
+    <div class="flex gap-12" style="margin-bottom:14px;flex-wrap:wrap">
+      <span class="badge badge-ok">新增 ${diff.toCreate.length}</span>
+      <span class="badge badge-manual">更新 ${diff.toUpdate.length}</span>
+      <span class="badge badge-err">略過 ${diff.toSkip.length}</span>
+    </div>
+    ${needsBrokerPicker ? `
+    <div class="form-row">
+      <div class="form-group"><label>新持股歸屬證券公司</label>
+        <select id="import-broker">
+          <option value="">請選擇</option>
+          <option value="元大">元大</option>
+          <option value="富邦">富邦</option>
+          <option value="凱基">凱基</option>
+        </select>
+      </div>
+      <div class="form-group"><label>新持股管理人</label>
+        <select id="import-manager">
+          <option value="">請選擇</option>
+          <option value="媽媽">媽媽</option>
+          <option value="哥哥">哥哥</option>
+        </select>
+      </div>
+    </div>` : ''}
+    <div class="table-wrap" style="max-height:340px;overflow-y:auto;margin-bottom:10px">
+      <table>
+        <thead><tr><th>代號</th><th>名稱</th><th>狀態</th><th>異動內容</th></tr></thead>
+        <tbody>${rowsHtml.join('') || '<tr><td colspan="4" class="text-center">沒有可匯入的資料列</td></tr>'}</tbody>
+      </table>
+    </div>
+    ${unmatchedNote}
+    <div class="flex gap-8" style="justify-content:flex-end;margin-top:10px">
+      <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmImport()" ${(diff.toCreate.length+diff.toUpdate.length)===0?'disabled':''}>💾 確認匯入</button>
+    </div>
+  `);
+}
+
+async function handleImportFile(event){
+  const file = event.target.files[0];
+  event.target.value = ''; // 允許重複選同一檔案
+  if(!file) return;
+  try{
+    const text = await readFileAsText(file);
+    const parsed = parseHtsCsv(text);
+    if(!parsed.length){
+      toast('這個檔案裡沒有解析到任何庫存資料列，請確認是否為 HTS2 庫存損益試算匯出的 CSV', 'error');
+      return;
+    }
+    const diff = buildImportDiff(parsed);
+    _pendingImport = diff;
+    renderImportPreview(diff);
+  }catch(e){
+    console.error(e);
+    toast('讀取檔案失敗：'+e.message, 'error');
+  }
+}
+window.handleImportFile = handleImportFile;
+
+async function confirmImport(){
+  const diff = _pendingImport;
+  if(!diff) return;
+  let broker = '', manager = '';
+  if(diff.toCreate.length){
+    broker = document.getElementById('import-broker').value;
+    manager = document.getElementById('import-manager').value;
+    if(!broker || !manager){ toast('請先選擇新持股的歸屬證券公司與管理人', 'error'); return; }
+  }
+
+  const details = [];
+  try{
+    for(const r of diff.toCreate){
+      await fb.addDoc(fb.collection(db,'asset_stocks'), {
+        symbol: r.symbol, name: r.name, lots: r.lots, buyPrice: r.buyPrice, costAmount: r.costAmount,
+        fetchedPrice: r.price, fetchedAt: fb.Timestamp.now(), overridePrice: null,
+        broker, manager, updatedAt: fb.Timestamp.now()
+      });
+      details.push({ type:'created', symbol:r.symbol, name:r.name, detail:`持有 ${r.lots} 張、買入價 ${r.buyPrice}、成本 ${r.costAmount}` });
+    }
+    for(const r of diff.toUpdate){
+      const updateData = {
+        lots: r.newLots, buyPrice: r.newBuyPrice, costAmount: r.newCost,
+        fetchedPrice: r.newPrice, fetchedAt: fb.Timestamp.now(), updatedAt: fb.Timestamp.now()
+      };
+      if(!r.existing.name || r.existing.name === r.existing.symbol) updateData.name = r.name;
+      await fb.updateDoc(fb.doc(db,'asset_stocks', r.existing.id), updateData);
+      details.push({ type:'updated', symbol:r.symbol, name:r.name,
+        detail:`持有 ${r.oldLots}→${r.newLots} 張、買入價 ${r.oldBuyPrice}→${r.newBuyPrice}、成本 ${r.oldCost}→${r.newCost}` });
+    }
+    diff.toSkip.forEach(r=>{
+      details.push({ type:'skipped', symbol:r.symbol, name:r.name, detail:r.reason });
+    });
+
+    await fb.addDoc(fb.collection(db,'asset_import_logs'), {
+      importedAt: fb.Timestamp.now(),
+      createdCount: diff.toCreate.length,
+      updatedCount: diff.toUpdate.length,
+      skippedCount: diff.toSkip.length,
+      details
+    });
+
+    closeModal();
+    toast(`匯入完成：新增 ${diff.toCreate.length} 檔、更新 ${diff.toUpdate.length} 檔`);
+    _pendingImport = null;
+    await loadStocks();
+    await loadLastImportInfo();
+  }catch(e){
+    console.error(e);
+    toast('匯入寫入失敗：'+e.message, 'error');
+  }
+}
+window.confirmImport = confirmImport;
+
+let _lastImportLog = null;
+async function loadLastImportInfo(){
+  try{
+    const snap = await fb.getDocs(fb.query(fb.collection(db,'asset_import_logs'), fb.orderBy('importedAt','desc'), fb.limit(1)));
+    const el = document.getElementById('stocks-last-import');
+    const btn = document.getElementById('btn-view-last-diff');
+    if(snap.empty){
+      el.textContent = '尚無匯入紀錄';
+      btn.style.display = 'none';
+      _lastImportLog = null;
+      return;
+    }
+    const log = snap.docs[0].data();
+    _lastImportLog = log;
+    const dt = log.importedAt && log.importedAt.toDate ? log.importedAt.toDate() : new Date();
+    el.textContent = `最後匯入：${fmtDateTime(dt)}（新增 ${log.createdCount||0}、更新 ${log.updatedCount||0}、略過 ${log.skippedCount||0}）`;
+    btn.style.display = '';
+  }catch(e){
+    console.error('[匯入紀錄] 讀取失敗', e);
+  }
+}
+
+function viewLastImportDiff(){
+  if(!_lastImportLog){ toast('尚無匯入紀錄','error'); return; }
+  const rowsHtml = (_lastImportLog.details||[]).map(d=>{
+    const type = d.type==='created' ? 'create' : d.type==='updated' ? 'update' : 'skip';
+    return diffRowHtml(type, d.symbol, d.name, escapeHtml(d.detail||''));
+  });
+  const dt = _lastImportLog.importedAt && _lastImportLog.importedAt.toDate ? _lastImportLog.importedAt.toDate() : new Date();
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">📋 最近一次匯入差異（${fmtDateTime(dt)}）</div>
+    <div class="table-wrap" style="max-height:400px;overflow-y:auto">
+      <table>
+        <thead><tr><th>代號</th><th>名稱</th><th>狀態</th><th>異動內容</th></tr></thead>
+        <tbody>${rowsHtml.join('') || '<tr><td colspan="4" class="text-center">無資料</td></tr>'}</tbody>
+      </table>
+    </div>
+    <div class="flex gap-8" style="justify-content:flex-end;margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeModal()">關閉</button>
+    </div>
+  `);
+}
+window.viewLastImportDiff = viewLastImportDiff;
+
+// ══════════════════════════════════════════
 // DIVIDENDS
 // ══════════════════════════════════════════
 function renderDividends(){
@@ -1013,7 +1287,7 @@ async function bootstrap(){
   db = window._db;
   fb = window._fbFns;
   try{
-    await Promise.all([loadBanks(), loadStocks(), loadDividends(), loadSnapshots()]);
+    await Promise.all([loadBanks(), loadStocks(), loadDividends(), loadSnapshots(), loadLastImportInfo()]);
     document.getElementById('sync-text').textContent = '已連線';
     renderOverview();
   }catch(e){
