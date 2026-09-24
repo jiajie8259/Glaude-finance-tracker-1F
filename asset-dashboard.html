@@ -299,8 +299,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>代號</th><th>名稱</th><th class="text-right">持有(張)</th><th class="text-right">買入價格</th><th class="text-right">投入成本</th>
-              <th class="text-right">現價</th><th class="text-right">現值</th><th class="text-right">損益</th>
+              <th onclick="toggleStockSort('symbol')" style="cursor:pointer;user-select:none">代號 <span class="sort-arrow" data-field="symbol"></span></th>
+              <th onclick="toggleStockSort('name')" style="cursor:pointer;user-select:none">名稱 <span class="sort-arrow" data-field="name"></span></th>
+              <th class="text-right" onclick="toggleStockSort('lots')" style="cursor:pointer;user-select:none">持有(張) <span class="sort-arrow" data-field="lots"></span></th>
+              <th class="text-right">買入價格</th><th class="text-right">投入成本</th>
+              <th class="text-right">現價</th>
+              <th class="text-right" onclick="toggleStockSort('value')" style="cursor:pointer;user-select:none">現值 <span class="sort-arrow" data-field="value"></span></th>
+              <th class="text-right" onclick="toggleStockSort('pl')" style="cursor:pointer;user-select:none">損益 <span class="sort-arrow" data-field="pl"></span></th>
               <th>證券公司</th><th>管理人</th><th></th>
             </tr></thead>
             <tbody id="stocks-tbody"><tr><td colspan="11" class="text-center" style="padding:30px"><div class="spinner"></div></td></tr></tbody>
@@ -319,11 +324,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
           <table>
             <thead><tr>
               <th>代號</th><th>名稱</th><th class="text-right">持有(張)</th><th>配息週期</th>
-              <th class="text-right">每單位配息</th><th class="text-right">每張配息</th><th class="text-right">每次總額</th><th class="text-right">月約當金額</th><th></th>
+              <th class="text-right">每單位配息</th><th class="text-right">每張配息</th><th class="text-right">每次總額</th><th class="text-right">月約當金額</th>
+              <th>證券公司</th><th>管理人</th><th></th>
             </tr></thead>
-            <tbody id="dividends-tbody"><tr><td colspan="9" class="text-center" style="padding:30px"><div class="spinner"></div></td></tr></tbody>
+            <tbody id="dividends-tbody"><tr><td colspan="11" class="text-center" style="padding:30px"><div class="spinner"></div></td></tr></tbody>
           </table>
         </div>
+        <div class="note">📌 股票資產內的 ETF（代號 00 開頭）會自動加入此頁面，配息週期為系統預設參考值，配息金額需要您手動確認並填入（近兩年平均值目前沒有可靠的公開資料源可自動計算）。</div>
       </div>
 
     </div>
@@ -561,19 +568,65 @@ function priceSource(s){
   if(s.fetchedPrice !== undefined && s.fetchedPrice !== null) return 'fetched';
   return 'none';
 }
+// 計算表格顯示與排序都會用到的衍生數值，避免重複邏輯
+function computeStockMetrics(s){
+  const lots = parseFloat(s.lots)||0;
+  const buyPrice = parseFloat(s.buyPrice)||0;
+  const cost = parseFloat(s.costAmount)||0;
+  const price = effectivePrice(s);
+  const value = price!==null ? price * lots * 1000 : null;
+  const pl = value!==null ? value - cost : null;
+  return { lots, buyPrice, cost, price, value, pl };
+}
+
+let stockSort = { field: null, dir: 'asc' };
+function toggleStockSort(field){
+  if(stockSort.field === field){
+    stockSort.dir = stockSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    stockSort = { field, dir: 'asc' };
+  }
+  renderStocks();
+}
+window.toggleStockSort = toggleStockSort;
+
+function sortStocksList(list){
+  if(!stockSort.field) return list;
+  const field = stockSort.field;
+  const dir = stockSort.dir === 'asc' ? 1 : -1;
+  return [...list].sort((a,b)=>{
+    let va, vb;
+    if(field==='symbol'){ va=a.symbol||''; vb=b.symbol||''; }
+    else if(field==='name'){ va=a.name||a.symbol||''; vb=b.name||b.symbol||''; }
+    else if(field==='lots'){ va=parseFloat(a.lots)||0; vb=parseFloat(b.lots)||0; }
+    else if(field==='value'){ va=computeStockMetrics(a).value; vb=computeStockMetrics(b).value; }
+    else if(field==='pl'){ va=computeStockMetrics(a).pl; vb=computeStockMetrics(b).pl; }
+    // 現值／損益尚未取得現價時（null）一律排到最後，不受排序方向影響
+    if(va===null && vb===null) return 0;
+    if(va===null) return 1;
+    if(vb===null) return -1;
+    if(typeof va === 'string') return va.localeCompare(vb, 'zh-Hant') * dir;
+    return (va - vb) * dir;
+  });
+}
+
+function updateSortArrows(){
+  document.querySelectorAll('#page-stocks .sort-arrow').forEach(el=>{
+    const field = el.getAttribute('data-field');
+    el.textContent = stockSort.field===field ? (stockSort.dir==='asc'?'▲':'▼') : '';
+  });
+}
+
 function renderStocks(){
   const tbody = document.getElementById('stocks-tbody');
   if(!stocks.length){
     tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state">尚未建立任何股票資產</div></td></tr>';
+    updateSortArrows();
     return;
   }
-  tbody.innerHTML = stocks.map(s=>{
-    const lots = parseFloat(s.lots)||0;
-    const buyPrice = parseFloat(s.buyPrice)||0;
-    const cost = parseFloat(s.costAmount)||0;
-    const price = effectivePrice(s);
-    const value = price!==null ? price * lots * 1000 : null;
-    const pl = value!==null ? value - cost : null;
+  const sorted = sortStocksList(stocks);
+  tbody.innerHTML = sorted.map(s=>{
+    const { lots, buyPrice, cost, price, value, pl } = computeStockMetrics(s);
     const src = priceSource(s);
     let priceBadge = '';
     if(src==='manual') priceBadge = '<span class="badge badge-manual">手動</span>';
@@ -599,6 +652,7 @@ function renderStocks(){
       </td>
     </tr>`;
   }).join('');
+  updateSortArrows();
 }
 
 function openStockModal(id){
@@ -642,6 +696,37 @@ function openStockModal(id){
 }
 window.openStockModal = openStockModal;
 
+// ══════════════════════════════════════════
+// ETF 自動轉入固定配息
+// ══════════════════════════════════════════
+// 台灣 ETF 代號慣例以「00」開頭（如 0050、00878），用此判斷是否為 ETF
+function isETF(symbol){
+  return /^00\d+/.test(String(symbol||'').trim());
+}
+// 已知常見 ETF 的目前配息頻率（僅供預設參考，仍請自行確認最新公告）
+const ETF_FREQUENCY_HINTS = {
+  '0050':'季', '0056':'季', '00878':'季', '00929':'季', '006208':'季',
+  '00713':'季', '00919':'季', '00915':'季', '00918':'季', '00679B':'月'
+};
+// 將股票資產內尚未加入固定配息的 ETF，自動建立一筆配息紀錄（週期給預設值、金額留待手動確認，避免顯示未經查證的數字）
+async function syncEtfDividends(){
+  const existingSymbols = new Set(dividends.map(d=>d.symbol));
+  const newEtfs = stocks.filter(s=>isETF(s.symbol) && !existingSymbols.has(s.symbol));
+  if(!newEtfs.length) return;
+  for(const s of newEtfs){
+    try{
+      await fb.addDoc(fb.collection(db,'asset_dividends'), {
+        symbol: s.symbol, name: s.name || s.symbol, lots: s.lots || 0,
+        frequency: ETF_FREQUENCY_HINTS[s.symbol] || '季',
+        amountPerUnit: 0, broker: s.broker||'', manager: s.manager||'',
+        autoSynced: true, updatedAt: fb.Timestamp.now()
+      });
+    }catch(e){ console.error('[ETF自動同步]', s.symbol, e); }
+  }
+  await loadDividends();
+  toast(`已自動將 ${newEtfs.length} 檔 ETF 加入固定配息，請至該頁面確認配息金額與週期`);
+}
+
 async function saveStock(id){
   const symbol = document.getElementById('sf-symbol').value.trim();
   const lots = Math.max(parseFloat(document.getElementById('sf-lots').value) || 0, 0);
@@ -663,6 +748,7 @@ async function saveStock(id){
     closeModal();
     toast('已儲存股票資產');
     await loadStocks();
+    await syncEtfDividends();
   }catch(e){ console.error(e); toast('儲存失敗：'+e.message,'error'); }
 }
 window.saveStock = saveStock;
@@ -1023,6 +1109,7 @@ async function confirmImport(){
     _pendingImport = null;
     await loadStocks();
     await loadLastImportInfo();
+    await syncEtfDividends();
   }catch(e){
     console.error(e);
     toast('匯入寫入失敗：'+e.message, 'error');
@@ -1082,7 +1169,7 @@ window.viewLastImportDiff = viewLastImportDiff;
 function renderDividends(){
   const tbody = document.getElementById('dividends-tbody');
   if(!dividends.length){
-    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">尚未建立任何固定配息紀錄</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state">尚未建立任何固定配息紀錄</div></td></tr>';
     return;
   }
   tbody.innerHTML = dividends.map(d=>{
@@ -1091,16 +1178,19 @@ function renderDividends(){
     const perLot = perShare * 1000; // 每張配息 = 每股配息 × 1000（系統自動計算）
     const totalPerPayout = perLot * lots; // 每次總額
     const monthly = d.frequency==='月' ? totalPerPayout : totalPerPayout/3;
+    const needsConfirm = d.autoSynced && perShare===0;
     return `
     <tr>
       <td class="mono">${escapeHtml(d.symbol)}</td>
       <td>${escapeHtml(d.name)}</td>
       <td class="text-right mono">${fmtNum(lots,2)}</td>
       <td>${escapeHtml(d.frequency)}</td>
-      <td class="text-right mono">${fmtNum(perShare,2)}</td>
+      <td class="text-right mono">${fmtNum(perShare,2)} ${needsConfirm?'<span class="badge badge-warn">請確認金額</span>':''}</td>
       <td class="text-right mono">${fmtMoney(perLot)}</td>
       <td class="text-right mono">${fmtMoney(totalPerPayout)}</td>
       <td class="text-right mono">${fmtMoney(monthly)}</td>
+      <td>${escapeHtml(d.broker||'')}</td>
+      <td>${escapeHtml(d.manager||'')}</td>
       <td>
         <div style="display:flex;gap:6px;justify-content:flex-end">
           <button class="btn btn-ghost btn-sm" onclick="openDividendModal('${d.id}')">✎</button>
@@ -1132,6 +1222,23 @@ function openDividendModal(id){
     <div class="form-row">
       <div class="form-group"><label>每單位配息金額（每股，元）</label><input id="df-amount" type="number" step="0.01" min="0" value="${d?d.amountPerUnit:''}" placeholder="例：0.3"></div>
     </div>
+    <div class="form-row">
+      <div class="form-group"><label>證券公司</label>
+        <select id="df-broker">
+          <option value="" ${!d||!d.broker?'selected':''}>請選擇</option>
+          <option value="元大" ${d&&d.broker==='元大'?'selected':''}>元大</option>
+          <option value="富邦" ${d&&d.broker==='富邦'?'selected':''}>富邦</option>
+          <option value="凱基" ${d&&d.broker==='凱基'?'selected':''}>凱基</option>
+        </select>
+      </div>
+      <div class="form-group"><label>管理人</label>
+        <select id="df-manager">
+          <option value="" ${!d||!d.manager?'selected':''}>請選擇</option>
+          <option value="媽媽" ${d&&d.manager==='媽媽'?'selected':''}>媽媽</option>
+          <option value="哥哥" ${d&&d.manager==='哥哥'?'selected':''}>哥哥</option>
+        </select>
+      </div>
+    </div>
     <div class="flex gap-8" style="justify-content:flex-end;margin-top:6px">
       <button class="btn btn-ghost" onclick="closeModal()">取消</button>
       <button class="btn btn-primary" onclick="saveDividend(${d?`'${d.id}'`:'null'})">💾 儲存</button>
@@ -1146,8 +1253,10 @@ async function saveDividend(id){
   const lots = parseFloat(document.getElementById('df-lots').value) || 0;
   const frequency = document.getElementById('df-freq').value;
   const amountPerUnit = parseFloat(document.getElementById('df-amount').value) || 0;
+  const broker = document.getElementById('df-broker').value;
+  const manager = document.getElementById('df-manager').value;
   if(!symbol || !name){ toast('請輸入股票代號與名稱','error'); return; }
-  const data = { symbol, name, lots, frequency, amountPerUnit, updatedAt: fb.Timestamp.now() };
+  const data = { symbol, name, lots, frequency, amountPerUnit, broker, manager, autoSynced:false, updatedAt: fb.Timestamp.now() };
   try{
     if(id){
       await fb.updateDoc(fb.doc(db,'asset_dividends',id), data);
@@ -1299,6 +1408,7 @@ async function bootstrap(){
     await Promise.all([loadBanks(), loadStocks(), loadDividends(), loadSnapshots(), loadLastImportInfo()]);
     document.getElementById('sync-text').textContent = '已連線';
     renderOverview();
+    await syncEtfDividends();
   }catch(e){
     console.error(e);
     document.getElementById('sync-text').textContent = '連線異常';
