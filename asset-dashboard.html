@@ -1166,18 +1166,27 @@ window.viewLastImportDiff = viewLastImportDiff;
 // ══════════════════════════════════════════
 // DIVIDENDS
 // ══════════════════════════════════════════
+// 配息週期換算成「月」的係數：月配=1、季配=1/3、半年配=1/6
+function dividendMonthlyFactor(frequency){
+  if(frequency==='月') return 1;
+  if(frequency==='半年') return 1/6;
+  return 1/3; // 季配（含未設定時的預設值）
+}
+
 function renderDividends(){
   const tbody = document.getElementById('dividends-tbody');
   if(!dividends.length){
     tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state">尚未建立任何固定配息紀錄</div></td></tr>';
     return;
   }
+  let monthlyTotal = 0;
   tbody.innerHTML = dividends.map(d=>{
     const lots = parseFloat(d.lots)||0;
     const perShare = parseFloat(d.amountPerUnit)||0; // 每單位（每股）配息金額
     const perLot = perShare * 1000; // 每張配息 = 每股配息 × 1000（系統自動計算）
     const totalPerPayout = perLot * lots; // 每次總額
-    const monthly = d.frequency==='月' ? totalPerPayout : totalPerPayout/3;
+    const monthly = totalPerPayout * dividendMonthlyFactor(d.frequency);
+    monthlyTotal += monthly;
     const needsConfirm = d.autoSynced && perShare===0;
     return `
     <tr>
@@ -1198,7 +1207,12 @@ function renderDividends(){
         </div>
       </td>
     </tr>`;
-  }).join('');
+  }).join('') + `
+    <tr style="background:var(--surface);font-weight:700">
+      <td colspan="7" class="text-right">配息加總 / 月</td>
+      <td class="text-right mono" style="color:var(--dividend)">${fmtMoney(monthlyTotal)}</td>
+      <td colspan="3"></td>
+    </tr>`;
 }
 
 function openDividendModal(id){
@@ -1216,6 +1230,7 @@ function openDividendModal(id){
         <select id="df-freq">
           <option value="月" ${d&&d.frequency==='月'?'selected':''}>月配</option>
           <option value="季" ${!d||d.frequency==='季'?'selected':''}>季配</option>
+          <option value="半年" ${d&&d.frequency==='半年'?'selected':''}>半年配</option>
         </select>
       </div>
     </div>
@@ -1299,7 +1314,7 @@ function computeTotals(){
   });
   const monthlyDividend = dividends.reduce((sum,d)=>{
     const total = (parseFloat(d.amountPerUnit)||0) * (parseFloat(d.lots)||0) * 1000; // 每股配息 × 張數 × 1000
-    return sum + (d.frequency==='月' ? total : total/3);
+    return sum + total * dividendMonthlyFactor(d.frequency);
   }, 0);
   return { totalBankBalance, totalStockCost, totalStockValue, valueKnown, monthlyDividend };
 }
