@@ -714,8 +714,13 @@ function extractLatestClose(json){
 // TWSE 的 title 格式為「公司全名 各日成交資訊」，例如「臺灣積體電路製造股份有限公司 各日成交資訊」
 function extractNameFromTitle(title){
   if(!title) return null;
-  const m = String(title).match(/^(.*?)\s*各日成交資訊\s*$/);
-  return m && m[1] ? m[1].trim() : null;
+  let t = String(title).trim();
+  // 去除結尾「各日成交資訊」等文字
+  t = t.replace(/\s*各日成交資訊\s*$/, '');
+  // 去除開頭「民國年月 + 股票代號」，例如「115年09月2330」或「115年09月 2330 」
+  t = t.replace(/^\d{2,3}年\d{1,2}月\s*[A-Za-z0-9]+\s*/, '');
+  t = t.trim();
+  return t || null;
 }
 
 async function fetchSingleStockPrice(symbol){
