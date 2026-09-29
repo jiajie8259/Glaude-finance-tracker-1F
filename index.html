@@ -45,7 +45,7 @@
 <script src="cjk-font-data.js" defer></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
@@ -120,8 +120,8 @@ a{color:var(--accent);text-decoration:none}
 .ledger-row .lr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .ledger-row .lr-title{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ledger-row .lr-sub{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ledger-row .lr-amt{font-family:'DM Mono',monospace;font-weight:600;font-size:14px;flex-shrink:0;width:100px;text-align:right}
-.ledger-row .lr-bal{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--muted);flex-shrink:0;width:68px;text-align:right}
+.ledger-row .lr-amt{font-family:'Archivo Black',sans-serif;font-weight:600;font-size:14px;flex-shrink:0;width:100px;text-align:right}
+.ledger-row .lr-bal{font-family:'Archivo Black',sans-serif;font-size:16px;font-weight:700;color:var(--muted);flex-shrink:0;width:68px;text-align:right}
 .ledger-row .lr-del{width:20px;flex-shrink:0}
 .ledger-head-amt{font-size:15px;color:var(--muted);width:100px;text-align:right;font-weight:600}
 .ledger-head-bal{font-size:15px;color:var(--muted);width:68px;text-align:right;font-weight:600}
@@ -132,7 +132,7 @@ a{color:var(--accent);text-decoration:none}
 /* ── CARDS ── */
 .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:var(--shadow)}
 .card-title{font-size:16px;color:var(--muted);font-weight:700;letter-spacing:.03em;margin-bottom:9px}
-.card-value{font-family:'Space Mono',monospace;font-size:36px;font-weight:700}
+.card-value{font-family:'Archivo Black',sans-serif;font-size:36px;font-weight:700}
 .card-value.income{color:var(--income)}
 .card-value.expense{color:var(--expense)}
 .card-value.pharmacy{color:var(--pharmacy)}
@@ -189,7 +189,7 @@ select option{background:var(--card)}
 .bar-label{width:120px;text-align:right;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar-track{flex:1;background:var(--surface);border-radius:9px;height:21px;overflow:hidden;border:1px solid var(--border)}
 .bar-fill{height:100%;border-radius:9px;transition:.5s}
-.bar-val{width:108px;font-family:'Space Mono',monospace;font-size:17px;text-align:right;font-weight:700}
+.bar-val{width:108px;font-family:'Archivo Black',sans-serif;font-size:17px;text-align:right;font-weight:700}
 
 /* ── MONTH / YEAR SELECTORS ── */
 .period-selector{display:flex;align-items:center;gap:10px;margin-bottom:16px}
@@ -224,7 +224,7 @@ select option{background:var(--card)}
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .section-title{font-family:'Fredoka',sans-serif;font-size:22px;font-weight:600;color:var(--text)}
 .divider{margin:14px 0;border-top:2px dashed var(--border)}
-.amount-pos{color:var(--income)}.amount-neg{color:var(--expense)}
+.amount-pos{color:var(--income);font-family:'Archivo Black',sans-serif}.amount-neg{color:var(--expense);font-family:'Archivo Black',sans-serif}
 .page{display:none}
 .page.active{display:block}
 #page-calendar.active{
@@ -441,7 +441,7 @@ select option{background:var(--card)}
   /* 第4格：金額（右上，大字） */
   #page-records td:nth-child(4){
     grid-column:2;grid-row:1;
-    font-family:'DM Mono',monospace;font-size:16px;font-weight:700;
+    font-family:'Archivo Black',sans-serif;font-size:16px;font-weight:700;
     text-align:right;white-space:nowrap
   }
   /* 第5格：付款方式（右下小字） */
@@ -821,7 +821,7 @@ select option{background:var(--card)}
       <!-- 餘額 -->
       <div style="flex:1;min-width:180px">
         <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px">💰 家傑代買餘額</div>
-        <div id="jiajie-balance-display" style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;color:var(--accent2);line-height:1.1">載入中…</div>
+        <div id="jiajie-balance-display" style="font-family:'Archivo Black',sans-serif;font-size:28px;font-weight:700;color:var(--accent2);line-height:1.1">載入中…</div>
         <div style="font-size:12px;color:var(--muted);margin-top:3px" id="jiajie-balance-sub"></div>
       </div>
       <!-- 分隔線 -->
@@ -833,7 +833,7 @@ select option{background:var(--card)}
           <input type="date" id="jiajie-topup-date" style="font-size:14px;padding:6px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit">
         </div>
         <input type="number" id="jiajie-topup-amount" placeholder="金額" min="1"
-          style="font-size:15px;padding:6px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:'DM Mono',monospace;width:110px;align-self:flex-end">
+          style="font-size:15px;padding:6px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:'Archivo Black',sans-serif;width:110px;align-self:flex-end">
         <button class="btn btn-success btn-sm" onclick="addJiajieTopup()" style="font-size:14px;padding:7px 14px;align-self:flex-end;white-space:nowrap">＋ 確認儲值</button>
       </div>
     </div>
@@ -1959,7 +1959,7 @@ async function loadDashboard() {
         const col = isIncome ? 'var(--income)' : 'var(--expense)';
         return `<div style="display:flex;justify-content:space-between;font-size:17px;border-bottom:1px solid var(--border);padding-bottom:6px">
           <span style="color:var(--muted)">${r.date}</span>
-          <span style="color:${col};font-family:'DM Mono',monospace">${isIncome?'+':'-'}${fmt(r.amount)}</span>
+          <span style="color:${col};font-family:'Archivo Black',sans-serif">${isIncome?'+':'-'}${fmt(r.amount)}</span>
         </div>`;
       }).join('') + '</div>';
   }
@@ -2128,7 +2128,7 @@ async function loadYearly() {
               <div class="bar-track" style="height:12px"><div class="bar-fill" style="width:${r.pi/maxBar*100}%;background:var(--income)"></div></div>
               <div class="bar-track" style="height:12px"><div class="bar-fill" style="width:${(r.pe+r.fe)/maxBar*100}%;background:var(--expense)"></div></div>
             </div>
-            <div style="width:110px;text-align:right;font-family:'DM Mono',monospace;font-size:16px;color:${r.net>=0?'var(--income)':'var(--expense)'}">
+            <div style="width:110px;text-align:right;font-family:'Archivo Black',sans-serif;font-size:16px;color:${r.net>=0?'var(--income)':'var(--expense)'}">
               ${r.net>=0?'+':'-'}${fmt(Math.abs(r.net))}
             </div>
           </div>`).join('')}
