@@ -653,9 +653,9 @@ const cards = [
   {
     id:"fubonj", bank:"台北富邦銀行", name:"富邦 J 卡", accent:"#3F7FBF",
     mode:"—", settle:"結算日 8 / 回饋結算 9日–次月8日",
-    deadline:"優惠至 12/31（2026權益轉型：主力移至海外，日韓泰最高6%）", official:"https://cardpromote.taipeifubon.com.tw/promotion/Detail?sn=D000217",
+    deadline:"優惠至 12/31（2026權益轉型：主力移至海外，日韓泰最高6%，為常態權益非限時活動）", official:"https://cardpromote.taipeifubon.com.tw/promotion/Detail?sn=D000217",
     scenarios:[
-      {cat:"overseasjkt", rate:6, label:"6%", note:"日本／韓國／泰國指定實體店面消費，最高6%（原權益+活動加碼疊加）", cap:"依活動公告，詳官網"},
+      {cat:"overseasjkt", rate:6, label:"6%", note:"日本／韓國／泰國指定實體店面消費，單筆滿NT$1,000，最高6%（原權益+活動加碼疊加）", cap:"依活動公告，詳官網"},
       {cat:"suica", rate:10, label:"10%", note:"綁定日本Suica西瓜卡儲值，最高10%回饋", cap:"依活動公告，詳官網"},
       {cat:"taxi", rate:0, label:"現折$50", note:"LINE GO TAXI 單筆滿 $250 現折 $50，每月需登錄"},
       {cat:"daily", rate:1, label:"1%", note:"一般消費（2026年已從LINE Pay神卡定位轉為海外導向，國內僅剩1%）"}
@@ -688,7 +688,7 @@ const cards = [
     mode:"HamiPay", settle:"—",
     deadline:"優惠至 12/31", official:"https://hamipoint.cht.com.tw/creditcard/",
     scenarios:[
-      {cat:"telecom", rate:2, label:"2%", note:"中華電信電信費代扣繳，回饋為 Hami Point"},
+      {cat:"telecom", rate:2, label:"2%", note:"中華電信電信費代扣繳，回饋為 Hami Point", cap:"每戶每月上限300點Hami Point"},
       {cat:"daily", rate:1, label:"1%", note:"一般消費"}
     ],
     fullNote:"回饋以 Hami Point 發放（1點=NT$1），可用於中華電信門市、Hami Point 購物商城折抵消費，注意點數使用效期。"
