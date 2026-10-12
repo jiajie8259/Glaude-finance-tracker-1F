@@ -462,7 +462,7 @@ select option{background:var(--card)}
     display:flex;justify-content:flex-end;
     padding-top:6px;margin-top:2px;border-top:1px solid var(--border)
   }
-  #page-records .btn-danger{font-size:12px;padding:4px 12px}
+  #page-records .btn-danger,#page-records .row-actions .btn-ghost{font-size:12px;padding:4px 12px}
   /* badge 縮小 */
   #page-records .badge{padding:2px 8px;font-size:11px;border-radius:10px}
   /* 篩選器換行 */
@@ -1292,6 +1292,51 @@ select option{background:var(--card)}
   </div>
 </div>
 
+<!-- ── RECORD EDIT MODAL（所有記錄：修改既有資料）── -->
+<div class="overlay" id="record-edit-modal">
+  <div class="modal" style="max-width:460px">
+    <button class="modal-close" onclick="closeRecordEditModal()">✕</button>
+    <div class="modal-title" id="re-title">✏️ 修改記錄</div>
+    <input type="hidden" id="re-id">
+    <input type="hidden" id="re-type">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="form-group">
+        <label>📅 日期</label>
+        <input type="date" id="re-date" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%">
+      </div>
+      <div class="form-group">
+        <label>💰 金額 (NT$)</label>
+        <input type="number" id="re-amount" min="0" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%">
+      </div>
+      <div class="form-group" id="re-field-cat" style="display:none">
+        <label>🏷️ 類別</label>
+        <select id="re-cat" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%"></select>
+      </div>
+      <div class="form-group" id="re-field-cats" style="display:none">
+        <label>🏷️ 類別</label>
+        <button class="btn btn-ghost btn-sm cell-cat-btn" id="re-cats-btn" onclick="openCatModalForContainer(document.getElementById('re-field-cats'))" style="width:100%;font-size:17px;white-space:nowrap">選擇類別 ▾</button>
+        <input type="hidden" class="cell-cats" id="re-cats">
+      </div>
+      <div class="form-group" id="re-field-usage" style="display:none">
+        <label>🔁 使用週期(天)</label>
+        <input type="number" id="re-usage" min="0" max="999" placeholder="例：30" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%">
+      </div>
+      <div class="form-group" id="re-field-payment" style="display:none">
+        <label>💳 付款方式</label>
+        <select id="re-payment" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%"></select>
+      </div>
+      <div class="form-group" id="re-field-note" style="display:none">
+        <label>📝 備註</label>
+        <input type="text" id="re-note" style="font-size:18px;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;width:100%">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:22px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeRecordEditModal()">取消</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveRecordEdit()">💾 儲存修改</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════════════════════
 // CONSTANTS
@@ -1306,7 +1351,7 @@ const FAMILY_CATS = [
   '家用支出','爸爸支出','醫療','稅務','第四台費','公共支出',
   '網路費+健保費','送禮'
 ];
-const PHARMA_EXP_CATS = ['家用支出','藥局-現金','藥局-支票','醫療','爸爸支出','公共支出','保險費用','稅務','第四台費','網路費+健保費','送禮'];
+const PHARMA_EXP_CATS = ['藥局-現金','藥局-支票'];
 const PAYMENT_TYPES = ['現金','信用卡','轉帳','支票','其他'];
 
 const PAGE_TITLES = {
@@ -1317,8 +1362,9 @@ const PAGE_TITLES = {
 };
 
 let db, fbFns;
-let activeCatRow = null;   // excel row element for category modal
+let activeCatRow = null;   // excel row element (or edit-modal wrapper) for category modal
 let activeCatCells = [];   // currently checked cats
+let _recordsCache = {};    // id -> record，供「所有記錄」頁編輯時快速取用，避免重新查詢
 
 // ══════════════════════════════════════════════════════
 // FIREBASE INIT
@@ -1489,6 +1535,16 @@ async function deleteRecord(id) {
   }
   const { doc, deleteDoc } = fbFns;
   await deleteDoc(doc(db, 'records', id));
+}
+
+async function updateRecord(id, data) {
+  if (window._demoMode) {
+    const idx = (window._demoData || []).findIndex(r => r.id === id);
+    if (idx >= 0) Object.assign(window._demoData[idx], data);
+    return;
+  }
+  const { doc, updateDoc } = fbFns;
+  await updateDoc(doc(db, 'records', id), data);
 }
 
 // ══════════════════════════════════════════════════════
@@ -1716,12 +1772,16 @@ async function saveExcelRows(type) {
 // CATEGORY MODAL
 // ══════════════════════════════════════════════════════
 function openCatModal(btn) {
-  activeCatRow = btn.closest('tr');
+  openCatModalForContainer(btn.closest('tr'));
+}
+
+function openCatModalForContainer(targetContainer) {
+  activeCatRow = targetContainer;
   const currentVal = activeCatRow.querySelector('.cell-cats').value;
   activeCatCells = currentVal ? currentVal.split(',') : [];
 
-  const container = document.getElementById('cat-checkboxes');
-  container.innerHTML = '';
+  const checkboxWrap = document.getElementById('cat-checkboxes');
+  checkboxWrap.innerHTML = '';
   FAMILY_CATS.forEach(cat => {
     const checked = activeCatCells.includes(cat);
     const lbl = document.createElement('label');
@@ -1730,7 +1790,7 @@ function openCatModal(btn) {
     lbl.querySelector('input').addEventListener('change', e => {
       lbl.classList.toggle('checked', e.target.checked);
     });
-    container.appendChild(lbl);
+    checkboxWrap.appendChild(lbl);
   });
   document.getElementById('cat-modal').classList.add('open');
 }
@@ -1817,6 +1877,10 @@ async function loadRecords() {
     return;
   }
 
+  // 快取目前這批資料，供點擊「修改」時直接取用，不必重新查詢
+  _recordsCache = {};
+  all.forEach(r => { _recordsCache[r.id] = r; });
+
   // 選了特定類型（或全部類型）時，顯示這批篩選結果的總計金額
   const isIncome = r => r.type === 'pharma-income' || r.type === 'topup';
   const total = all.reduce((s, r) => s + (isIncome(r) ? +r.amount : -(+r.amount || 0)), 0);
@@ -1833,7 +1897,7 @@ async function loadRecords() {
         <td>–</td>
         <td style="color:var(--muted);font-size:17px">–</td>
         <td style="color:var(--muted);font-size:15px;white-space:nowrap">–</td>
-        <td><button class="btn btn-danger btn-sm" onclick="confirmDeleteTopupInRecords('${r.id}')">刪除</button></td>
+        <td><div class="row-actions" style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="openRecordEditModal('${r.id}')">✏️ 修改</button><button class="btn btn-danger btn-sm" onclick="confirmDeleteTopupInRecords('${r.id}')">刪除</button></div></td>
       </tr>`;
     }
     const typeLabel = { 'pharma-income':'藥局收入','pharma-expense':'藥局支出','family-expense':'家庭支出','jiajie-expense':'家傑代買' }[r.type] || r.type;
@@ -1848,7 +1912,7 @@ async function loadRecords() {
       <td>${r.payment||'–'}</td>
       <td style="color:var(--muted);font-size:17px">${r.note||'–'}</td>
       <td style="color:var(--muted);font-size:15px;white-space:nowrap">${r.createdBy||'–'}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="confirmDelete('${r.id}')">刪除</button></td>
+      <td><div class="row-actions" style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="openRecordEditModal('${r.id}')">✏️ 修改</button><button class="btn btn-danger btn-sm" onclick="confirmDelete('${r.id}')">刪除</button></div></td>
     </tr>`;
   }).join('');
 }
@@ -1910,6 +1974,120 @@ async function confirmDelete(id) {
   await deleteRecord(id).catch(() => {});
   toast('已刪除', 'success');
   loadRecords();
+}
+
+// ── 修改既有記錄（所有記錄頁）────────────────────────
+function openRecordEditModal(id) {
+  const r = _recordsCache[id];
+  if (!r) { toast('⚠️ 找不到這筆資料，請重新整理後再試', 'error'); return; }
+
+  document.getElementById('re-id').value = id;
+  document.getElementById('re-type').value = r.type;
+  document.getElementById('re-date').value = r.date || '';
+  document.getElementById('re-amount').value = r.amount || '';
+
+  const titleMap = {
+    'pharma-income':'💊 修改藥局收入', 'pharma-expense':'💸 修改藥局支出',
+    'family-expense':'🏠 修改家庭支出', 'jiajie-expense':'🛍️ 修改家傑代買',
+    'topup':'📥 修改媽媽儲值'
+  };
+  document.getElementById('re-title').textContent = titleMap[r.type] || '✏️ 修改記錄';
+
+  // 先全部隱藏，再依類型顯示需要的欄位
+  ['re-field-cat','re-field-cats','re-field-usage','re-field-payment','re-field-note'].forEach(fid => {
+    document.getElementById(fid).style.display = 'none';
+  });
+
+  if (r.type === 'pharma-expense') {
+    const sel = document.getElementById('re-cat');
+    // 把目前值也加進選項，避免舊資料的類別不在目前允許清單內時被迫改掉
+    const opts = (!r.category || PHARMA_EXP_CATS.includes(r.category))
+      ? PHARMA_EXP_CATS
+      : [r.category, ...PHARMA_EXP_CATS];
+    sel.innerHTML = opts.map(c => `<option value="${c}" ${c===r.category?'selected':''}>${c}</option>`).join('');
+    document.getElementById('re-field-cat').style.display = '';
+  }
+
+  if (r.type === 'family-expense' || r.type === 'jiajie-expense') {
+    const cats = r.categories || [];
+    document.getElementById('re-cats').value = cats.join(',');
+    document.getElementById('re-cats-btn').textContent = cats.length ? cats.join('、') + ' ▾' : '選擇類別 ▾';
+    document.getElementById('re-field-cats').style.display = '';
+  }
+
+  if (r.type === 'jiajie-expense') {
+    document.getElementById('re-usage').value = r.usageDays || '';
+    document.getElementById('re-field-usage').style.display = '';
+  }
+
+  if (r.type !== 'jiajie-expense' && r.type !== 'topup') {
+    const paySel = document.getElementById('re-payment');
+    paySel.innerHTML = PAYMENT_TYPES.map(p => `<option ${p===r.payment?'selected':''}>${p}</option>`).join('');
+    document.getElementById('re-field-payment').style.display = '';
+  }
+
+  if (r.type !== 'topup') {
+    document.getElementById('re-note').value = r.note || '';
+    document.getElementById('re-field-note').style.display = '';
+  }
+
+  document.getElementById('record-edit-modal').classList.add('open');
+}
+
+function closeRecordEditModal() {
+  document.getElementById('record-edit-modal').classList.remove('open');
+}
+
+async function saveRecordEdit() {
+  const id   = document.getElementById('re-id').value;
+  const type = document.getElementById('re-type').value;
+  const date = document.getElementById('re-date').value;
+  const amtRaw = document.getElementById('re-amount').value;
+  const amount = parseFloat(amtRaw || 0);
+
+  if (!date) { toast('⚠️ 請選擇日期', 'error'); return; }
+  if (!amount || amount <= 0) { toast('⚠️ 請輸入正確的金額', 'error'); return; }
+
+  const saveBtn = document.querySelector('#record-edit-modal .btn-primary');
+  const origHTML = saveBtn.innerHTML;
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<div class="spinner"></div> 儲存中…';
+
+  try {
+    if (type === 'topup') {
+      await updateJiajieTopup(id, { date, amount });
+    } else {
+      const d = new Date(date);
+      const updates = { date, amount, year: d.getFullYear(), month: d.getMonth() + 1 };
+
+      if (type === 'pharma-expense') {
+        updates.category = document.getElementById('re-cat').value || '';
+      }
+      if (type === 'family-expense' || type === 'jiajie-expense') {
+        const catsVal = document.getElementById('re-cats').value;
+        updates.categories = catsVal ? catsVal.split(',') : [];
+      }
+      if (type === 'jiajie-expense') {
+        updates.usageDays = parseInt(document.getElementById('re-usage').value || '0', 10) || 0;
+      }
+      if (type !== 'jiajie-expense') {
+        updates.payment = document.getElementById('re-payment').value || '現金';
+      }
+      updates.note = document.getElementById('re-note').value || '';
+
+      await updateRecord(id, updates);
+    }
+
+    toast('✅ 已更新', 'success');
+    closeRecordEditModal();
+    loadRecords();
+  } catch (e) {
+    console.error('saveRecordEdit error:', e);
+    toast('❌ 更新失敗：' + e.message, 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = origHTML;
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -3705,6 +3883,16 @@ async function deleteJiajieTopup(id) {
   }
   const { collection, doc, deleteDoc } = fbFns;
   await deleteDoc(doc(db, 'jiajie_topup', id));
+}
+
+async function updateJiajieTopup(id, data) {
+  if (window._demoMode) {
+    const idx = (window._demoTopups || []).findIndex(r => r.id === id);
+    if (idx >= 0) Object.assign(window._demoTopups[idx], data);
+    return;
+  }
+  const { doc, updateDoc } = fbFns;
+  await updateDoc(doc(db, 'jiajie_topup', id), data);
 }
 
 async function loadJiajiePanel() {
