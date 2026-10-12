@@ -936,6 +936,7 @@ select option{background:var(--card)}
       <select id="rec-month" onchange="loadRecords()" style="padding:6px 10px;font-size:16px"></select>
       <select id="rec-year"  onchange="loadRecords()" style="padding:6px 10px;font-size:16px"></select>
       <button class="btn btn-ghost btn-sm" onclick="migratePharmaCatRecords()" title="把家庭支出／家傑代買裡類別是「藥局-現金／藥局-支票」的資料，搬去藥局支出">🔧 修正藥局類別資料</button>
+      <button class="btn btn-ghost btn-sm" onclick="migrateFamilyCatRecords()" title="把藥局支出裡類別屬於家庭支出（家用支出、醫療、爸爸支出等）的資料，搬去家庭支出">🔧 修正家庭支出類別資料</button>
     </div>
   </div>
   <div id="records-total" style="display:none;margin-bottom:14px;font-size:16px;color:var(--muted);font-weight:700"></div>
@@ -1965,6 +1966,48 @@ async function migratePharmaCatRecords() {
     loadRecords();
   } catch (e) {
     console.error('migratePharmaCatRecords error:', e);
+    toast('❌ 修正失敗：' + e.message, 'error');
+  }
+}
+
+// 一次性資料修正（反向）：把「藥局支出」裡，類別其實屬於家庭支出類別
+// （家用支出／爸爸支出／醫療／稅務／第四台費／公共支出／網路費+健保費／送禮）的舊資料，
+// 類型改成「家庭支出」，categories 改為陣列格式。
+async function migrateFamilyCatRecords() {
+  if (!confirm('這會把「藥局支出」裡，類別屬於家庭支出類別（例如家用支出、醫療、爸爸支出等）的資料，類型改成「家庭支出」。確定要執行嗎？')) return;
+
+  if (window._demoMode) {
+    let count = 0;
+    window._demoData = (window._demoData || []).map(r => {
+      if (r.type === 'pharma-expense' && FAMILY_CATS.includes(r.category)) {
+        count++;
+        return { ...r, type: 'family-expense', categories: [r.category] };
+      }
+      return r;
+    });
+    toast(count ? `✅ 已修正 ${count} 筆（demo）` : '沒有找到需要修正的資料', 'success');
+    loadRecords();
+    return;
+  }
+
+  try {
+    const { collection, getDocs, query, where, doc, updateDoc } = fbFns;
+    const snap = await getDocs(query(collection(db, 'records'), where('type', '==', 'pharma-expense')));
+    const targets = snap.docs.filter(d => FAMILY_CATS.includes(d.data().category));
+
+    if (!targets.length) {
+      toast('沒有找到需要修正的資料', 'success');
+      return;
+    }
+
+    for (const d of targets) {
+      await updateDoc(doc(db, 'records', d.id), { type: 'family-expense', categories: [d.data().category] });
+    }
+
+    toast(`✅ 已將 ${targets.length} 筆資料搬移到「家庭支出」`, 'success');
+    loadRecords();
+  } catch (e) {
+    console.error('migrateFamilyCatRecords error:', e);
     toast('❌ 修正失敗：' + e.message, 'error');
   }
 }
