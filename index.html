@@ -675,6 +675,9 @@ select option{background:var(--card)}
 <header class="topbar">
   <span class="topbar-title" id="topbar-title">儀表板</span>
   <div class="topbar-right">
+    <button id="reminder-bell" onclick="openReminderModal()" title="補貨提醒" style="display:none;position:relative;background:none;border:none;cursor:pointer;font-size:19px;padding:2px 6px;line-height:1;color:var(--text)">
+      🔔<span id="reminder-bell-badge" style="position:absolute;top:-3px;right:0px;background:var(--expense);color:#fff;border-radius:999px;font-size:10px;font-weight:700;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:inherit"></span>
+    </button>
     <div class="sync-status" id="sync-status" style="cursor:pointer" onclick="showDiagnostic()" title="點擊查看連線診斷">
       <span class="dot" id="sync-dot"></span>
       <span id="sync-text">連線中…</span>
@@ -1338,6 +1341,18 @@ select option{background:var(--card)}
   </div>
 </div>
 
+<!-- ── REMINDER MODAL（補貨提醒）── -->
+<div class="overlay" id="reminder-modal">
+  <div class="modal" style="max-width:440px">
+    <button class="modal-close" onclick="closeReminderModal()">✕</button>
+    <div class="modal-title">⏰ 補貨提醒</div>
+    <div id="reminder-list" style="display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow-y:auto;margin-top:6px"></div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeReminderModal()">稍後再說</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════════════════════
 // CONSTANTS
@@ -1427,6 +1442,8 @@ function init() {
   // 家庭支出、家傑代買、藥局支出：預設 1 列；藥局收入：3 列
   ['family-expense-tbody','jiajie-expense-tbody','pharma-expense-tbody'].forEach(id => addExcelRow(id));
   addExcelRow('pharma-income-tbody'); addExcelRow('pharma-income-tbody'); addExcelRow('pharma-income-tbody');
+  // 開啟網站時檢查是否有快到期／過期的補貨提醒
+  checkRepurchaseReminders();
 }
 
 function populatePeriodSelectors() {
@@ -1746,6 +1763,9 @@ async function saveExcelRows(type) {
 
   // Restore button
   if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = origHTML; }
+
+  // 若剛新增了補貨提醒，順便刷新右上角的提醒鈴鐺
+  if (type === 'jiajie-expense') checkRepurchaseReminders();
 
   // Summary feedback
   if (saved > 0 && errors === 0) {
@@ -3572,6 +3592,108 @@ async function deleteCalEventRecord(id) {
   }
   const { doc, deleteDoc } = fbFns;
   await deleteDoc(doc(db, 'events', id));
+}
+
+// ══════════════════════════════════════════════════════
+// 補貨提醒（家傑代買「使用週期(天)」自動產生的行事曆事項）
+// 開啟網站時自動檢查，快到期或已過期就跳出提醒；右上角 🔔 可隨時手動查看
+// ══════════════════════════════════════════════════════
+const REMINDER_WINDOW_DAYS = 3; // 到期前幾天開始提醒
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function daysDiff(dateStr) {
+  const today = new Date(todayStr() + 'T00:00:00');
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.round((d - today) / 86400000);
+}
+
+async function checkRepurchaseReminders() {
+  try {
+    const events = await fetchCalEvents();
+    const horizon = addDaysToDateStr(todayStr(), REMINDER_WINDOW_DAYS);
+    const due = events
+      .filter(e => e.category === '購物' && (e.title || '').startsWith('🛒 補貨提醒') && e.date <= horizon)
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    window._dueReminders = due;
+    renderReminderBell(due);
+
+    if (due.length) {
+      const dismissKey = 'reminderDismiss_' + todayStr();
+      if (localStorage.getItem(dismissKey) !== '1') {
+        openReminderModal();
+      }
+    }
+  } catch (e) {
+    console.error('checkRepurchaseReminders error:', e);
+  }
+}
+
+function renderReminderBell(due) {
+  const bell = document.getElementById('reminder-bell');
+  const badge = document.getElementById('reminder-bell-badge');
+  if (!bell || !badge) return;
+  if (!due || !due.length) { bell.style.display = 'none'; return; }
+  bell.style.display = '';
+  badge.textContent = due.length;
+}
+
+function renderReminderList() {
+  const wrap = document.getElementById('reminder-list');
+  const due = window._dueReminders || [];
+  if (!due.length) {
+    wrap.innerHTML = '<div style="text-align:center;color:var(--muted);padding:24px 0">目前沒有待補貨的項目 🎉</div>';
+    return;
+  }
+  wrap.innerHTML = due.map(e => {
+    const diff = daysDiff(e.date);
+    const statusTxt = diff < 0 ? `已過期 ${Math.abs(diff)} 天` : (diff === 0 ? '就是今天' : `還有 ${diff} 天`);
+    const statusColor = diff <= 0 ? 'var(--expense)' : 'var(--muted)';
+    const label = (e.title || '').replace('🛒 補貨提醒：', '') || '商品';
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 14px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px;flex-shrink:0">🛒</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</div>
+        <div style="font-size:12px;color:${statusColor};margin-top:2px">${e.date}・${statusTxt}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="padding:6px 10px;font-size:12px" onclick="snoozeReminder('${e.id}')" title="延後3天再提醒">🔁 延後</button>
+      <button class="btn btn-primary btn-sm" style="padding:6px 10px;font-size:12px" onclick="resolveReminder('${e.id}')" title="已經補貨，刪除這則提醒">✅ 已補貨</button>
+    </div>`;
+  }).join('');
+}
+
+function openReminderModal() {
+  renderReminderList();
+  document.getElementById('reminder-modal').classList.add('open');
+}
+
+function closeReminderModal() {
+  document.getElementById('reminder-modal').classList.remove('open');
+  localStorage.setItem('reminderDismiss_' + todayStr(), '1');
+}
+
+async function resolveReminder(id) {
+  await deleteCalEventRecord(id).catch(() => {});
+  window._dueReminders = (window._dueReminders || []).filter(e => e.id !== id);
+  renderReminderBell(window._dueReminders);
+  renderReminderList();
+  toast('✅ 已標記補貨完成', 'success');
+  if (document.getElementById('page-calendar')?.classList.contains('active')) renderCalendar();
+}
+
+async function snoozeReminder(id) {
+  const ev = (window._dueReminders || []).find(e => e.id === id);
+  if (!ev) return;
+  const newDate = addDaysToDateStr(ev.date, 3);
+  await updateCalEventRecord(id, { date: newDate }).catch(() => {});
+  window._dueReminders = (window._dueReminders || []).filter(e => e.id !== id);
+  renderReminderBell(window._dueReminders);
+  renderReminderList();
+  toast('🔁 已延後3天再提醒', 'success');
+  if (document.getElementById('page-calendar')?.classList.contains('active')) renderCalendar();
 }
 
 async function renderCalendar() {
