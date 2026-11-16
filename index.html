@@ -142,6 +142,18 @@ a{color:var(--accent);text-decoration:none}
 .table-wrap{overflow-x:auto;border-radius:18px;border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow)}
 /* 新增收支頁的「加列」表格：只在內部捲動，不要把整頁撐高 */
 .table-wrap-entry{max-height:340px;overflow-y:auto}
+
+/* 流水帳／新增支出 左右並排，盡量縮短整頁高度（寬螢幕才啟用，避免影響手機版版面） */
+.entry-split{display:flex;gap:16px;align-items:flex-start}
+.entry-split > .entry-col{flex:1;min-width:0}
+@media(min-width:1101px){
+  .entry-split .table-wrap-entry{max-height:260px}
+  .entry-split .excel-table th{padding:9px 6px;font-size:13px}
+  .entry-split .excel-table input,.entry-split .excel-table select{padding:9px 8px;font-size:15px}
+}
+@media(max-width:1100px){
+  .entry-split{flex-direction:column}
+}
 table{width:100%;border-collapse:collapse;font-size:19px}
 thead{background:var(--surface)}
 th{padding:16px 20px;text-align:left;font-weight:700;color:var(--muted);font-size:15px;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
@@ -788,38 +800,45 @@ select option{background:var(--card)}
   <!-- Family Expense (預設顯示) -->
   <div id="et-family-expense">
 
-    <!-- 流水帳 -->
-    <div class="card mb-16" style="padding:0;overflow:hidden">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
-        <span style="font-weight:700;font-size:16px;color:var(--text)">📋 流水帳</span>
-        <div style="display:flex;align-items:center;gap:0">
-          <span class="ledger-head-amt">金額異動</span>
-          <span class="ledger-head-bal">累計</span>
-          <span style="width:20px;display:inline-block"></span>
+    <div class="entry-split">
+      <!-- 流水帳 -->
+      <div class="entry-col">
+        <div class="card mb-16" style="padding:0;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
+            <span style="font-weight:700;font-size:16px;color:var(--text)">📋 流水帳</span>
+            <div style="display:flex;align-items:center;gap:0">
+              <span class="ledger-head-amt">金額異動</span>
+              <span class="ledger-head-bal">累計</span>
+              <span style="width:20px;display:inline-block"></span>
+            </div>
+          </div>
+          <div id="family-ledger" style="max-height:260px;overflow-y:auto">
+            <div style="text-align:center;padding:24px;color:var(--muted)"><div class="spinner"></div></div>
+          </div>
         </div>
       </div>
-      <div id="family-ledger" style="max-height:260px;overflow-y:auto">
-        <div style="text-align:center;padding:24px;color:var(--muted)"><div class="spinner"></div></div>
-      </div>
-    </div>
 
-    <div class="section-header">
-      <span class="section-title">家庭支出</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="addExcelRow('family-expense-tbody')">＋ 加列</button>
-        <button class="btn btn-primary btn-sm" onclick="saveExcelRows('family-expense')">💾 儲存全部</button>
+      <!-- 新增家庭支出 -->
+      <div class="entry-col">
+        <div class="section-header">
+          <span class="section-title">家庭支出</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="addExcelRow('family-expense-tbody')">＋ 加列</button>
+            <button class="btn btn-primary btn-sm" onclick="saveExcelRows('family-expense')">💾 儲存全部</button>
+          </div>
+        </div>
+        <div class="table-wrap table-wrap-entry">
+          <table class="excel-table">
+            <thead><tr>
+              <th>日期</th><th>金額 (NT$)</th><th>類別（多選）</th><th>備註</th><th>付款方式</th><th style="width:50px"></th>
+            </tr></thead>
+            <tbody id="family-expense-tbody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px;font-size:13px;color:var(--muted)">
+          💡 點選「類別」欄位可選取多個類別；支援家用支出、爸爸支出、醫療、稅務等 10 種類別。
+        </div>
       </div>
-    </div>
-    <div class="table-wrap table-wrap-entry">
-      <table class="excel-table">
-        <thead><tr>
-          <th>日期</th><th>金額 (NT$)</th><th>類別（多選）</th><th>備註</th><th>付款方式</th><th style="width:50px"></th>
-        </tr></thead>
-        <tbody id="family-expense-tbody"></tbody>
-      </table>
-    </div>
-    <div style="margin-top:10px;font-size:17px;color:var(--muted)">
-      💡 點選「類別」欄位可選取多個類別；支援家用支出、爸爸支出、醫療、稅務等 10 種類別。
     </div>
   </div>
 
@@ -848,39 +867,45 @@ select option{background:var(--card)}
       </div>
     </div>
 
-    <!-- 流水帳 -->
-    <div class="card mb-16" style="padding:0;overflow:hidden">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
-        <span style="font-weight:700;font-size:16px;color:var(--text)">📋 流水帳</span>
-        <div style="display:flex;align-items:center;gap:0">
-          <span class="ledger-head-amt">金額異動</span>
-          <span class="ledger-head-bal">餘額</span>
-          <span style="width:20px;display:inline-block"></span>
+    <div class="entry-split">
+      <!-- 流水帳 -->
+      <div class="entry-col">
+        <div class="card mb-16" style="padding:0;overflow:hidden">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)">
+            <span style="font-weight:700;font-size:16px;color:var(--text)">📋 流水帳</span>
+            <div style="display:flex;align-items:center;gap:0">
+              <span class="ledger-head-amt">金額異動</span>
+              <span class="ledger-head-bal">餘額</span>
+              <span style="width:20px;display:inline-block"></span>
+            </div>
+          </div>
+          <div id="jiajie-ledger" style="max-height:260px;overflow-y:auto">
+            <div style="text-align:center;padding:24px;color:var(--muted)"><div class="spinner"></div></div>
+          </div>
         </div>
       </div>
-      <div id="jiajie-ledger" style="max-height:260px;overflow-y:auto">
-        <div style="text-align:center;padding:24px;color:var(--muted)"><div class="spinner"></div></div>
-      </div>
-    </div>
 
-    <!-- 支出輸入 -->
-    <div class="section-header">
-      <span class="section-title">新增代買支出</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="addExcelRow('jiajie-expense-tbody')">＋ 加列</button>
-        <button class="btn btn-primary btn-sm" onclick="saveExcelRows('jiajie-expense')">💾 儲存全部</button>
+      <!-- 支出輸入 -->
+      <div class="entry-col">
+        <div class="section-header">
+          <span class="section-title">新增代買支出</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="addExcelRow('jiajie-expense-tbody')">＋ 加列</button>
+            <button class="btn btn-primary btn-sm" onclick="saveExcelRows('jiajie-expense')">💾 儲存全部</button>
+          </div>
+        </div>
+        <div class="table-wrap table-wrap-entry">
+          <table class="excel-table">
+            <thead><tr>
+              <th>日期</th><th>金額 (NT$)</th><th>類別（多選）</th><th>備註</th><th>使用週期(天)</th><th style="width:50px"></th>
+            </tr></thead>
+            <tbody id="jiajie-expense-tbody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px;font-size:13px;color:var(--muted)">
+          💡 儲存後餘額與流水帳將自動更新。
+        </div>
       </div>
-    </div>
-    <div class="table-wrap table-wrap-entry">
-      <table class="excel-table">
-        <thead><tr>
-          <th>日期</th><th>金額 (NT$)</th><th>類別（多選）</th><th>備註</th><th>使用週期(天)</th><th style="width:50px"></th>
-        </tr></thead>
-        <tbody id="jiajie-expense-tbody"></tbody>
-      </table>
-    </div>
-    <div style="margin-top:10px;font-size:15px;color:var(--muted)">
-      💡 儲存後餘額與流水帳將自動更新。
     </div>
   </div>
 
