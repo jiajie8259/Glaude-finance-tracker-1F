@@ -76,9 +76,9 @@ a{color:var(--accent);text-decoration:none}
 /* ── LAYOUT ── */
 .shell{display:flex;min-height:100vh}
 .sidebar{width:250px;background:var(--surface);border-right:2px dashed var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
-.main{margin-left:250px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.main{margin-left:250px;flex:1;min-width:0;display:flex;flex-direction:column;min-height:100vh}
 .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:46px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
-.content{padding:14px 28px;flex:1;overflow-y:auto;overflow-x:hidden}
+.content{padding:12px 20px;flex:1;min-width:0;overflow-y:auto;overflow-x:hidden}
 /* 行事曆頁：main 撐滿視窗，content 固定可用高度 */
 .main{display:flex;flex-direction:column;height:100vh}
 .content.cal-active{padding-bottom:0;overflow:hidden !important;display:flex;flex-direction:column}
@@ -144,10 +144,33 @@ a{color:var(--accent);text-decoration:none}
 .table-wrap-entry{max-height:340px;overflow-y:auto}
 
 /* 流水帳／新增支出 左右並排，盡量縮短整頁高度（寬螢幕才啟用，避免影響手機版版面） */
-.entry-split{display:flex;gap:16px;align-items:flex-start}
+.entry-split{display:flex;gap:14px;align-items:flex-start}
 .entry-split > .entry-col{flex:1;min-width:0}
 @media(min-width:1101px){
-  .entry-split .table-wrap-entry{max-height:260px}
+  /* 新增收支頁：整頁剛好填滿視窗高度，不出現外層捲軸 */
+  .content.entry-active{overflow:hidden !important;display:flex;flex-direction:column;padding-bottom:10px}
+  .content.entry-active > #page-entry.active{flex:1;min-height:0;display:flex;flex-direction:column}
+  #page-entry > .tabs{flex-shrink:0}
+  #page-entry > div[id^="et-"]{flex:1;min-height:0;display:flex;flex-direction:column}
+  #et-jiajie-expense > div:first-child{flex-shrink:0}
+  .entry-split{flex:1;min-height:0;align-items:stretch}
+  .entry-split > .entry-col{display:flex;flex-direction:column;min-height:0}
+  .entry-split > .entry-col:first-child{flex:4}
+  .entry-split > .entry-col:last-child{flex:6}
+  .entry-col .section-header,.entry-col > div[style*="margin-top"]{flex-shrink:0}
+  .entry-col > .card{flex:0 1 auto;min-height:0;display:flex;flex-direction:column;margin-bottom:0}
+  .entry-col > .card > div[id$="-ledger"]{max-height:none !important;flex:1 1 auto;min-height:0}
+  .table-wrap-entry{max-height:none;flex:0 1 auto;min-height:0}
+  /* 新增表格欄位：固定比例，文字與格線貼近 */
+  .entry-split .excel-table{table-layout:fixed}
+  .entry-split .excel-table th:nth-child(1){width:27%}
+  .entry-split .excel-table th:nth-child(2){width:15%}
+  .entry-split .excel-table th:nth-child(3){width:21%}
+  .entry-split .excel-table th:nth-child(4){width:19%}
+  .entry-split .excel-table th:nth-child(5){width:12%}
+  .entry-split .excel-table th{padding:6px 4px;font-size:12px;white-space:nowrap}
+  .entry-split .excel-table input,.entry-split .excel-table select{padding:6px 5px;font-size:14px}
+  .entry-split .excel-table .cell-cat-btn{width:100%;padding:6px 4px !important;font-size:13px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 }
 @media(max-width:1100px){
   .entry-split{flex-direction:column}
@@ -190,7 +213,7 @@ select option{background:var(--card)}
 .checkbox-label.checked{border-color:var(--accent);background:rgba(217,119,87,.12);color:var(--accent);font-weight:700}
 
 /* ── TABS ── */
-.tabs{display:flex;gap:5px;margin-bottom:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:4px;overflow:hidden}
+.tabs{display:flex;gap:5px;margin-bottom:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:4px;overflow:hidden}
 .tab{-webkit-appearance:none;appearance:none;padding:9px 22px;border-radius:12px;cursor:pointer;font-size:16px;color:var(--muted);transition:.18s;border:none;background:transparent;font-family:inherit;font-weight:700}
 .tab:hover{color:var(--text)}
 .tab.active{background:var(--accent);color:#fff;box-shadow:var(--shadow)}
@@ -844,15 +867,15 @@ select option{background:var(--card)}
   <div id="et-jiajie-expense" style="display:none">
 
     <!-- 餘額卡 + 儲值 合併一列 -->
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;background:linear-gradient(135deg,#f0faf3 0%,#e3f5e8 100%);border:1.5px solid var(--accent2);border-radius:12px;padding:12px 16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;background:linear-gradient(135deg,#f0faf3 0%,#e3f5e8 100%);border:1.5px solid var(--accent2);border-radius:12px;padding:8px 14px;flex-wrap:wrap">
       <!-- 餘額 -->
       <div style="flex:1;min-width:180px">
         <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px">💰 家傑代買餘額</div>
-        <div id="jiajie-balance-display" style="font-family:'Archivo Black',sans-serif;font-size:28px;font-weight:700;color:var(--accent2);line-height:1.1">載入中…</div>
+        <div id="jiajie-balance-display" style="font-family:'Archivo Black',sans-serif;font-size:24px;font-weight:700;color:var(--accent2);line-height:1.1">載入中…</div>
         <div style="font-size:12px;color:var(--muted);margin-top:3px" id="jiajie-balance-sub"></div>
       </div>
       <!-- 分隔線 -->
-      <div style="width:1px;height:52px;background:var(--accent2);opacity:.3;flex-shrink:0"></div>
+      <div style="width:1px;height:42px;background:var(--accent2);opacity:.3;flex-shrink:0"></div>
       <!-- 儲值表單 -->
       <div class="jiajie-topup-row" style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap">
         <div class="jiajie-topup-datewrap" style="display:flex;flex-direction:column;gap:3px">
@@ -1513,6 +1536,7 @@ function navigate(page) {
   document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
 
   document.querySelector('.content').classList.toggle('cal-active', page === 'calendar');
+  document.querySelector('.content').classList.toggle('entry-active', page === 'entry');
   updateMobNav(page);
   if (page === 'calendar')  renderCalendar();
   if (page === 'entry')     loadFamilyLedger();
