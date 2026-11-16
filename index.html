@@ -140,6 +140,8 @@ a{color:var(--accent);text-decoration:none}
 
 /* ── TABLE ── */
 .table-wrap{overflow-x:auto;border-radius:18px;border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow)}
+/* 新增收支頁的「加列」表格：只在內部捲動，不要把整頁撐高 */
+.table-wrap-entry{max-height:340px;overflow-y:auto}
 table{width:100%;border-collapse:collapse;font-size:19px}
 thead{background:var(--surface)}
 th{padding:16px 20px;text-align:left;font-weight:700;color:var(--muted);font-size:15px;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
@@ -178,8 +180,8 @@ select option{background:var(--card)}
 .checkbox-label.checked{border-color:var(--accent);background:rgba(217,119,87,.12);color:var(--accent);font-weight:700}
 
 /* ── TABS ── */
-.tabs{display:flex;gap:5px;margin-bottom:16px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px;overflow:hidden}
-.tab{-webkit-appearance:none;appearance:none;padding:13px 26px;border-radius:16px;cursor:pointer;font-size:18px;color:var(--muted);transition:.18s;border:none;background:transparent;font-family:inherit;font-weight:700}
+.tabs{display:flex;gap:5px;margin-bottom:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:4px;overflow:hidden}
+.tab{-webkit-appearance:none;appearance:none;padding:9px 22px;border-radius:12px;cursor:pointer;font-size:16px;color:var(--muted);transition:.18s;border:none;background:transparent;font-family:inherit;font-weight:700}
 .tab:hover{color:var(--text)}
 .tab.active{background:var(--accent);color:#fff;box-shadow:var(--shadow)}
 
@@ -808,7 +810,7 @@ select option{background:var(--card)}
         <button class="btn btn-primary btn-sm" onclick="saveExcelRows('family-expense')">💾 儲存全部</button>
       </div>
     </div>
-    <div class="table-wrap">
+    <div class="table-wrap table-wrap-entry">
       <table class="excel-table">
         <thead><tr>
           <th>日期</th><th>金額 (NT$)</th><th>類別（多選）</th><th>備註</th><th>付款方式</th><th style="width:50px"></th>
@@ -869,7 +871,7 @@ select option{background:var(--card)}
         <button class="btn btn-primary btn-sm" onclick="saveExcelRows('jiajie-expense')">💾 儲存全部</button>
       </div>
     </div>
-    <div class="table-wrap">
+    <div class="table-wrap table-wrap-entry">
       <table class="excel-table">
         <thead><tr>
           <th>日期</th><th>金額 (NT$)</th><th>類別（多選）</th><th>備註</th><th>使用週期(天)</th><th style="width:50px"></th>
@@ -892,7 +894,7 @@ select option{background:var(--card)}
         <button class="btn btn-primary btn-sm" onclick="saveExcelRows('pharma-expense')">💾 儲存全部</button>
       </div>
     </div>
-    <div class="table-wrap">
+    <div class="table-wrap table-wrap-entry">
       <table class="excel-table">
         <thead><tr>
           <th>日期</th><th>金額 (NT$)</th><th>類別</th><th>備註</th><th>付款方式</th><th style="width:50px"></th>
@@ -912,7 +914,7 @@ select option{background:var(--card)}
         <button class="btn btn-primary btn-sm" onclick="saveExcelRows('pharma-income')">💾 儲存全部</button>
       </div>
     </div>
-    <div class="table-wrap">
+    <div class="table-wrap table-wrap-entry">
       <table class="excel-table">
         <thead><tr>
           <th>日期</th><th>金額 (NT$)</th><th>備註</th><th>付款方式</th><th style="width:50px"></th>
