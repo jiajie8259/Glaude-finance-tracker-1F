@@ -117,6 +117,7 @@ a{color:var(--accent);text-decoration:none}
 .ledger-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:15px}
 .ledger-row:last-child{border-bottom:none}
 .ledger-row .lr-icon{font-size:17px;flex-shrink:0;width:20px;text-align:center}
+.ledger-row .lr-date{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);flex-shrink:0;width:42px}
 .ledger-row .lr-info{flex:1;min-width:0;display:flex;flex-direction:row;align-items:baseline;gap:6px;overflow:hidden}
 .ledger-row .lr-title{color:var(--text);white-space:nowrap;flex-shrink:0}
 .ledger-row .lr-sub{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -157,19 +158,19 @@ a{color:var(--accent);text-decoration:none}
   #et-jiajie-expense > div:first-child{flex-shrink:0}
   .entry-split{flex:1;min-height:0;align-items:stretch}
   .entry-split > .entry-col{display:flex;flex-direction:column;min-height:0}
-  .entry-split > .entry-col:first-child{flex:4}
-  .entry-split > .entry-col:last-child{flex:6}
+  .entry-split > .entry-col:first-child,.entry-split > .entry-col:last-child{flex:1 1 0}
   .entry-col .section-header,.entry-col > div[style*="margin-top"]{flex-shrink:0}
   .entry-col > .card{flex:1 1 0;min-height:0;display:flex;flex-direction:column;margin-bottom:0}
   .entry-col > .card > div[id$="-ledger"]{max-height:none !important;flex:1 1 auto;min-height:0}
   .table-wrap-entry{max-height:none;flex:0 1 auto;min-height:0}
   /* 新增表格欄位：固定比例，文字與格線貼近 */
   .entry-split .excel-table{table-layout:fixed}
-  .entry-split .excel-table th:nth-child(1){width:27%}
-  .entry-split .excel-table th:nth-child(2){width:15%}
-  .entry-split .excel-table th:nth-child(3){width:21%}
-  .entry-split .excel-table th:nth-child(4){width:19%}
-  .entry-split .excel-table th:nth-child(5){width:12%}
+  .entry-split .excel-table th:nth-child(1){width:25%}
+  .entry-split .excel-table th:nth-child(2){width:14%}
+  .entry-split .excel-table th:nth-child(3){width:20%}
+  .entry-split .excel-table th:nth-child(4){width:20%}
+  .entry-split .excel-table th:nth-child(5){width:13%}
+  .entry-split .excel-table input[type=date]{font-size:13px;padding:6px 2px}
   .entry-split .excel-table th{padding:6px 4px;font-size:12px;white-space:nowrap}
   .entry-split .excel-table input,.entry-split .excel-table select{padding:6px 5px;font-size:14px}
   .entry-split .excel-table .cell-cat-btn{width:100%;padding:6px 4px !important;font-size:13px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
@@ -423,6 +424,7 @@ select option{background:var(--card)}
   /* 流水帳手機版縮減：單行主標題＋副標題，長文字用省略號截斷，不再逐字換行 */
   .ledger-row{padding:8px 12px;gap:8px}
   .ledger-row .lr-icon{font-size:14px;width:16px}
+  .ledger-row .lr-date{font-size:12px;width:38px}
   .ledger-row .lr-title{font-size:13px}
   .ledger-row .lr-sub{font-size:10.5px}
   .ledger-row .lr-amt{font-size:12.5px;width:76px}
@@ -1656,6 +1658,15 @@ function sortExcelTable(tbody) {
   rows.forEach(r => tbody.appendChild(r));
 }
 
+function famCatSelect() {
+  return `<select class="cell-cat-select"><option value="">類別</option>${FAMILY_CATS.map(c=>`<option value="${c}">${c}</option>`).join('')}</select>`;
+}
+
+function mmdd(d) {
+  const m = /^\d{4}-(\d{2})-(\d{2})/.exec(d || '');
+  return m ? `${m[1]}/${m[2]}` : (d || '');
+}
+
 function addExcelRow(tbodyId) {
   const type = tbodyId.replace('-tbody','');
   const tbody = document.getElementById(tbodyId);
@@ -1684,7 +1695,7 @@ function addExcelRow(tbodyId) {
     tr.innerHTML = `
       <td><input type="date" value="${today}" class="cell-date" onchange="sortExcelTable(this.closest('tbody'))"></td>
       <td><input type="number" placeholder="0" class="cell-amount" min="0"></td>
-      <td><button class="btn btn-ghost btn-sm cell-cat-btn" onclick="openCatModal(this)" style="width:100%;font-size:17px;white-space:nowrap">選擇類別 ▾</button><input type="hidden" class="cell-cats" value=""></td>
+      <td>${famCatSelect()}</td>
       <td><input type="text" placeholder="備註" class="cell-note"></td>
       <td><input type="number" placeholder="例如 30" class="cell-usage-days" min="0" max="999" step="1" oninput="if(this.value.length>3)this.value=this.value.slice(0,3)"></td>
       <td><div class="row-actions"><button class="btn btn-danger btn-sm" onclick="removeRow(this)" style="padding:3px 8px">✕</button></div></td>`;
@@ -1693,7 +1704,7 @@ function addExcelRow(tbodyId) {
     tr.innerHTML = `
       <td><input type="date" value="${today}" class="cell-date" onchange="sortExcelTable(this.closest('tbody'))"></td>
       <td><input type="number" placeholder="0" class="cell-amount" min="0"></td>
-      <td><button class="btn btn-ghost btn-sm cell-cat-btn" onclick="openCatModal(this)" style="width:100%;font-size:17px;white-space:nowrap">選擇類別 ▾</button><input type="hidden" class="cell-cats" value=""></td>
+      <td>${famCatSelect()}</td>
       <td><input type="text" placeholder="備註" class="cell-note"></td>
       <td>${paymentSelect()}</td>
       <td><div class="row-actions"><button class="btn btn-danger btn-sm" onclick="removeRow(this)" style="padding:3px 8px">✕</button></div></td>`;
@@ -1769,8 +1780,8 @@ async function saveExcelRows(type) {
 
     if (type === 'pharma-expense') record.category = row.querySelector('.cell-cat')?.value || '';
     if (type === 'family-expense' || type === 'jiajie-expense') {
-      const cats = row.querySelector('.cell-cats')?.value || '';
-      record.categories = cats ? cats.split(',') : [];
+      const cat = row.querySelector('.cell-cat-select')?.value || '';
+      record.categories = cat ? [cat] : [];
     }
 
     let usageDays = 0;
@@ -4045,12 +4056,12 @@ function renderFamilyLedger(records) {
     running += amt;
     const title = (r.categories || []).join('、') || '家庭支出';
     const creator = r.createdBy ? `・${r.createdBy}` : '';
-    const sub = r.note ? `${r.note}・${r.date}${creator}` : `${r.date}${creator}`;
+    const sub = `${r.note || ''}${creator}`.replace(/^・/, '');
     const runStr = Math.round(running).toLocaleString('zh-TW');
     const amtStr = '－' + Math.round(amt).toLocaleString('zh-TW');
 
     return `<div class="ledger-row ledger-expense">
-      <span class="lr-icon">🏠</span>
+      <span class="lr-date">${mmdd(r.date)}</span>
       <span class="lr-info">
         <span class="lr-title">${title}</span>
         <span class="lr-sub">${sub}</span>
@@ -4174,14 +4185,14 @@ function renderJiajieLedger(topups, expenses) {
     const title   = isTopup
       ? '媽媽儲值'
       : ((r.categories||[]).join('、') || '代買支出');
-    const sub     = isTopup ? r.date : (r.note ? `${r.note}・${r.date}` : r.date);
+    const sub     = isTopup ? '' : (r.note || '');
     const rowCls  = isTopup ? 'ledger-row ledger-topup' : 'ledger-row ledger-expense';
     const delBtn = isTopup
       ? `<button onclick="deleteTopupRow('${r.id}')" title="刪除" class="lr-del" style="background:none;border:none;cursor:pointer;font-size:13px;opacity:.4;padding:0 2px" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.4">✕</button>`
       : `<span class="lr-del"></span>`;
 
     return `<div class="${rowCls}">
-      <span class="lr-icon">${icon}</span>
+      <span class="lr-date">${mmdd(r.date)}</span>
       <span class="lr-info">
         <span class="lr-title">${title}</span>
         <span class="lr-sub">${sub}</span>
