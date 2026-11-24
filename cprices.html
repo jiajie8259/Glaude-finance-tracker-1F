@@ -3,264 +3,253 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>平日購物比價｜1F 大事記</title>
+<title>平日購物比價</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#FFFBF2;--surface:#FFF6E8;--card:#FFFFFF;--border:#EDDCBE;
-  --accent:#D97757;--accent2:#7FA88F;--danger:#D9684F;--warn:#D9A23B;
-  --text:#4A3F35;--muted:#8C7A63;--good:#6B9080;--blue:#4C8FB0;
-  --shadow:0 2px 10px rgba(180,140,90,.10);--shadow-lg:0 10px 32px rgba(180,140,90,.16);
+  --ink:#1f2328; --muted:#656d76; --line:#d0d7de; --line2:#e4e8ec;
+  --head:#eef1f4; --band:#f8f9fb; --bg:#f3f4f6; --card:#fff;
+  --green:#1a7f4b; --greenbg:#e3f3ea; --greenline:#9fd4b5;
+  --blue:#0b5cad; --bluebg:#e7f0fa;
+  --amber:#8a5a00; --amberbg:#fff4d6; --amberline:#e8c870;
+  --red:#b42318; --redbg:#fde8e6;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:17px;line-height:1.5;
-  background-image:radial-gradient(circle at 1px 1px,rgba(217,119,87,.05) 1px,transparent 0);background-size:22px 22px;
-  padding-bottom:env(safe-area-inset-bottom)}
-a{color:var(--accent);text-decoration:none}
-.wrap{max-width:1180px;margin:0 auto;padding:0 20px 60px}
-.topbar{background:var(--card);border-bottom:1px solid var(--border);box-shadow:var(--shadow);position:sticky;top:0;z-index:50}
-.topbar-in{max-width:1180px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.brand{font-family:'Fredoka',sans-serif;font-size:21px;font-weight:600;color:var(--accent)}
-.brand small{display:block;font-family:'Noto Sans TC';font-size:13px;color:var(--muted);font-weight:500}
-.back{font-size:15px;font-weight:600;color:var(--muted)}
-.back:hover{color:var(--accent)}
-.sync{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.dot{width:9px;height:9px;border-radius:50%;background:var(--accent2)}
-.dot.off{background:var(--danger)}
-.dot.wait{background:var(--warn)}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Noto Sans TC',-apple-system,'Segoe UI','PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;padding-bottom:env(safe-area-inset-bottom)}
+button,input,select{font-family:inherit;font-size:14px;color:inherit}
+.num,td.num,th.num{font-variant-numeric:tabular-nums}
 
-.tabs{display:flex;gap:5px;margin:16px 0;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px;overflow-x:auto}
-.tab{appearance:none;-webkit-appearance:none;padding:11px 20px;border-radius:16px;cursor:pointer;font-size:16px;color:var(--muted);border:none;background:transparent;font-family:inherit;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
-.tab.active{background:var(--accent);color:#fff;box-shadow:var(--shadow)}
-.tab .cnt{background:var(--danger);color:#fff;border-radius:12px;font-size:12px;padding:1px 8px;min-width:22px;text-align:center}
-.tab.active .cnt{background:#fff;color:var(--accent)}
-.panel{display:none}.panel.active{display:block}
+/* 頂欄 */
+.top{background:#1f2937;color:#fff;position:sticky;top:0;z-index:60}
+.top-in{max-width:1500px;margin:0 auto;padding:0 16px;display:flex;align-items:center;gap:18px;min-height:46px;flex-wrap:wrap}
+.ttl{font-weight:700;font-size:16px;letter-spacing:.02em;padding:10px 0}
+.nav{display:flex;gap:2px;flex:1;overflow-x:auto}
+.nav button{background:none;border:0;color:#c9d1d9;padding:14px 14px 12px;cursor:pointer;font-weight:500;border-bottom:3px solid transparent;white-space:nowrap}
+.nav button:hover{color:#fff}
+.nav button.on{color:#fff;border-bottom-color:#4ade80}
+.nav .cnt{background:#f87171;color:#fff;border-radius:9px;font-size:11px;padding:0 6px;margin-left:4px;font-weight:700}
+.top a{color:#c9d1d9;text-decoration:none;font-size:13px}
+.top a:hover{color:#fff}
+.sync{font-size:12px;color:#c9d1d9;display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:#4ade80}.dot.off{background:#f87171}.dot.wait{background:#fbbf24}
 
-.banner{background:#FBEDD9;border:1.5px solid #EBCB93;border-radius:16px;padding:12px 16px;margin-bottom:14px;display:none;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;cursor:pointer}
-.banner b{color:#9a6a12}
+.wrap{max-width:1500px;margin:0 auto;padding:14px 16px 60px}
+.panel{display:none}.panel.on{display:block}
 
-.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px}
-.card h2{font-family:'Fredoka','Noto Sans TC',sans-serif;font-size:19px;margin-bottom:14px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
-.fg{display:flex;flex-direction:column;gap:6px;min-width:0}
-.fg.full{grid-column:1/-1}
-label,.lbl{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.03em}
-input,select,textarea{background:var(--card);border:1.5px solid var(--border);border-radius:11px;color:var(--text);padding:11px 13px;font-size:16px;font-family:inherit;outline:none;width:100%;transition:.15s}
-input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(217,119,87,.13)}
-input[readonly]{background:var(--surface)}
-.hint{font-size:13px;color:var(--muted)}
-.hint b{color:var(--accent)}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-size:15px;font-weight:600;color:var(--muted);background:var(--card);user-select:none}
-.chip input{width:auto;accent-color:var(--accent)}
-.chip.on{border-color:var(--accent);color:var(--accent);background:rgba(217,119,87,.07)}
-.note-row{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
-.note-row span{font-size:13px;color:var(--muted);font-weight:700}
-.note-row input{max-width:260px}
-.paid-box{background:var(--surface);border:1.5px dashed var(--border);border-radius:14px;padding:12px 14px}
+/* 按鈕 */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{background:var(--head)}
+.btn.pri{background:var(--green);border-color:var(--green);color:#fff}
+.btn.pri:hover{background:#156a3e}
+.btn.dan{color:var(--red);border-color:#f1b8b2}
+.btn.dan:hover{background:var(--redbg)}
+.btn.sm{padding:3px 9px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.tool{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.tool input[type=search],.tool select{border:1px solid var(--line);border-radius:6px;padding:7px 10px;background:#fff;min-width:150px}
+.tool .grow{flex:1}
+.sum{color:var(--muted);font-size:13px}
 
-.btn{appearance:none;-webkit-appearance:none;display:inline-flex;align-items:center;gap:6px;padding:12px 22px;border-radius:22px;border:none;cursor:pointer;font-size:16px;font-family:inherit;font-weight:700;transition:.18s}
-.btn-primary{background:var(--accent);color:#fff;box-shadow:0 3px 0 #B85A3D}
-.btn-primary:hover{background:#C76847}
-.btn-ghost{background:var(--card);color:var(--muted);border:1.5px solid var(--border)}
-.btn-ghost:hover{color:var(--text);border-color:var(--accent)}
-.btn-ok{background:var(--accent2);color:#fff}
-.btn-danger{background:#FBE9E3;color:var(--danger);border:1.5px solid #F3CDBE}
-.btn-sm{padding:7px 13px;font-size:14px;border-radius:14px}
-.btn:disabled{opacity:.55;cursor:not-allowed}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+/* 提醒橫幅 */
+.banner{display:none;background:var(--amberbg);border:1px solid var(--amberline);color:var(--amber);border-radius:6px;padding:9px 14px;margin-bottom:10px;cursor:pointer;justify-content:space-between;gap:10px;align-items:center}
+.banner b{font-weight:700}
 
-.tw{overflow-x:auto;border-radius:16px;border:1px solid var(--border);background:var(--card);box-shadow:var(--shadow)}
-table{width:100%;border-collapse:collapse;font-size:15px}
-thead{background:var(--surface)}
-th{padding:11px 12px;text-align:left;font-weight:700;color:var(--muted);font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:11px 12px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle}
-td.wrapc{white-space:normal;min-width:120px}
-tr:last-child td{border-bottom:none}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
-.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:14px;font-size:12px;font-weight:700;background:#E7F0E9;color:var(--good)}
-.badge.warn{background:#FBEDD9;color:#9a6a12}
-.badge.err{background:#FBE9E3;color:var(--danger)}
-.badge.blue{background:#E1ECF7;color:#1f5c8c}
-.pf{display:inline-block;padding:2px 9px;border-radius:12px;font-size:13px;font-weight:700;color:#fff;margin:1px 3px 1px 0}
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
-.toolbar input,.toolbar select{width:auto;flex:1;min-width:150px}
-.toolbar .sp{flex:0 0 auto}
-.empty{text-align:center;color:var(--muted);padding:34px 10px}
+/* 格線表格 */
+.sheet{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:6px;max-height:calc(100vh - 190px)}
+table.g{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px}
+.g th{position:sticky;top:0;z-index:2;background:var(--head);border-bottom:1px solid var(--line);border-right:1px solid var(--line2);padding:8px 10px;text-align:left;font-weight:700;color:#3d444d;white-space:nowrap;font-size:12.5px}
+.g td{border-bottom:1px solid var(--line2);border-right:1px solid var(--line2);padding:6px 10px;white-space:nowrap;vertical-align:middle}
+.g th:last-child,.g td:last-child{border-right:0}
+.g td.num,.g th.num{text-align:right}
+.g td.c,.g th.c{text-align:center}
+.g td.wr{white-space:normal;min-width:100px}
+.g tr.first td{border-top:2px solid #aab4bf}
+.g tbody tr.first:first-child td{border-top:0}
+.g tr.alt td{background:var(--band)}
+.g tr.buy td{background:var(--greenbg)}
+.g tr.buy td.pcell{box-shadow:inset 3px 0 0 var(--green)}
+.g td.cs{background:#fff;vertical-align:top;font-weight:500}
+.g tr.alt td.cs{background:var(--band)}
+.g td.merge{background:inherit}
+.g tr:hover td:not(.cs){background:#f0f6ff}
+.g tr.buy:hover td:not(.cs){background:#d4ecdd}
+.mark{display:inline-block;padding:0 7px;border-radius:9px;font-size:11.5px;font-weight:700;line-height:18px}
+.mk-buy{background:var(--green);color:#fff}
+.mk-low{background:#fff;color:var(--green);border:1px solid var(--greenline)}
+.mk-none{background:var(--amberbg);color:var(--amber);border:1px solid var(--amberline)}
+.mk-diff{color:var(--red);font-weight:500}
+.sub{color:var(--muted);font-size:12px}
+.tag{display:inline-block;padding:0 7px;border-radius:3px;font-size:12px;font-weight:500;background:var(--head);border:1px solid var(--line)}
+.empty{padding:36px;text-align:center;color:var(--muted)}
 
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:12px 0}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px}
-.stat .k{font-size:12px;color:var(--muted);font-weight:700}
-.stat .v{font-family:'Archivo Black','Fredoka',sans-serif;font-size:22px}
-.stat .s{font-size:13px;color:var(--muted)}
-.up{color:var(--danger)}.down{color:var(--good)}
-.legend{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 2px;font-size:13px;color:var(--muted)}
-.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
-svg.chart{width:100%;height:auto;display:block}
+/* 編輯器 */
+.ed{background:#fff;border:1px solid var(--line);border-radius:6px;margin-bottom:14px;display:none}
+.ed.on{display:block}
+.ed-h{background:var(--head);border-bottom:1px solid var(--line);padding:9px 14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.ed-b{padding:14px}
+.hg{display:grid;grid-template-columns:140px minmax(200px,2fr) minmax(140px,1fr) 90px 130px minmax(160px,2fr);gap:10px}
+.fg{display:flex;flex-direction:column;gap:3px;min-width:0}
+.fg label{font-size:12px;color:var(--muted);font-weight:700}
+.fg input,.fg select,.et input,.et select{border:1px solid var(--line);border-radius:4px;padding:6px 8px;background:#fff;width:100%;min-width:0}
+.fg input:focus,.fg select:focus,.et input:focus,.et select:focus{outline:2px solid #8cc4ff;outline-offset:-1px;border-color:var(--blue)}
+.hint{font-size:12.5px;color:var(--muted);margin-top:4px;min-height:18px}
+.hint b{color:var(--ink)}
+.et-wrap{overflow-x:auto;margin-top:12px;border:1px solid var(--line);border-radius:4px}
+.et{border-collapse:collapse;width:100%;min-width:1080px}
+.et th{background:var(--head);border-bottom:1px solid var(--line);border-right:1px solid var(--line2);padding:6px 8px;font-size:12px;text-align:left;white-space:nowrap}
+.et td{border-bottom:1px solid var(--line2);border-right:1px solid var(--line2);padding:3px;vertical-align:middle}
+.et td:first-child{min-width:118px}
+.et td:nth-child(2){min-width:120px}
+.et td.ro input{background:var(--band);text-align:right}
+.et input[type=number]{text-align:right}
+.et td.rd{text-align:center;width:64px}
+.et td.rd input{width:18px;height:18px;accent-color:var(--green)}
+.et tr.buyrow td{background:var(--greenbg)}
+.et .x{width:28px}
+.ed-f{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.ed-f .sp{flex:1}
+.note-off{opacity:.45}
 
-.rem{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1.5px solid #EBCB93;background:#FFF8EA;border-radius:16px;padding:14px 16px;margin-bottom:10px}
-.rem.over{border-color:#F3CDBE;background:#FEF1EC}
-.rem .t{font-weight:700;font-size:17px}
-.rem .m{font-size:14px;color:var(--muted)}
-.sec-title{font-weight:700;color:var(--muted);font-size:14px;margin:18px 0 8px}
+/* 提醒 */
+.rem{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--amberline);border-left:4px solid #e0a100;border-radius:6px;padding:10px 14px;margin-bottom:8px}
+.rem.over{border-color:#f1b8b2;border-left-color:var(--red)}
+.rem .t{font-weight:700}
+.rem .m{font-size:12.5px;color:var(--muted)}
+.rem .b{display:flex;gap:6px;flex-wrap:wrap}
+.sec{font-weight:700;margin:16px 0 6px;color:#3d444d}
 
-.modal-bg{position:fixed;inset:0;background:rgba(74,63,53,.45);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
-.modal-bg.show{display:flex}
-.modal{background:var(--card);border-radius:22px;max-width:620px;width:100%;max-height:88vh;overflow-y:auto;padding:22px;box-shadow:var(--shadow-lg)}
-.modal h3{font-family:'Fredoka','Noto Sans TC';font-size:20px;margin-bottom:12px}
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:12px 22px;border-radius:22px;opacity:0;pointer-events:none;transition:.25s;z-index:300;font-weight:600;font-size:15px}
-.toast.show{opacity:1;transform:translateX(-50%)}
-.toast.err{background:var(--danger)}
+/* 查詢 */
+.card{background:#fff;border:1px solid var(--line);border-radius:6px;margin-bottom:14px}
+.card-h{background:var(--head);border-bottom:1px solid var(--line);padding:9px 14px;font-weight:700;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.card-b{padding:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));border:1px solid var(--line);border-radius:4px;margin-bottom:14px}
+.kpi{padding:9px 12px;border-right:1px solid var(--line2)}
+.kpi:last-child{border-right:0}
+.kpi .k{font-size:12px;color:var(--muted);font-weight:700}
+.kpi .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.up{color:var(--red)}.down{color:var(--green)}
+svg.ch{width:100%;height:auto;display:block;margin-bottom:4px}
+.lg{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.mx td.pick{background:var(--greenbg);font-weight:700;box-shadow:inset 0 0 0 1.5px var(--green)}
+.mx td.low{color:var(--green);font-weight:700}
+.mx td div+div{margin-top:2px}
+.q-inp{width:100%;border:1px solid var(--line);border-radius:6px;padding:9px 12px;font-size:15px;background:#fff}
+.q-inp:focus{outline:2px solid #8cc4ff;border-color:var(--blue)}
 
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1f2937;color:#fff;padding:9px 18px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:300}
+.toast.show{opacity:1}.toast.err{background:var(--red)}
+.mbg{position:fixed;inset:0;background:rgba(31,35,40,.5);display:none;align-items:center;justify-content:center;padding:14px;z-index:200}
+.mbg.on{display:flex}
+.modal{background:#fff;border-radius:8px;max-width:640px;width:100%;max-height:86vh;overflow:auto;padding:16px}
+.modal h3{margin-bottom:10px}
+
+@media(max-width:900px){.hg{grid-template-columns:1fr 1fr}.hg .fg:nth-child(2){grid-column:1/-1}.hg .fg:last-child{grid-column:1/-1}}
 @media(max-width:720px){
-  body{font-size:16px}
-  .wrap{padding:0 12px 60px}
-  .topbar-in{padding:8px 12px}
-  .card{padding:16px;border-radius:16px}
-  .grid{grid-template-columns:1fr 1fr}
-  .fg.full{grid-column:1/-1}
-  .tab{padding:10px 14px;font-size:15px}
-  .toolbar input,.toolbar select{min-width:100%}
-  .btn{padding:12px 18px}
+  .wrap{padding:10px 8px 60px}
+  .top-in{gap:8px;padding:0 8px}
+  .sheet{max-height:none}
+  .et{min-width:0}
+  .et thead{display:none}
+  .et,.et tbody{display:block}
+  .et tr{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px;border-bottom:2px solid var(--line)}
+  .et td{display:block;border:0;padding:0}
+  .et td::before{content:attr(data-l);display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:1px}
+  .et td.rd,.et td.x{width:auto;text-align:left}
 }
-@media(max-width:420px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
-<div class="topbar"><div class="topbar-in">
-  <div>
-    <div class="brand">🛒 平日購物比價<small>1F 大事記</small></div>
+<div class="top"><div class="top-in">
+  <div class="ttl">🛒 平日購物比價</div>
+  <div class="nav" id="nav">
+    <button data-t="log" class="on">比價紀錄</button>
+    <button data-t="query">價格查詢</button>
+    <button data-t="remind">採買提醒<span class="cnt" id="remCnt" style="display:none">0</span></button>
   </div>
-  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-    <a class="back" href="index.html">← 回 1F 大事記</a>
-    <div class="sync"><span class="dot wait" id="dot"></span><span id="syncText">連線中…</span></div>
-  </div>
+  <a href="index.html">← 1F 大事記</a>
+  <div class="sync"><span class="dot wait" id="dot"></span><span id="syncText">連線中…</span></div>
 </div></div>
 
 <div class="wrap">
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-tab="form">✏️ 新增紀錄</button>
-    <button class="tab" data-tab="list">📋 所有紀錄</button>
-    <button class="tab" data-tab="query">📈 價格查詢</button>
-    <button class="tab" data-tab="remind">🔔 採買提醒 <span class="cnt" id="remCnt" style="display:none">0</span></button>
-  </div>
+  <div class="banner" id="banner"><div>🔔 <b id="bannerText"></b></div><span>查看 ›</span></div>
 
-  <div class="banner" id="banner"><div>🔔 <b id="bannerText"></b></div><span class="btn btn-sm btn-ghost">查看</span></div>
-
-  <!-- 新增 / 編輯 -->
-  <div class="panel active" id="panel-form">
-    <div class="card">
-      <h2 id="formTitle">新增購物紀錄</h2>
-      <div class="grid">
-        <div class="fg"><label>購買日期</label><input type="date" id="f-date"></div>
-        <div class="fg" style="grid-column:span 2"><label>商品</label>
-          <input type="text" id="f-item" list="dl-items" placeholder="例如：洗衣精" autocomplete="off">
-          <div class="hint" id="itemHint"></div>
+  <!-- 比價紀錄 -->
+  <div class="panel on" id="p-log">
+    <div class="ed" id="ed">
+      <div class="ed-h"><span id="edTitle">新增比價單</span><button class="btn sm" id="edClose">✕ 關閉</button></div>
+      <div class="ed-b">
+        <div class="hg">
+          <div class="fg"><label>查價日期</label><input type="date" id="e-date"></div>
+          <div class="fg"><label>商品</label><input type="text" id="e-item" list="dl-items" placeholder="例如：洗衣精" autocomplete="off"></div>
+          <div class="fg"><label>規格／容量</label><input type="text" id="e-spec" list="dl-specs" placeholder="例如：2000ml" autocomplete="off"></div>
+          <div class="fg"><label>數量</label><input type="number" id="e-qty" min="0" step="any" inputmode="decimal" value="1"></div>
+          <div class="fg"><label>預估使用週期（天）</label><input type="number" id="e-cycle" min="0" step="1" inputmode="numeric" placeholder="不追蹤可留空"></div>
+          <div class="fg"><label>備註</label><input type="text" id="e-memo" maxlength="60"></div>
         </div>
-        <div class="fg"><label>規格／容量</label><input type="text" id="f-spec" list="dl-specs" placeholder="例如：2000ml、一箱24入" autocomplete="off"></div>
-      </div>
+        <div class="hint" id="e-hint"></div>
 
-      <div class="fg full" style="margin-top:16px">
-        <span class="lbl">比價平台（可多選，你這次拿來比較的平台）</span>
-        <div class="chips" id="cmpChips"></div>
-        <div class="note-row" id="cmpNoteRow" style="display:none">
-          <span>蝦皮註記（比價）</span>
-          <input type="text" id="f-cmpNote" maxlength="10" list="dl-shops" placeholder="直營 或 店家名稱（約8字）">
+        <div class="et-wrap"><table class="et">
+          <thead><tr>
+            <th>比價平台</th><th>蝦皮註記</th><th>單價</th><th>總價</th><th>折扣方式</th><th>折扣金額</th><th>支付金額</th><th>實付單價</th><th>備註（運費、規格差異…）</th><th class="c">✔ 購買</th><th></th>
+          </tr></thead>
+          <tbody id="e-body"></tbody>
+        </table></div>
+        <div class="ed-f">
+          <button class="btn sm" id="addRow">＋ 加一列</button>
+          <button class="btn sm" id="addAll">＋ 帶入全部平台</button>
+          <button class="btn sm" id="clrBuy">清除購買選擇（尚未決定）</button>
+          <span class="sp sum">支付金額預設＝數量×單價−折扣，可手動改；每列都填一個平台報價，最後只勾選一個「購買」。</span>
+          <button class="btn" id="edCancel">取消</button>
+          <button class="btn pri" id="edSave">💾 儲存比價單</button>
         </div>
-      </div>
-
-      <div class="grid" style="margin-top:16px">
-        <div class="fg"><label>✅ 購買平台（最後決定下單的一個）</label>
-          <select id="f-buy"></select>
-        </div>
-        <div class="fg" id="buyNoteBox" style="display:none"><label>蝦皮註記（購買）</label>
-          <input type="text" id="f-buyNote" maxlength="10" list="dl-shops" placeholder="直營 或 店家名稱（約8字）">
-        </div>
-      </div>
-
-      <div class="grid" style="margin-top:16px">
-        <div class="fg"><label>數量</label><input type="number" id="f-qty" min="0" step="any" inputmode="decimal" value="1"></div>
-        <div class="fg"><label>單價（NT$）</label><input type="number" id="f-unit" min="0" step="any" inputmode="decimal"></div>
-        <div class="fg"><label>總價（自動）</label><input type="text" id="f-total" readonly></div>
-        <div class="fg"><label>折扣方式</label><select id="f-dmethod"></select></div>
-        <div class="fg" id="dOtherBox" style="display:none"><label>折扣說明</label><input type="text" id="f-dother" maxlength="20" placeholder="例如：信用卡回饋"></div>
-        <div class="fg"><label>折扣金額（NT$）</label><input type="number" id="f-damt" min="0" step="any" inputmode="decimal" value="0"></div>
-      </div>
-
-      <div class="paid-box" style="margin-top:16px">
-        <div class="grid">
-          <div class="fg"><label>支付金額（NT$，自動＝總價－折扣，可手動修改）</label><input type="number" id="f-paid" min="0" step="any" inputmode="decimal"></div>
-          <div class="fg"><label>折扣後實付單價（自動）</label><input type="text" id="f-net" readonly></div>
-          <div class="fg" style="justify-content:flex-end"><button class="btn btn-ghost btn-sm" type="button" id="btnAuto">↺ 還原自動計算</button></div>
-        </div>
-      </div>
-
-      <div class="grid" style="margin-top:16px">
-        <div class="fg"><label>預估使用週期（天，選填）</label><input type="number" id="f-cycle" min="0" step="1" inputmode="numeric" placeholder="例如：60"></div>
-        <div class="fg" style="grid-column:span 2"><label>備註（選填）</label><input type="text" id="f-memo" maxlength="60"></div>
-      </div>
-      <div class="hint" style="margin-top:8px">有填使用週期的商品，會在「購買日 + 週期 − 14 天」開始提醒，直到你按「取消提醒」或再次購買同商品為止。</div>
-
-      <div class="actions">
-        <button class="btn btn-primary" id="btnSave">💾 儲存紀錄</button>
-        <button class="btn btn-ghost" id="btnCancel" style="display:none">取消編輯</button>
-        <button class="btn btn-ghost" id="btnReset">清空表單</button>
       </div>
     </div>
-  </div>
 
-  <!-- 所有紀錄 -->
-  <div class="panel" id="panel-list">
-    <div class="toolbar">
-      <input type="search" id="l-search" placeholder="🔍 搜尋商品／規格／備註">
-      <select id="l-buy"><option value="">全部購買平台</option></select>
-      <button class="btn btn-ghost sp" id="btnCsv">⬇ 匯出 CSV</button>
+    <div class="tool">
+      <button class="btn pri" id="btnNew">＋ 新增比價單</button>
+      <input type="search" id="l-q" placeholder="搜尋商品／規格／備註">
+      <select id="l-p"><option value="">購買平台：全部</option></select>
+      <select id="l-s"><option value="">狀態：全部</option><option value="bought">已下單</option><option value="open">尚未決定</option></select>
+      <span class="grow sum" id="l-sum"></span>
+      <button class="btn" id="btnCsv">⬇ 匯出 CSV</button>
     </div>
-    <div class="hint" id="l-sum" style="margin-bottom:8px"></div>
-    <div class="tw"><table>
+    <div class="sheet"><table class="g">
       <thead><tr>
-        <th>購買日期</th><th>比價平台</th><th>購買平台</th><th>商品</th><th>規格</th>
-        <th class="num">數量</th><th class="num">單價</th><th class="num">總價</th>
-        <th>折扣方式</th><th class="num">折扣金額</th><th class="num">支付金額</th><th class="num">實付單價</th><th>週期</th><th></th>
+        <th>查價日期</th><th>商品</th><th>規格</th><th class="num">數量</th>
+        <th>比價平台</th><th class="num">單價</th><th class="num">總價</th><th>折扣方式</th><th class="num">折扣金額</th><th class="num">支付金額</th><th class="num">實付單價</th><th class="num">與最低價差</th><th class="c">購買</th><th>備註</th><th class="num">週期(天)</th><th></th>
       </tr></thead>
       <tbody id="l-body"></tbody>
     </table></div>
   </div>
 
   <!-- 價格查詢 -->
-  <div class="panel" id="panel-query">
-    <div class="card">
-      <h2>歷史價格查詢</h2>
-      <input type="search" id="q-input" list="dl-items" placeholder="輸入部分商品名稱，例如：洗衣" autocomplete="off">
-      <div class="hint" style="margin-top:6px">以「折扣後實付單價」比較；🏆 代表該商品歷史最低。不輸入時顯示全部商品總覽。</div>
-    </div>
-    <div id="q-result"></div>
+  <div class="panel" id="p-query">
+    <input class="q-inp" type="search" id="q-in" list="dl-items" placeholder="🔍 輸入部分商品名稱，例如：洗衣　（留空顯示全部商品總覽）" autocomplete="off">
+    <div class="hint" style="margin-bottom:12px">價格皆為「折扣後實付單價」＝支付金額 ÷ 數量。</div>
+    <div id="q-out"></div>
   </div>
 
   <!-- 提醒 -->
-  <div class="panel" id="panel-remind">
-    <div id="r-active"></div>
-    <div class="sec-title">追蹤中（尚未進入 14 天提醒期，或已取消提醒）</div>
-    <div class="tw"><table>
-      <thead><tr><th>商品</th><th>規格</th><th>上次購買</th><th class="num">週期(天)</th><th>預計用完</th><th>開始提醒</th><th>狀態</th></tr></thead>
+  <div class="panel" id="p-remind">
+    <div id="r-act"></div>
+    <div class="sec">追蹤中的商品（尚未進入 14 天提醒期，或已取消提醒）</div>
+    <div class="sheet"><table class="g">
+      <thead><tr><th>商品</th><th>規格</th><th>上次購買日</th><th>購買平台</th><th class="num">週期(天)</th><th>預計用完</th><th>開始提醒</th><th>狀態</th></tr></thead>
       <tbody id="r-body"></tbody>
     </table></div>
   </div>
 </div>
 
-<datalist id="dl-items"></datalist>
-<datalist id="dl-specs"></datalist>
-<datalist id="dl-shops"></datalist>
+<datalist id="dl-items"></datalist><datalist id="dl-specs"></datalist><datalist id="dl-shops"></datalist>
 
-<!-- 開頁提醒彈窗 -->
-<div class="modal-bg" id="remModal"><div class="modal">
-  <h3>🔔 該補貨囉！</h3>
-  <div id="remModalBody"></div>
-  <div class="actions"><button class="btn btn-ghost" id="remModalClose">先關閉（提醒仍保留）</button></div>
+<div class="mbg" id="rm"><div class="modal">
+  <h3>🔔 該補貨了</h3><div id="rm-body"></div>
+  <div style="margin-top:8px"><button class="btn" id="rm-close">先關閉（提醒仍保留）</button></div>
 </div></div>
-
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -276,458 +265,382 @@ const firebaseConfig = {
   appId: "1:551294320640:web:caec827a871f18a25898e5",
   measurementId: "G-FCW04KDJQ0"
 };
+const COL='cprices_cases', COL_DIS='cprices_dismissed', REMIND_DAYS=14;
+const PLATFORMS=['PCHOME','MOMO','家樂福','蝦皮','全聯','康是美','屈臣氏','寶雅'];
+const PF_COLOR={PCHOME:'#2563eb',MOMO:'#be3a7a',家樂福:'#0e7490',蝦皮:'#ea580c',全聯:'#15803d',康是美:'#7c3aed',屈臣氏:'#0d9488',寶雅:'#b45309'};
+const DISCOUNTS=['無','優惠券','滿額折','點數回饋','會員價','促銷活動','其他'];
 
-const COL = 'cprices';                 // 購物紀錄
-const COL_DISMISS = 'cprices_dismissed'; // 已取消的提醒
-const REMIND_DAYS = 14;
-const PLATFORMS = ['PCHOME','MOMO','家樂福','蝦皮','全聯','康是美','屈臣氏','寶雅'];
-const PF_COLOR = {PCHOME:'#4C8FB0',MOMO:'#C25D8A',家樂福:'#3F6FB5',蝦皮:'#E8803A',全聯:'#6B9080',康是美:'#8F6BB5',屈臣氏:'#2FA39A',寶雅:'#D9A23B'};
-const DISCOUNTS = ['無','優惠券','滿額折','點數回饋','會員價','促銷活動','其他'];
+let db=null, cases=[], dismissed={}, editingId=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:0};
+const money=n=>(n==null||!isFinite(n))?'-':Number(n).toLocaleString('zh-TW',{maximumFractionDigits:2});
+const r2=n=>Math.round(n*100)/100;
+const pad=n=>String(n).padStart(2,'0');
+const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+const toUTC=s=>{const [y,m,d]=s.split('-').map(Number);return Date.UTC(y,m-1,d)};
+const addDays=(s,n)=>{const d=new Date(toUTC(s)+n*864e5);return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`};
+const daysBetween=(a,b)=>Math.round((toUTC(b)-toUTC(a))/864e5);
+const norm=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,'');
+const keyOf=c=>norm(c.item)+'||'+norm(c.spec);
+const cmpCase=(a,b)=>(a.date<b.date?-1:a.date>b.date?1:0)||((a.createdMs||0)-(b.createdMs||0));
+const hash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return 'k'+(h>>>0).toString(16)};
+const bought=c=>c.buyIndex>=0&&c.quotes[c.buyIndex]?c.quotes[c.buyIndex]:null;
+const pfLabel=q=>q.platform+(q.note?`・${q.note}`:'');
+const dmText=q=>q.discountMethod==='其他'&&q.discountNote?`其他：${q.discountNote}`:(q.discountMethod||'無');
+function toast(m,err){const t=$('toast');t.textContent=m;t.className='toast show'+(err?' err':'');clearTimeout(toast._t);toast._t=setTimeout(()=>t.className='toast',2600)}
+function setSync(s,t){$('dot').className='dot '+(s==='ok'?'':s==='off'?'off':'wait');$('syncText').textContent=t}
 
-let db = null;
-let records = [];            // 全部紀錄
-let dismissed = {};          // hash -> {recordId}
-let editingId = null;
-let paidManual = false;
-
-const $ = id => document.getElementById(id);
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
-const money = n => { if(n==null||!isFinite(n)) return '-'; return Number(n).toLocaleString('zh-TW',{maximumFractionDigits:2}); };
-const round2 = n => Math.round(n*100)/100;
-
-/* ---------- 日期 ---------- */
-const pad = n => String(n).padStart(2,'0');
-const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
-const toUTC = s => { const [y,m,d]=s.split('-').map(Number); return Date.UTC(y,m-1,d); };
-const addDays = (s,n) => { const d=new Date(toUTC(s)+n*864e5); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`; };
-const daysBetween = (a,b) => Math.round((toUTC(b)-toUTC(a))/864e5);
-
-/* ---------- 工具 ---------- */
-const norm = s => String(s||'').trim().toLowerCase().replace(/\s+/g,'');
-const itemKey = r => norm(r.item) + '||' + norm(r.spec);
-const hash = s => { let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return 'k'+(h>>>0).toString(16)+'_'+s.length; };
-const cmpRec = (a,b) => (a.date<b.date?-1:a.date>b.date?1:0) || ((a.createdMs||0)-(b.createdMs||0));
-const pfTag = (p,note) => p ? `<span class="pf" style="background:${PF_COLOR[p]||'#999'}">${esc(p)}${note?'・'+esc(note):''}</span>` : '-';
-const cmpText = r => (r.comparePlatforms||[]).map(c=>c.p+(c.note?`（${c.note}）`:'')).join('、');
-function toast(msg, err){ const t=$('toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); clearTimeout(toast._t); toast._t=setTimeout(()=>t.className='toast',2600); }
-function setSync(state,text){ $('dot').className='dot '+(state==='ok'?'':state==='off'?'off':'wait'); $('syncText').textContent=text; }
-
-/* ---------- Firestore ---------- */
+/* ===== Firestore ===== */
 async function initFirebase(){
   try{
-    const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
-    await loadAll();
-    setSync('ok','已連線');
-  }catch(e){
-    console.error(e);
-    setSync('off','連線失敗');
-    toast('Firebase 連線失敗：'+e.message, true);
-  }
+    db=getFirestore(initializeApp(firebaseConfig));
+    await loadAll(); setSync('ok','已連線');
+  }catch(e){console.error(e);setSync('off','連線失敗');toast('Firebase 連線失敗：'+e.message,true)}
 }
 async function loadAll(){
-  const [s1,s2] = await Promise.all([getDocs(collection(db,COL)), getDocs(collection(db,COL_DISMISS))]);
-  records = s1.docs.map(d=>{ const x=d.data(); return {...x, id:d.id, createdMs: x.createdAt?.toMillis?.() || 0}; });
-  dismissed = {};
-  s2.docs.forEach(d=>{ dismissed[d.id] = d.data(); });
+  const [a,b]=await Promise.all([getDocs(collection(db,COL)),getDocs(collection(db,COL_DIS))]);
+  cases=a.docs.map(d=>{const x=d.data();return {...x,id:d.id,quotes:x.quotes||[],buyIndex:x.buyIndex??-1,createdMs:x.createdAt?.toMillis?.()||0}});
+  dismissed={}; b.docs.forEach(d=>dismissed[d.id]=d.data());
   renderAll();
 }
 
-/* ---------- 表單初始化 ---------- */
-function buildForm(){
-  $('cmpChips').innerHTML = PLATFORMS.map(p=>`<label class="chip" data-p="${p}"><input type="checkbox" value="${p}"> ${p}</label>`).join('');
-  $('f-buy').innerHTML = '<option value="">請選擇</option>' + PLATFORMS.map(p=>`<option>${p}</option>`).join('');
-  $('l-buy').innerHTML = '<option value="">全部購買平台</option>' + PLATFORMS.map(p=>`<option>${p}</option>`).join('');
-  $('f-dmethod').innerHTML = DISCOUNTS.map(p=>`<option>${p}</option>`).join('');
-  resetForm();
+/* ===== 編輯器 ===== */
+const platOpts=sel=>'<option value="">選擇平台</option>'+PLATFORMS.map(p=>`<option${p===sel?' selected':''}>${p}</option>`).join('');
+const dmOpts=sel=>DISCOUNTS.map(p=>`<option${p===(sel||'無')?' selected':''}>${p}</option>`).join('');
+function addRow(q={}){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td data-l="比價平台"><select class="q-pf">${platOpts(q.platform)}</select></td>
+    <td data-l="蝦皮註記"><input class="q-note" maxlength="10" list="dl-shops" placeholder="直營／店家" value="${esc(q.note||'')}"></td>
+    <td data-l="單價"><input class="q-unit" type="number" min="0" step="any" inputmode="decimal" value="${q.unitPrice??''}"></td>
+    <td data-l="總價" class="ro"><input class="q-total" readonly tabindex="-1"></td>
+    <td data-l="折扣方式"><select class="q-dm">${dmOpts(q.discountMethod)}</select><input class="q-dn" maxlength="20" placeholder="說明" style="display:none;margin-top:3px" value="${esc(q.discountNote||'')}"></td>
+    <td data-l="折扣金額"><input class="q-da" type="number" min="0" step="any" inputmode="decimal" value="${q.discountAmount??0}"></td>
+    <td data-l="支付金額"><input class="q-paid" type="number" min="0" step="any" inputmode="decimal" value="${q.paid??''}"></td>
+    <td data-l="實付單價" class="ro"><input class="q-net" readonly tabindex="-1"></td>
+    <td data-l="備註"><input class="q-rm" maxlength="40" value="${esc(q.remark||'')}"></td>
+    <td data-l="✔ 購買" class="rd"><input type="radio" name="buy" class="q-buy" aria-label="購買此平台"></td>
+    <td data-l="" class="x"><button class="btn sm dan q-del" type="button" title="刪除此列">✕</button></td>`;
+  if(q.paid!=null && Math.abs(q.paid-Math.max(r2((q.unitPrice||0)*num($('e-qty').value)-(q.discountAmount||0)),0))>.005) tr.dataset.manual='1';
+  $('e-body').appendChild(tr);
+  rowUI(tr); rowCalc(tr); return tr;
 }
-function resetForm(){
-  editingId = null; paidManual = false;
-  $('formTitle').textContent = '新增購物紀錄';
-  $('btnSave').textContent = '💾 儲存紀錄';
-  $('btnCancel').style.display = 'none';
-  $('f-date').value = todayStr();
-  ['f-item','f-spec','f-unit','f-cmpNote','f-buyNote','f-dother','f-cycle','f-memo'].forEach(i=>$(i).value='');
-  $('f-qty').value = '1'; $('f-damt').value = '0'; $('f-paid').value=''; $('f-total').value=''; $('f-net').value='';
-  $('f-buy').value=''; $('f-dmethod').value='無';
-  document.querySelectorAll('#cmpChips input').forEach(c=>c.checked=false);
-  $('itemHint').innerHTML='';
-  syncFormUI(); calc();
+function rowUI(tr){
+  const shopee=tr.querySelector('.q-pf').value==='蝦皮';
+  const n=tr.querySelector('.q-note'); n.disabled=!shopee; n.classList.toggle('note-off',!shopee); if(!shopee) n.value='';
+  tr.querySelector('.q-dn').style.display=tr.querySelector('.q-dm').value==='其他'?'':'none';
+  tr.classList.toggle('buyrow',tr.querySelector('.q-buy').checked);
 }
-function selectedCompare(){
-  const note = $('f-cmpNote').value.trim();
-  return [...document.querySelectorAll('#cmpChips input:checked')].map(c=>({p:c.value, note: c.value==='蝦皮'?note:''}));
+function rowCalc(tr){
+  const qty=num($('e-qty').value), unit=tr.querySelector('.q-unit'), da=num(tr.querySelector('.q-da').value);
+  const hasU=unit.value!=='';
+  const total=r2(qty*num(unit.value));
+  tr.querySelector('.q-total').value=hasU?money(total):'';
+  const paidEl=tr.querySelector('.q-paid');
+  if(!tr.dataset.manual) paidEl.value=hasU?r2(Math.max(total-da,0)):'';
+  tr.querySelector('.q-net').value=(qty>0&&paidEl.value!=='')?money(r2(num(paidEl.value)/qty)):'';
 }
-function syncFormUI(){
-  document.querySelectorAll('#cmpChips .chip').forEach(ch=>ch.classList.toggle('on', ch.querySelector('input').checked));
-  $('cmpNoteRow').style.display = document.querySelector('#cmpChips input[value="蝦皮"]').checked ? 'flex' : 'none';
-  $('buyNoteBox').style.display = $('f-buy').value==='蝦皮' ? 'flex' : 'none';
-  $('dOtherBox').style.display = $('f-dmethod').value==='其他' ? 'flex' : 'none';
+function allRows(){return [...$('e-body').querySelectorAll('tr')]}
+function openEditor(c){
+  editingId=c?.id||null;
+  $('edTitle').textContent=editingId?'編輯比價單':'新增比價單';
+  $('e-date').value=c?.date||todayStr();
+  $('e-item').value=c?.item||''; $('e-spec').value=c?.spec||'';
+  $('e-qty').value=c?.qty??1; $('e-cycle').value=c?.cycleDays||''; $('e-memo').value=c?.memo||'';
+  $('e-body').innerHTML='';
+  if(c&&c.quotes.length){ c.quotes.forEach((q,i)=>{const tr=addRow(q); if(i===c.buyIndex) tr.querySelector('.q-buy').checked=true; rowUI(tr);}) }
+  else { addRow(); addRow(); }
+  refreshDatalists(); updateHint();
+  $('ed').classList.add('on'); $('ed').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function calc(){
-  const q=num($('f-qty').value), u=num($('f-unit').value), d=num($('f-damt').value);
-  const total = round2(q*u);
-  $('f-total').value = $('f-unit').value==='' ? '' : money(total);
-  if(!paidManual) $('f-paid').value = $('f-unit').value==='' ? '' : round2(Math.max(total-d,0));
-  const paid = num($('f-paid').value);
-  $('f-net').value = (q>0 && $('f-paid').value!=='') ? money(round2(paid/q)) : '';
+function closeEditor(){ $('ed').classList.remove('on'); editingId=null; }
+function updateHint(){
+  const nm=norm($('e-item').value), h=$('e-hint');
+  if(!nm){h.innerHTML='';return}
+  const list=cases.filter(c=>norm(c.item)===nm&&bought(c)&&c.id!==editingId).sort(cmpCase);
+  if(!list.length){h.innerHTML='新商品（尚無購買紀錄）';return}
+  const last=list[list.length-1], lq=bought(last);
+  const mn=list.map(c=>({c,q:bought(c)})).reduce((a,b)=>b.q.netUnit<a.q.netUnit?b:a);
+  h.innerHTML=`上次購買：<b>${money(lq.netUnit)}</b>（${esc(pfLabel(lq))}・${last.date}）　歷史最低購買價：<b>${money(mn.q.netUnit)}</b>（${esc(pfLabel(mn.q))}）`;
 }
-function updateItemHint(){
-  const name = norm($('f-item').value);
-  const hint = $('itemHint');
-  if(!name){ hint.innerHTML=''; return; }
-  const specN = norm($('f-spec').value);
-  let list = records.filter(r=>norm(r.item)===name);
-  if(specN) { const l2 = list.filter(r=>norm(r.spec)===specN); if(l2.length) list=l2; }
-  if(!list.length){ hint.innerHTML='新商品（尚無歷史紀錄）'; return; }
-  list.sort(cmpRec);
-  const last = list[list.length-1];
-  const min = list.reduce((a,b)=>b.netUnit<a.netUnit?b:a);
-  hint.innerHTML = `上次：<b>NT$${money(last.netUnit)}</b>（${esc(last.buyPlatform)}・${last.date}）　歷史最低：<b>NT$${money(min.netUnit)}</b>（${esc(min.buyPlatform)}）`;
-}
-function fillFromLatest(){
-  const name = norm($('f-item').value);
-  if(!name || editingId) return;
-  const list = records.filter(r=>norm(r.item)===name).sort(cmpRec);
-  if(!list.length) return;
-  const last = list[list.length-1];
-  if(!$('f-spec').value) $('f-spec').value = last.spec||'';
-  if(!$('f-cycle').value && last.cycleDays) $('f-cycle').value = last.cycleDays;
+function prefillFromHistory(){
+  if(editingId) return;
+  const nm=norm($('e-item').value); if(!nm) return;
+  const list=cases.filter(c=>norm(c.item)===nm).sort(cmpCase); if(!list.length) return;
+  const last=list[list.length-1];
+  if(!$('e-spec').value) $('e-spec').value=last.spec||'';
+  if(!$('e-cycle').value && last.cycleDays) $('e-cycle').value=last.cycleDays;
+  const blank=allRows().every(tr=>tr.querySelector('.q-unit').value===''&&!tr.querySelector('.q-pf').value);
+  if(blank){ $('e-body').innerHTML=''; last.quotes.forEach(q=>addRow({platform:q.platform,note:q.note})); if(!last.quotes.length){addRow();addRow();} }
 }
 function refreshDatalists(){
-  const items = [...new Set(records.map(r=>r.item))].sort((a,b)=>a.localeCompare(b,'zh-TW'));
-  $('dl-items').innerHTML = items.map(i=>`<option value="${esc(i)}">`).join('');
-  const nm = norm($('f-item').value);
-  const specs = [...new Set(records.filter(r=>!nm||norm(r.item)===nm).map(r=>r.spec).filter(Boolean))];
-  $('dl-specs').innerHTML = specs.map(i=>`<option value="${esc(i)}">`).join('');
-  const shops = new Set(['直營']);
-  records.forEach(r=>{ if(r.buyNote) shops.add(r.buyNote); (r.comparePlatforms||[]).forEach(c=>{ if(c.note) shops.add(c.note); }); });
-  $('dl-shops').innerHTML = [...shops].map(i=>`<option value="${esc(i)}">`).join('');
+  $('dl-items').innerHTML=[...new Set(cases.map(c=>c.item))].sort((a,b)=>a.localeCompare(b,'zh-TW')).map(i=>`<option value="${esc(i)}">`).join('');
+  const nm=norm($('e-item').value);
+  $('dl-specs').innerHTML=[...new Set(cases.filter(c=>!nm||norm(c.item)===nm).map(c=>c.spec).filter(Boolean))].map(i=>`<option value="${esc(i)}">`).join('');
+  const shops=new Set(['直營']); cases.forEach(c=>c.quotes.forEach(q=>q.note&&shops.add(q.note)));
+  $('dl-shops').innerHTML=[...shops].map(i=>`<option value="${esc(i)}">`).join('');
 }
-
-/* ---------- 儲存 ---------- */
-async function save(){
-  if(!db){ toast('尚未連線 Firebase', true); return; }
-  const date=$('f-date').value, item=$('f-item').value.trim(), buy=$('f-buy').value;
-  const qty=num($('f-qty').value), unit=num($('f-unit').value);
-  if(!date) return toast('請選擇購買日期', true);
-  if(!item) return toast('請輸入商品', true);
-  if(!buy) return toast('請選擇購買平台', true);
-  if(!(qty>0)) return toast('數量需大於 0', true);
-  if($('f-unit').value==='') return toast('請輸入單價', true);
-  const total = round2(qty*unit);
-  const damt = num($('f-damt').value);
-  const paid = $('f-paid').value==='' ? Math.max(total-damt,0) : num($('f-paid').value);
-  const method = $('f-dmethod').value;
-  const cycle = parseInt($('f-cycle').value,10);
-  const buyNote = buy==='蝦皮' ? $('f-buyNote').value.trim() : '';
-  const data = {
-    date, item, spec:$('f-spec').value.trim(),
-    comparePlatforms: selectedCompare(),
-    buyPlatform: buy, buyNote,
-    qty, unitPrice: unit, total,
-    discountMethod: method, discountNote: method==='其他' ? $('f-dother').value.trim() : '',
-    discountAmount: damt, paid, netUnit: round2(paid/qty),
-    cycleDays: cycle>0 ? cycle : null,
-    memo: $('f-memo').value.trim()
-  };
-  $('btnSave').disabled = true;
+async function saveCase(){
+  if(!db) return toast('尚未連線 Firebase',true);
+  const date=$('e-date').value, item=$('e-item').value.trim(), qty=num($('e-qty').value);
+  if(!date) return toast('請選擇查價日期',true);
+  if(!item) return toast('請輸入商品',true);
+  if(!(qty>0)) return toast('數量需大於 0',true);
+  const quotes=[]; let buyIndex=-1, bad='';
+  allRows().forEach((tr,i)=>{
+    const pf=tr.querySelector('.q-pf').value, u=tr.querySelector('.q-unit').value;
+    const isBuy=tr.querySelector('.q-buy').checked;
+    if(!pf&&u===''){ if(isBuy) bad='勾選購買的那一列沒有填資料'; return; }
+    if(!pf){bad=`第 ${i+1} 列請選擇比價平台`;return}
+    if(u===''){bad=`第 ${i+1} 列（${pf}）請輸入單價`;return}
+    const unit=num(u), da=num(tr.querySelector('.q-da').value), total=r2(qty*unit);
+    const pv=tr.querySelector('.q-paid').value; const paid=pv===''?Math.max(total-da,0):num(pv);
+    const dm=tr.querySelector('.q-dm').value;
+    quotes.push({platform:pf,note:pf==='蝦皮'?tr.querySelector('.q-note').value.trim():'',unitPrice:unit,total,
+      discountMethod:dm,discountNote:dm==='其他'?tr.querySelector('.q-dn').value.trim():'',discountAmount:da,paid,netUnit:r2(paid/qty),
+      remark:tr.querySelector('.q-rm').value.trim()});
+    if(isBuy) buyIndex=quotes.length-1;
+  });
+  if(bad) return toast(bad,true);
+  if(!quotes.length) return toast('請至少填一個平台的報價',true);
+  const cy=parseInt($('e-cycle').value,10);
+  const data={date,item,spec:$('e-spec').value.trim(),qty,cycleDays:cy>0?cy:null,memo:$('e-memo').value.trim(),quotes,buyIndex};
+  $('edSave').disabled=true;
   try{
     if(editingId){
-      await updateDoc(doc(db,COL,editingId), data);
-      const i = records.findIndex(r=>r.id===editingId);
-      records[i] = {...records[i], ...data};
-      toast('已更新紀錄');
+      await updateDoc(doc(db,COL,editingId),data);
+      const i=cases.findIndex(c=>c.id===editingId); cases[i]={...cases[i],...data}; toast('已更新比價單');
     }else{
-      const ref = await addDoc(collection(db,COL), {...data, createdAt: Timestamp.now()});
-      records.push({...data, id:ref.id, createdMs:Date.now()});
-      toast('已儲存紀錄（同商品的舊提醒已自動解除）');
+      const ref=await addDoc(collection(db,COL),{...data,createdAt:Timestamp.now()});
+      cases.push({...data,id:ref.id,createdMs:Date.now()});
+      toast(buyIndex>=0?'已儲存（同商品的舊提醒已自動解除）':'已儲存（尚未決定購買平台）');
     }
-    resetForm(); renderAll();
-  }catch(e){
-    console.error(e); toast('儲存失敗：'+e.message, true);
-  }finally{ $('btnSave').disabled=false; }
+    closeEditor(); renderAll();
+  }catch(e){console.error(e);toast('儲存失敗：'+e.message,true)}
+  finally{$('edSave').disabled=false}
+}
+async function delCase(id){
+  const c=cases.find(x=>x.id===id); if(!c) return;
+  if(!confirm(`刪除這張比價單？\n${c.date}　${c.item}${c.spec?'（'+c.spec+'）':''}　共 ${c.quotes.length} 筆報價`)) return;
+  try{ await deleteDoc(doc(db,COL,id)); try{await deleteDoc(doc(db,COL_DIS,id))}catch(_){} cases=cases.filter(x=>x.id!==id); delete dismissed[id]; renderAll(); toast('已刪除'); }
+  catch(e){toast('刪除失敗：'+e.message,true)}
 }
 
-function startEdit(id){
-  const r = records.find(x=>x.id===id); if(!r) return;
-  editingId = id;
-  $('formTitle').textContent = '編輯購物紀錄';
-  $('btnSave').textContent = '💾 更新紀錄';
-  $('btnCancel').style.display = '';
-  $('f-date').value=r.date; $('f-item').value=r.item; $('f-spec').value=r.spec||'';
-  document.querySelectorAll('#cmpChips input').forEach(c=>{ c.checked = (r.comparePlatforms||[]).some(x=>x.p===c.value); });
-  const sp = (r.comparePlatforms||[]).find(x=>x.p==='蝦皮'); $('f-cmpNote').value = sp?.note||'';
-  $('f-buy').value=r.buyPlatform; $('f-buyNote').value=r.buyNote||'';
-  $('f-qty').value=r.qty; $('f-unit').value=r.unitPrice;
-  $('f-dmethod').value=r.discountMethod||'無'; $('f-dother').value=r.discountNote||'';
-  $('f-damt').value=r.discountAmount||0;
-  paidManual = Math.abs((r.paid) - Math.max(r.total - (r.discountAmount||0),0)) > 0.005;
-  calc(); $('f-paid').value=r.paid; calc();
-  $('f-cycle').value=r.cycleDays||''; $('f-memo').value=r.memo||'';
-  syncFormUI(); updateItemHint(); switchTab('form'); window.scrollTo({top:0,behavior:'smooth'});
-}
-async function removeRec(id){
-  const r = records.find(x=>x.id===id); if(!r) return;
-  if(!confirm(`確定刪除這筆紀錄？\n${r.date}　${r.item}${r.spec?'（'+r.spec+'）':''}　${r.buyPlatform}`)) return;
-  try{ await deleteDoc(doc(db,COL,id)); records = records.filter(x=>x.id!==id); renderAll(); toast('已刪除'); }
-  catch(e){ toast('刪除失敗：'+e.message, true); }
-}
-
-/* ---------- 紀錄列表 ---------- */
-function minMap(){
-  const m = {};
-  records.forEach(r=>{ const k=itemKey(r); const c=m[k]||(m[k]={min:Infinity,n:0}); c.n++; if(r.netUnit<c.min) c.min=r.netUnit; });
-  return m;
-}
+/* ===== 紀錄列表 ===== */
 function renderList(){
-  const kw = norm($('l-search').value), bp = $('l-buy').value;
-  const mm = minMap();
-  const rows = records.filter(r=>{
-    if(bp && r.buyPlatform!==bp) return false;
-    if(kw && !norm(r.item+r.spec+(r.memo||'')+r.buyPlatform).includes(kw)) return false;
+  const kw=norm($('l-q').value), bp=$('l-p').value, st=$('l-s').value;
+  const rows=cases.filter(c=>{
+    const b=bought(c);
+    if(bp&&(!b||b.platform!==bp)) return false;
+    if(st==='bought'&&!b) return false; if(st==='open'&&b) return false;
+    if(kw&&!norm(c.item+c.spec+(c.memo||'')+c.quotes.map(q=>q.remark||'').join('')).includes(kw)) return false;
     return true;
-  }).sort((a,b)=>cmpRec(b,a));
-  const sumPaid = rows.reduce((s,r)=>s+r.paid,0);
-  $('l-sum').textContent = `共 ${rows.length} 筆，支付金額合計 NT$${money(sumPaid)}`;
-  if(!rows.length){ $('l-body').innerHTML = `<tr><td colspan="14" class="empty">沒有符合的紀錄</td></tr>`; return; }
-  $('l-body').innerHTML = rows.map(r=>{
-    const c = mm[itemKey(r)];
-    const best = c.n>1 && r.netUnit===c.min ? ' 🏆' : '';
-    const dm = r.discountMethod==='其他' && r.discountNote ? `其他：${r.discountNote}` : (r.discountMethod||'無');
-    return `<tr>
-      <td>${r.date}</td>
-      <td class="wrapc">${(r.comparePlatforms||[]).map(c=>pfTag(c.p,c.note)).join('')||'-'}</td>
-      <td>${pfTag(r.buyPlatform,r.buyNote)}</td>
-      <td class="wrapc"><b>${esc(r.item)}</b>${r.memo?`<div class="hint">${esc(r.memo)}</div>`:''}</td>
-      <td>${esc(r.spec||'')}</td>
-      <td class="num">${money(r.qty)}</td><td class="num">${money(r.unitPrice)}</td><td class="num">${money(r.total)}</td>
-      <td>${esc(dm)}</td><td class="num">${money(r.discountAmount)}</td>
-      <td class="num"><b>${money(r.paid)}</b></td><td class="num"><b>${money(r.netUnit)}</b>${best}</td>
-      <td>${r.cycleDays?r.cycleDays+' 天':''}</td>
-      <td><button class="btn btn-ghost btn-sm" data-act="edit" data-id="${r.id}">編輯</button>
-          <button class="btn btn-danger btn-sm" data-act="del" data-id="${r.id}">刪除</button></td>
-    </tr>`;
-  }).join('');
+  }).sort((a,b)=>cmpCase(b,a));
+  const spent=rows.reduce((s,c)=>s+(bought(c)?.paid||0),0);
+  $('l-sum').textContent=`${rows.length} 張比價單　已下單支付合計 NT$ ${money(spent)}`;
+  if(!rows.length){$('l-body').innerHTML='<tr><td colspan="16" class="empty">沒有資料，按「＋ 新增比價單」開始記錄</td></tr>';return}
+  let h='';
+  rows.forEach((c,ci)=>{
+    const n=c.quotes.length, mn=Math.min(...c.quotes.map(q=>q.netUnit)), alt=ci%2?' alt':'';
+    c.quotes.forEach((q,i)=>{
+      const isBuy=i===c.buyIndex, diff=r2(q.netUnit-mn);
+      h+=`<tr class="${i===0?'first':''}${alt}${isBuy?' buy':''}">`;
+      if(i===0){
+        const rs=` rowspan="${n}"`;
+        h+=`<td class="cs"${rs}>${c.date}</td><td class="cs wr"${rs}><b>${esc(c.item)}</b>${c.memo?`<div class="sub">${esc(c.memo)}</div>`:''}${bought(c)?'':'<div><span class="mark mk-none">尚未決定</span></div>'}</td>
+          <td class="cs"${rs}>${esc(c.spec||'')}</td><td class="cs num"${rs}>${money(c.qty)}</td>`;
+      }
+      h+=`<td class="pcell"><span style="color:${PF_COLOR[q.platform]||'#444'};font-weight:700">●</span> ${esc(q.platform)}${q.note?`<span class="sub">・${esc(q.note)}</span>`:''}</td>
+        <td class="num">${money(q.unitPrice)}</td><td class="num">${money(q.total)}</td><td>${esc(dmText(q))}</td><td class="num">${money(q.discountAmount)}</td>
+        <td class="num"><b>${money(q.paid)}</b></td><td class="num"><b>${money(q.netUnit)}</b></td>
+        <td class="num">${n>1?(diff===0?'<span class="mark mk-low">最低</span>':`<span class="mk-diff">+${money(diff)}</span>`):''}</td>
+        <td class="c">${isBuy?'<span class="mark mk-buy">✔ 購買</span>':''}</td><td class="wr sub">${esc(q.remark||'')}</td>`;
+      if(i===0){
+        h+=`<td class="cs num" rowspan="${n}">${c.cycleDays||''}</td>
+          <td class="cs" rowspan="${n}"><button class="btn sm" data-a="edit" data-id="${c.id}">編輯</button> <button class="btn sm dan" data-a="del" data-id="${c.id}">刪除</button></td>`;
+      }
+      h+='</tr>';
+    });
+  });
+  $('l-body').innerHTML=h;
 }
 function exportCsv(){
-  const head = ['購買日期','比價平台','購買平台','購買平台註記','商品','規格','數量','單價','總價','折扣方式','折扣金額','支付金額','折扣後實付單價','使用週期(天)','備註'];
-  const q = v => '"'+String(v??'').replace(/"/g,'""')+'"';
-  const lines = [head.map(q).join(',')];
-  [...records].sort((a,b)=>cmpRec(b,a)).forEach(r=>{
-    const dm = r.discountMethod==='其他' && r.discountNote ? `其他：${r.discountNote}` : r.discountMethod;
-    lines.push([r.date,cmpText(r),r.buyPlatform,r.buyNote,r.item,r.spec,r.qty,r.unitPrice,r.total,dm,r.discountAmount,r.paid,r.netUnit,r.cycleDays??'',r.memo].map(q).join(','));
-  });
-  const blob = new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`cprices_${todayStr()}.csv`;
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  const head=['查價日期','商品','規格','數量','比價平台','蝦皮註記','單價','總價','折扣方式','折扣金額','支付金額','實付單價','是否購買','使用週期(天)','比價單備註','報價備註'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const L=[head.map(q).join(',')];
+  [...cases].sort((a,b)=>cmpCase(b,a)).forEach(c=>c.quotes.forEach((x,i)=>L.push([c.date,c.item,c.spec,c.qty,x.platform,x.note,x.unitPrice,x.total,dmText(x),x.discountAmount,x.paid,x.netUnit,i===c.buyIndex?'購買':'',c.cycleDays??'',c.memo,x.remark].map(q).join(','))));
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+L.join('\r\n')],{type:'text/csv;charset=utf-8'}));
+  a.download=`cprices_${todayStr()}.csv`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
-/* ---------- 價格查詢 ---------- */
+/* ===== 價格查詢 ===== */
 function trendChart(list){
-  const pts = [...list].sort(cmpRec);
-  const W=720,H=260,L=56,R=16,T=14,B=34;
-  const ys = pts.map(p=>p.netUnit);
-  let lo=Math.min(...ys), hi=Math.max(...ys);
-  if(lo===hi){ lo=lo*0.9; hi=hi*1.1+1; }
-  const pad = (hi-lo)*0.12; lo=Math.max(0,lo-pad); hi=hi+pad;
-  const t0=toUTC(pts[0].date), t1=toUTC(pts[pts.length-1].date);
-  const X = d => pts.length===1||t0===t1 ? (L+(W-L-R)/2) : L+(toUTC(d)-t0)/(t1-t0)*(W-L-R);
-  const Y = v => T+(1-(v-lo)/(hi-lo))*(H-T-B);
-  let g='';
-  for(let i=0;i<=4;i++){
-    const v=lo+(hi-lo)*i/4, y=Y(v);
-    g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#EDDCBE" stroke-dasharray="3 4"/><text x="${L-8}" y="${y+4}" text-anchor="end" font-size="12" fill="#8C7A63">${money(round2(v))}</text>`;
-  }
-  const path = pts.map((p,i)=>`${i?'L':'M'}${X(p.date).toFixed(1)},${Y(p.netUnit).toFixed(1)}`).join(' ');
-  const dots = pts.map(p=>`<circle cx="${X(p.date).toFixed(1)}" cy="${Y(p.netUnit).toFixed(1)}" r="6" fill="${PF_COLOR[p.buyPlatform]||'#999'}" stroke="#fff" stroke-width="2"><title>${p.date}　${p.buyPlatform}${p.buyNote?'（'+p.buyNote+'）':''}　實付單價 NT$${money(p.netUnit)}</title></circle>`).join('');
-  const xl = pts.length===1 ? [pts[0]] : [pts[0],pts[pts.length-1]];
-  const xt = xl.map((p,i)=>`<text x="${X(p.date)}" y="${H-10}" text-anchor="${pts.length===1?'middle':(i?'end':'start')}" font-size="12" fill="#8C7A63">${p.date}</text>`).join('');
-  const used = [...new Set(pts.map(p=>p.buyPlatform))];
-  const legend = `<div class="legend">${used.map(p=>`<span><i style="background:${PF_COLOR[p]||'#999'}"></i>${p}</span>`).join('')}</div>`;
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="價格趨勢圖">${g}<path d="${path}" fill="none" stroke="#D97757" stroke-width="2.5" stroke-linejoin="round"/>${dots}${xt}</svg>${legend}`;
+  const cs=[...list].sort(cmpCase); const pts=[];
+  cs.forEach(c=>c.quotes.forEach((q,i)=>pts.push({d:c.date,v:q.netUnit,p:q.platform,n:q.note,buy:i===c.buyIndex})));
+  const W=760,H=270,L=58,R=18,T=14,B=34;
+  let lo=Math.min(...pts.map(p=>p.v)),hi=Math.max(...pts.map(p=>p.v)); if(lo===hi){lo*=.9;hi=hi*1.1+1}
+  const pd=(hi-lo)*.12; lo=Math.max(0,lo-pd); hi+=pd;
+  const t0=toUTC(cs[0].date),t1=toUTC(cs[cs.length-1].date);
+  const X=d=>t0===t1?L+(W-L-R)/2:L+(toUTC(d)-t0)/(t1-t0)*(W-L-R), Y=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
+  let g=''; for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#e4e8ec"/><text x="${L-8}" y="${y+4}" text-anchor="end" font-size="12" fill="#656d76">${money(r2(v))}</text>`}
+  const bp=pts.filter(p=>p.buy);
+  const line=bp.length>1?`<path d="${bp.map((p,i)=>`${i?'L':'M'}${X(p.d).toFixed(1)},${Y(p.v).toFixed(1)}`).join(' ')}" fill="none" stroke="#1a7f4b" stroke-width="2" stroke-dasharray="5 3"/>`:'';
+  const dots=pts.filter(p=>!p.buy).map(p=>`<circle cx="${X(p.d).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="5" fill="#fff" stroke="${PF_COLOR[p.p]||'#666'}" stroke-width="2"><title>${p.d}　報價 ${p.p}${p.n?'（'+p.n+'）':''}　NT$${money(p.v)}</title></circle>`).join('')
+    +bp.map(p=>`<circle cx="${X(p.d).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="7.5" fill="${PF_COLOR[p.p]||'#666'}" stroke="#1a7f4b" stroke-width="3"><title>${p.d}　✔購買 ${p.p}${p.n?'（'+p.n+'）':''}　NT$${money(p.v)}</title></circle>`).join('');
+  const one=cs.length===1;
+  const xt=(one?[cs[0]]:[cs[0],cs[cs.length-1]]).map((c,i)=>`<text x="${X(c.date)}" y="${H-10}" text-anchor="${one?'middle':i?'end':'start'}" font-size="12" fill="#656d76">${c.date}</text>`).join('');
+  const used=[...new Set(pts.map(p=>p.p))];
+  return `<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="價格趨勢">${g}${line}${dots}${xt}</svg>
+  <div class="lg"><span>● 實心粗框＝購買價（綠色虛線連接）　○ 空心＝其他平台報價</span>${used.map(p=>`<span><i style="background:${PF_COLOR[p]||'#666'}"></i>${p}</span>`).join('')}</div>`;
 }
-function groupItems(filterKw){
-  const groups = {};
-  records.forEach(r=>{
-    if(filterKw && !norm(r.item+r.spec).includes(filterKw)) return;
-    (groups[itemKey(r)] ||= []).push(r);
-  });
-  return Object.values(groups).sort((a,b)=>{
-    const la=Math.max(...a.map(x=>toUTC(x.date))), lb=Math.max(...b.map(x=>toUTC(x.date)));
-    return lb-la;
-  });
+function groups(kw){
+  const m={}; cases.forEach(c=>{ if(kw&&!norm(c.item+c.spec).includes(kw)) return; (m[keyOf(c)]||(m[keyOf(c)]=[])).push(c); });
+  return Object.values(m).sort((a,b)=>Math.max(...b.map(c=>toUTC(c.date)))-Math.max(...a.map(c=>toUTC(c.date))));
 }
 function renderQuery(){
-  const kw = norm($('q-input').value);
-  const groups = groupItems(kw);
-  const box = $('q-result');
-  if(!records.length){ box.innerHTML = '<div class="card empty">還沒有任何紀錄，先到「新增紀錄」建立吧。</div>'; return; }
-  if(!groups.length){ box.innerHTML = `<div class="card empty">找不到包含「${esc($('q-input').value)}」的商品</div>`; return; }
+  const kw=norm($('q-in').value), gs=groups(kw), out=$('q-out');
+  if(!cases.length){out.innerHTML='<div class="card"><div class="empty">還沒有任何比價單</div></div>';return}
+  if(!gs.length){out.innerHTML=`<div class="card"><div class="empty">找不到包含「${esc($('q-in').value)}」的商品</div></div>`;return}
   if(!kw){
-    box.innerHTML = `<div class="card"><h2>商品總覽（${groups.length} 項）</h2><div class="tw"><table>
-      <thead><tr><th>商品</th><th>規格</th><th class="num">次數</th><th class="num">最近實付單價</th><th>最近平台</th><th class="num">歷史最低</th><th>最低平台</th></tr></thead><tbody>` +
-      groups.map(g=>{
-        const s=[...g].sort(cmpRec), last=s[s.length-1], min=g.reduce((a,b)=>b.netUnit<a.netUnit?b:a);
-        return `<tr data-q="${esc(last.item)}" style="cursor:pointer"><td><b>${esc(last.item)}</b></td><td>${esc(last.spec||'')}</td><td class="num">${g.length}</td>
-          <td class="num">${money(last.netUnit)}</td><td>${pfTag(last.buyPlatform,last.buyNote)}</td>
-          <td class="num">${money(min.netUnit)}</td><td>${pfTag(min.buyPlatform,min.buyNote)}</td></tr>`;
-      }).join('') + `</tbody></table></div><div class="hint" style="margin-top:8px">點任一列可查看該商品的價格趨勢。</div></div>`;
+    out.innerHTML=`<div class="sheet"><table class="g"><thead><tr><th>商品</th><th>規格</th><th class="num">比價次數</th><th class="num">最近購買價</th><th>最近購買平台</th><th class="num">歷史最低購買價</th><th>最低購買平台</th><th>最近比價日</th></tr></thead><tbody>`+
+    gs.map(g=>{
+      const s=[...g].sort(cmpCase), last=s[s.length-1], bs=s.filter(bought);
+      if(!bs.length) return `<tr data-q="${esc(last.item)}" style="cursor:pointer"><td><b>${esc(last.item)}</b></td><td>${esc(last.spec||'')}</td><td class="num">${g.length}</td><td colspan="4" class="sub">尚無購買紀錄</td><td>${last.date}</td></tr>`;
+      const lb=bs[bs.length-1], mn=bs.reduce((a,b)=>bought(b).netUnit<bought(a).netUnit?b:a);
+      return `<tr data-q="${esc(last.item)}" style="cursor:pointer"><td><b>${esc(last.item)}</b></td><td>${esc(last.spec||'')}</td><td class="num">${g.length}</td>
+        <td class="num">${money(bought(lb).netUnit)}</td><td>${esc(pfLabel(bought(lb)))}</td><td class="num">${money(bought(mn).netUnit)}</td><td>${esc(pfLabel(bought(mn)))}</td><td>${last.date}</td></tr>`;
+    }).join('')+'</tbody></table></div><div class="hint">點任一列可查看該商品的價格趨勢與各平台比較。</div>';
     return;
   }
-  box.innerHTML = groups.map(g=>{
-    const s=[...g].sort(cmpRec), first=s[0], last=s[s.length-1];
-    const min=g.reduce((a,b)=>b.netUnit<a.netUnit?b:a), max=g.reduce((a,b)=>b.netUnit>a.netUnit?b:a);
-    const avg = g.reduce((t,r)=>t+r.netUnit,0)/g.length;
-    let chg='—', cls='';
-    if(s.length>1){ const prev=s[s.length-2]; const d=last.netUnit-prev.netUnit; const p=prev.netUnit? d/prev.netUnit*100:0;
-      chg=(d>0?'▲ +':d<0?'▼ ':'＝ ')+money(round2(d))+`（${p>0?'+':''}${p.toFixed(1)}%）`; cls=d>0?'up':d<0?'down':''; }
+  out.innerHTML=gs.map(g=>{
+    const s=[...g].sort(cmpCase), last=s[s.length-1], bs=s.filter(bought);
+    const allq=[]; s.forEach(c=>c.quotes.forEach((q,i)=>allq.push({c,q,buy:i===c.buyIndex})));
+    const minQ=allq.reduce((a,b)=>b.q.netUnit<a.q.netUnit?b:a);
+    let kpi='';
+    if(bs.length){
+      const lb=bs[bs.length-1], lq=bought(lb), mnB=bs.reduce((a,b)=>bought(b).netUnit<bought(a).netUnit?b:a), mxB=bs.reduce((a,b)=>bought(b).netUnit>bought(a).netUnit?b:a);
+      const avg=bs.reduce((t,c)=>t+bought(c).netUnit,0)/bs.length;
+      let chg='—',cls=''; if(bs.length>1){const pv=bought(bs[bs.length-2]),d=r2(lq.netUnit-pv.netUnit),p=pv.netUnit?d/pv.netUnit*100:0;chg=(d>0?'▲ +':d<0?'▼ ':'＝ ')+money(d)+`（${p>0?'+':''}${p.toFixed(1)}%）`;cls=d>0?'up':d<0?'down':''}
+      kpi=`<div class="kpis">
+        <div class="kpi"><div class="k">最近購買價</div><div class="v">${money(lq.netUnit)}</div><div class="sub">${esc(pfLabel(lq))}・${lb.date}</div></div>
+        <div class="kpi"><div class="k">較上次購買</div><div class="v ${cls}" style="font-size:16px;padding:3px 0">${chg}</div></div>
+        <div class="kpi"><div class="k">歷史最低購買價</div><div class="v down">${money(bought(mnB).netUnit)}</div><div class="sub">${esc(pfLabel(bought(mnB)))}・${mnB.date}</div></div>
+        <div class="kpi"><div class="k">歷史最高購買價</div><div class="v up">${money(bought(mxB).netUnit)}</div><div class="sub">${esc(pfLabel(bought(mxB)))}・${mxB.date}</div></div>
+        <div class="kpi"><div class="k">平均購買價</div><div class="v">${money(r2(avg))}</div><div class="sub">最近一次${lq.netUnit<=avg?'低於':'高於'}平均</div></div>
+        <div class="kpi"><div class="k">曾出現的最低報價</div><div class="v">${money(minQ.q.netUnit)}</div><div class="sub">${esc(pfLabel(minQ.q))}・${minQ.c.date}${minQ.buy?'（有買）':''}</div></div>
+      </div>`;
+    }else kpi='<div class="hint">這個商品還沒有勾選購買的紀錄。</div>';
     // 各平台統計
-    const byP={}; g.forEach(r=>{ (byP[r.buyPlatform] ||= []).push(r); });
-    const pRows = Object.entries(byP).map(([p,l])=>{
-      const ls=[...l].sort(cmpRec);
-      return {p, n:l.length, avg:l.reduce((t,r)=>t+r.netUnit,0)/l.length, min:Math.min(...l.map(r=>r.netUnit)), last:ls[ls.length-1]};
-    }).sort((a,b)=>a.avg-b.avg);
-    const bestAvg = pRows[0].avg;
-    const detail = [...g].sort((a,b)=>cmpRec(b,a)).map(r=>`<tr>
-      <td>${r.date}</td><td>${pfTag(r.buyPlatform,r.buyNote)}</td><td class="num">${money(r.unitPrice)}</td><td class="num">${money(r.qty)}</td>
-      <td>${esc(r.discountMethod==='其他'&&r.discountNote?'其他：'+r.discountNote:(r.discountMethod||'無'))}</td>
-      <td class="num">${money(r.discountAmount)}</td><td class="num">${money(r.paid)}</td>
-      <td class="num"><b>${money(r.netUnit)}</b>${g.length>1&&r.netUnit===min.netUnit?' 🏆':''}</td><td class="wrapc">${esc(cmpText(r))}</td></tr>`).join('');
-    return `<div class="card">
-      <h2>${esc(last.item)}${last.spec?`　<span class="badge blue">${esc(last.spec)}</span>`:''}　<span class="hint">共 ${g.length} 次購買（${first.date} ～ ${last.date}）</span></h2>
-      <div class="stats">
-        <div class="stat"><div class="k">最近實付單價</div><div class="v">${money(last.netUnit)}</div><div class="s">${esc(last.buyPlatform)}・${last.date}</div></div>
-        <div class="stat"><div class="k">較上次</div><div class="v ${cls}" style="font-size:18px">${chg}</div><div class="s">&nbsp;</div></div>
-        <div class="stat"><div class="k">歷史最低 🏆</div><div class="v down">${money(min.netUnit)}</div><div class="s">${esc(min.buyPlatform)}${min.buyNote?'（'+esc(min.buyNote)+'）':''}・${min.date}</div></div>
-        <div class="stat"><div class="k">歷史最高</div><div class="v up">${money(max.netUnit)}</div><div class="s">${esc(max.buyPlatform)}・${max.date}</div></div>
-        <div class="stat"><div class="k">平均</div><div class="v">${money(round2(avg))}</div><div class="s">最近 vs 平均 ${last.netUnit<=avg?'偏低':'偏高'}</div></div>
-      </div>
-      ${trendChart(g)}
-      <div class="sec-title">各購買平台比較（依平均實付單價由低到高）</div>
-      <div class="tw"><table><thead><tr><th>購買平台</th><th class="num">次數</th><th class="num">平均實付單價</th><th class="num">最低</th><th class="num">最近一次</th></tr></thead><tbody>
-      ${pRows.map(x=>`<tr><td>${pfTag(x.p)}${x.avg===bestAvg&&pRows.length>1?' 🏆':''}</td><td class="num">${x.n}</td><td class="num">${money(round2(x.avg))}</td><td class="num">${money(x.min)}</td><td class="num">${money(x.last.netUnit)}（${x.last.date}）</td></tr>`).join('')}
-      </tbody></table></div>
-      <div class="sec-title">購買明細</div>
-      <div class="tw"><table><thead><tr><th>日期</th><th>購買平台</th><th class="num">單價</th><th class="num">數量</th><th>折扣方式</th><th class="num">折扣</th><th class="num">支付</th><th class="num">實付單價</th><th>當時比價平台</th></tr></thead><tbody>${detail}</tbody></table></div>
-    </div>`;
+    const pst={}; allq.forEach(x=>{const p=pst[x.q.platform]||(pst[x.q.platform]={n:0,sum:0,min:Infinity,picked:0,lowest:0});p.n++;p.sum+=x.q.netUnit;p.min=Math.min(p.min,x.q.netUnit);if(x.buy)p.picked++;});
+    s.forEach(c=>{const m=Math.min(...c.quotes.map(q=>q.netUnit)); if(c.quotes.length>1) c.quotes.forEach(q=>{if(q.netUnit===m)pst[q.platform].lowest++})});
+    const prow=Object.entries(pst).sort((a,b)=>a[1].sum/a[1].n-b[1].sum/b[1].n).map(([p,x])=>`<tr><td><span style="color:${PF_COLOR[p]};font-weight:700">●</span> ${p}</td><td class="num">${x.n}</td><td class="num">${money(r2(x.sum/x.n))}</td><td class="num">${money(x.min)}</td><td class="num">${x.lowest}</td><td class="num">${x.picked}</td></tr>`).join('');
+    // 比價矩陣
+    const plats=PLATFORMS.filter(p=>pst[p]);
+    const mrows=[...s].reverse().map(c=>{
+      const mn=Math.min(...c.quotes.map(q=>q.netUnit));
+      const cells=plats.map(p=>{
+        const qs=c.quotes.map((q,i)=>({q,i})).filter(x=>x.q.platform===p);
+        if(!qs.length) return '<td class="num sub">—</td>';
+        const pick=qs.some(x=>x.i===c.buyIndex), low=c.quotes.length>1&&qs.some(x=>x.q.netUnit===mn);
+        return `<td class="num ${pick?'pick':''} ${low&&!pick?'low':''}">${qs.map(x=>`<div>${money(x.q.netUnit)}${x.q.note?`<span class="sub"> ${esc(x.q.note)}</span>`:''}</div>`).join('')}</td>`;
+      }).join('');
+      return `<tr><td>${c.date}</td><td class="num">${money(c.qty)}</td>${cells}<td>${bought(c)?esc(pfLabel(bought(c))):'<span class="mark mk-none">未決定</span>'}</td></tr>`;
+    }).join('');
+    return `<div class="card"><div class="card-h"><span>${esc(last.item)}</span>${last.spec?`<span class="tag">${esc(last.spec)}</span>`:''}<span class="sub">${g.length} 次比價・${s[0].date} ～ ${last.date}</span></div>
+      <div class="card-b">${kpi}${trendChart(g)}
+      <div class="sec">各平台報價統計（依平均報價由低到高）</div>
+      <div class="sheet" style="max-height:none"><table class="g"><thead><tr><th>平台</th><th class="num">報價次數</th><th class="num">平均實付單價</th><th class="num">最低實付單價</th><th class="num">當次最低次數</th><th class="num">被選中購買</th></tr></thead><tbody>${prow}</tbody></table></div>
+      <div class="sec">歷次比價對照表（實付單價；綠底＝最後購買，綠字＝當次最低）</div>
+      <div class="sheet mx" style="max-height:none"><table class="g mx"><thead><tr><th>日期</th><th class="num">數量</th>${plats.map(p=>`<th class="num">${p}</th>`).join('')}<th>購買平台</th></tr></thead><tbody>${mrows}</tbody></table></div>
+      </div></div>`;
   }).join('');
 }
 
-/* ---------- 提醒 ---------- */
-function computeReminders(){
-  const latest = {};
-  records.forEach(r=>{ const k=itemKey(r); if(!latest[k] || cmpRec(r,latest[k])>0) latest[k]=r; });
-  const today = todayStr();
-  return Object.entries(latest).filter(([,r])=>r.cycleDays>0).map(([k,r])=>{
-    const due = addDays(r.date, r.cycleDays);
-    const from = addDays(due, -REMIND_DAYS);
-    const diff = daysBetween(today, due);
-    const dis = dismissed[hash(k)]?.recordId === r.id;
-    return {key:k, r, due, from, diff, dismissed:dis, active: today>=from && !dis};
+/* ===== 提醒 ===== */
+function computeRem(){
+  const latest={}; cases.filter(bought).forEach(c=>{const k=keyOf(c); if(!latest[k]||cmpCase(c,latest[k])>0) latest[k]=c});
+  const today=todayStr();
+  return Object.entries(latest).filter(([,c])=>c.cycleDays>0).map(([k,c])=>{
+    const due=addDays(c.date,c.cycleDays), from=addDays(due,-REMIND_DAYS), diff=daysBetween(today,due), dis=!!dismissed[c.id];
+    return {c,due,from,diff,dis,active:today>=from&&!dis};
   }).sort((a,b)=>a.diff-b.diff);
 }
-const statusText = x => x.diff<0 ? `已逾期 ${-x.diff} 天` : x.diff===0 ? '今天用完' : `還剩 ${x.diff} 天`;
-function remCard(x, inModal){
-  const r=x.r;
-  return `<div class="rem ${x.diff<0?'over':''}">
-    <div><div class="t">${esc(r.item)}${r.spec?`（${esc(r.spec)}）`:''}　<span class="badge ${x.diff<0?'err':'warn'}">${statusText(x)}</span></div>
-    <div class="m">上次購買 ${r.date}・週期 ${r.cycleDays} 天・預計用完 ${x.due}・最近買在 ${esc(r.buyPlatform)}（NT$${money(r.netUnit)}）</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-ok btn-sm" data-act="rebuy" data-id="${r.id}">🛒 已採買（新增紀錄）</button>
-      <button class="btn btn-ghost btn-sm" data-act="dismiss" data-key="${esc(x.key)}" data-id="${r.id}">取消提醒</button>
-    </div></div>`;
+const stTxt=x=>x.diff<0?`已逾期 ${-x.diff} 天`:x.diff===0?'今天用完':`還剩 ${x.diff} 天`;
+function remCard(x){
+  const c=x.c,b=bought(c);
+  return `<div class="rem ${x.diff<0?'over':''}"><div><div class="t">${esc(c.item)}${c.spec?`（${esc(c.spec)}）`:''}　<span class="mark ${x.diff<0?'mk-diff':'mk-none'}">${stTxt(x)}</span></div>
+    <div class="m">上次購買 ${c.date}（${esc(pfLabel(b))}・實付單價 ${money(b.netUnit)}）・週期 ${c.cycleDays} 天・預計用完 ${x.due}</div></div>
+    <div class="b"><button class="btn sm pri" data-a="rebuy" data-id="${c.id}">🛒 開始比價</button><button class="btn sm" data-a="dis" data-id="${c.id}">取消提醒</button></div></div>`;
 }
-function renderReminders(){
-  const all = computeReminders();
-  const act = all.filter(x=>x.active);
-  $('r-active').innerHTML = act.length ? act.map(x=>remCard(x)).join('') : '<div class="card empty">🎉 目前沒有需要補貨的商品</div>';
-  $('r-body').innerHTML = all.filter(x=>!x.active).map(x=>`<tr><td><b>${esc(x.r.item)}</b></td><td>${esc(x.r.spec||'')}</td><td>${x.r.date}</td><td class="num">${x.r.cycleDays}</td><td>${x.due}</td><td>${x.from}</td>
-    <td>${x.dismissed?'<span class="badge">已取消提醒</span>':`<span class="badge blue">${statusText(x)}</span>`}</td></tr>`).join('') || `<tr><td colspan="7" class="empty">沒有追蹤中的商品（新增紀錄時填「預估使用週期」即可追蹤）</td></tr>`;
-  const cnt = $('remCnt'); cnt.textContent = act.length; cnt.style.display = act.length ? '' : 'none';
-  const b = $('banner');
-  if(act.length){
-    b.style.display='flex';
-    const over = act.filter(x=>x.diff<0).length;
-    $('bannerText').textContent = `${act.length} 項商品該補貨了${over?`（其中 ${over} 項已逾期）`:''}：` + act.slice(0,3).map(x=>x.r.item).join('、') + (act.length>3?' …':'');
-  }else b.style.display='none';
+function renderRem(){
+  const all=computeRem(), act=all.filter(x=>x.active);
+  $('r-act').innerHTML=act.length?act.map(remCard).join(''):'<div class="card"><div class="empty">目前沒有需要補貨的商品</div></div>';
+  $('r-body').innerHTML=all.filter(x=>!x.active).map(x=>`<tr><td><b>${esc(x.c.item)}</b></td><td>${esc(x.c.spec||'')}</td><td>${x.c.date}</td><td>${esc(pfLabel(bought(x.c)))}</td><td class="num">${x.c.cycleDays}</td><td>${x.due}</td><td>${x.from}</td><td>${x.dis?'<span class="mark mk-low">已取消提醒</span>':stTxt(x)}</td></tr>`).join('')||'<tr><td colspan="8" class="empty">沒有追蹤中的商品（比價單填「預估使用週期」並勾選購買後即會追蹤）</td></tr>';
+  const cn=$('remCnt'); cn.textContent=act.length; cn.style.display=act.length?'':'none';
+  const b=$('banner');
+  if(act.length){b.style.display='flex';const ov=act.filter(x=>x.diff<0).length;$('bannerText').textContent=`${act.length} 項商品該補貨了${ov?`（${ov} 項已逾期）`:''}：`+act.slice(0,3).map(x=>x.c.item).join('、')+(act.length>3?' …':'')}
+  else b.style.display='none';
   return act;
 }
-function showRemModal(act){
-  if(!act.length) return;
-  $('remModalBody').innerHTML = act.map(x=>remCard(x,true)).join('');
-  $('remModal').classList.add('show');
-}
-async function dismissRem(key, recordId){
+function showModal(act){ if(!act.length) return; $('rm-body').innerHTML=act.map(remCard).join(''); $('rm').classList.add('on'); }
+async function dismissRem(id){
   try{
-    const h = hash(key);
-    await setDoc(doc(db,COL_DISMISS,h), {key, recordId, at: Timestamp.now()});
-    dismissed[h] = {key, recordId};
-    renderAll();
-    if(!computeReminders().some(x=>x.active)) $('remModal').classList.remove('show');
-    else showRemModal(computeReminders().filter(x=>x.active));
-    toast('已取消提醒');
-  }catch(e){ toast('操作失敗：'+e.message, true); }
+    await setDoc(doc(db,COL_DIS,id),{caseId:id,at:Timestamp.now()}); dismissed[id]={caseId:id};
+    renderAll(); const act=computeRem().filter(x=>x.active); if(act.length) showModal(act); else $('rm').classList.remove('on'); toast('已取消提醒');
+  }catch(e){toast('操作失敗：'+e.message,true)}
 }
 function rebuy(id){
-  const r = records.find(x=>x.id===id); if(!r) return;
-  resetForm();
-  $('f-item').value=r.item; $('f-spec').value=r.spec||''; $('f-cycle').value=r.cycleDays||'';
-  document.querySelectorAll('#cmpChips input').forEach(c=>{ c.checked=(r.comparePlatforms||[]).some(x=>x.p===c.value); });
-  const sp=(r.comparePlatforms||[]).find(x=>x.p==='蝦皮'); $('f-cmpNote').value=sp?.note||'';
-  syncFormUI(); updateItemHint();
-  $('remModal').classList.remove('show');
-  switchTab('form'); window.scrollTo({top:0,behavior:'smooth'});
-  toast('請填入這次的購買平台與價格');
+  const c=cases.find(x=>x.id===id); if(!c) return;
+  $('rm').classList.remove('on'); switchTab('log');
+  openEditor({date:todayStr(),item:c.item,spec:c.spec,qty:c.qty,cycleDays:c.cycleDays,memo:'',buyIndex:-1,quotes:c.quotes.map(q=>({platform:q.platform,note:q.note}))});
+  toast('已帶入上次比價的平台，請填入這次的價格');
 }
 
-/* ---------- 版面 ---------- */
+/* ===== 版面與事件 ===== */
 function switchTab(t){
-  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+t));
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+t));
 }
-function renderAll(){
-  refreshDatalists(); renderList(); renderQuery(); renderReminders(); updateItemHint();
-}
+function renderAll(){ refreshDatalists(); renderList(); renderQuery(); renderRem(); }
 
-/* ---------- 事件 ---------- */
-$('tabs').addEventListener('click', e=>{ const b=e.target.closest('.tab'); if(b) switchTab(b.dataset.tab); });
-$('banner').addEventListener('click', ()=>switchTab('remind'));
-$('remModalClose').addEventListener('click', ()=>$('remModal').classList.remove('show'));
-$('remModal').addEventListener('click', e=>{ if(e.target===$('remModal')) $('remModal').classList.remove('show'); });
-document.addEventListener('click', e=>{
-  const b = e.target.closest('[data-act]'); if(b){
-    const a=b.dataset.act;
-    if(a==='edit') startEdit(b.dataset.id);
-    else if(a==='del') removeRec(b.dataset.id);
-    else if(a==='dismiss') dismissRem(b.dataset.key, b.dataset.id);
-    else if(a==='rebuy') rebuy(b.dataset.id);
-    return;
-  }
-  const q = e.target.closest('tr[data-q]'); if(q){ $('q-input').value=q.dataset.q; renderQuery(); window.scrollTo({top:0,behavior:'smooth'}); }
+$('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b)switchTab(b.dataset.t)});
+$('banner').addEventListener('click',()=>switchTab('remind'));
+$('rm-close').addEventListener('click',()=>$('rm').classList.remove('on'));
+$('rm').addEventListener('click',e=>{if(e.target===$('rm'))$('rm').classList.remove('on')});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');
+  if(b){const a=b.dataset.a; if(a==='edit')openEditor(cases.find(c=>c.id===b.dataset.id)); else if(a==='del')delCase(b.dataset.id); else if(a==='dis')dismissRem(b.dataset.id); else if(a==='rebuy')rebuy(b.dataset.id); return}
+  const q=e.target.closest('tr[data-q]'); if(q){$('q-in').value=q.dataset.q;renderQuery();window.scrollTo({top:0,behavior:'smooth'})}
 });
-['f-qty','f-unit','f-damt'].forEach(i=>$(i).addEventListener('input', calc));
-$('f-paid').addEventListener('input', ()=>{ paidManual = true; calc(); });
-$('btnAuto').addEventListener('click', ()=>{ paidManual=false; calc(); });
-$('cmpChips').addEventListener('change', syncFormUI);
-$('f-buy').addEventListener('change', syncFormUI);
-$('f-dmethod').addEventListener('change', syncFormUI);
-$('f-item').addEventListener('input', ()=>{ refreshDatalists(); updateItemHint(); });
-$('f-item').addEventListener('change', ()=>{ fillFromLatest(); refreshDatalists(); updateItemHint(); });
-$('f-spec').addEventListener('change', updateItemHint);
-$('btnSave').addEventListener('click', save);
-$('btnReset').addEventListener('click', resetForm);
-$('btnCancel').addEventListener('click', resetForm);
-$('l-search').addEventListener('input', renderList);
-$('l-buy').addEventListener('change', renderList);
-$('btnCsv').addEventListener('click', exportCsv);
-$('q-input').addEventListener('input', renderQuery);
+$('btnNew').addEventListener('click',()=>openEditor(null));
+$('edClose').addEventListener('click',closeEditor); $('edCancel').addEventListener('click',closeEditor);
+$('edSave').addEventListener('click',saveCase);
+$('addRow').addEventListener('click',()=>addRow());
+$('addAll').addEventListener('click',()=>{const have=new Set(allRows().map(tr=>tr.querySelector('.q-pf').value));
+  const empty=allRows().filter(tr=>!tr.querySelector('.q-pf').value&&tr.querySelector('.q-unit').value==='');empty.forEach(tr=>tr.remove());
+  PLATFORMS.filter(p=>!have.has(p)).forEach(p=>addRow({platform:p}))});
+$('clrBuy').addEventListener('click',()=>{allRows().forEach(tr=>{tr.querySelector('.q-buy').checked=false;rowUI(tr)})});
+$('e-body').addEventListener('input',e=>{
+  const tr=e.target.closest('tr'); if(!tr) return;
+  if(e.target.classList.contains('q-paid')) tr.dataset.manual='1';
+  if(e.target.classList.contains('q-unit')||e.target.classList.contains('q-da')){ if(e.target.classList.contains('q-unit')&&!tr.dataset.manual){} }
+  rowCalc(tr);
+});
+$('e-body').addEventListener('change',e=>{const tr=e.target.closest('tr');if(!tr)return;rowUI(tr);rowCalc(tr)});
+$('e-body').addEventListener('click',e=>{
+  if(e.target.closest('.q-del')){const tr=e.target.closest('tr');tr.remove();if(!allRows().length)addRow();}
+  if(e.target.classList.contains('q-buy')) allRows().forEach(rowUI);
+});
+$('e-qty').addEventListener('input',()=>allRows().forEach(rowCalc));
+$('e-item').addEventListener('input',()=>{refreshDatalists();updateHint()});
+$('e-item').addEventListener('change',()=>{prefillFromHistory();refreshDatalists();updateHint()});
+$('l-q').addEventListener('input',renderList); $('l-p').addEventListener('change',renderList); $('l-s').addEventListener('change',renderList);
+$('btnCsv').addEventListener('click',exportCsv); $('q-in').addEventListener('input',renderQuery);
+$('l-p').innerHTML='<option value="">購買平台：全部</option>'+PLATFORMS.map(p=>`<option>${p}</option>`).join('');
 
-/* ---------- 啟動 ---------- */
-buildForm();
 await initFirebase();
-showRemModal(computeReminders().filter(x=>x.active));
+showModal(computeRem().filter(x=>x.active));
 </script>
 </body>
 </html>
