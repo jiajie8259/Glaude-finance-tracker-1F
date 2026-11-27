@@ -77,7 +77,7 @@ table.g{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px}
 .pchip input{display:none}
 
 .esheet{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:6px;max-height:calc(100vh - 250px)}
-table.sht{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:13.5px}
+table.sht{border-collapse:separate;border-spacing:0;table-layout:fixed;width:100%;font-size:13.5px}
 .sht th{position:sticky;top:0;z-index:5;background:var(--head);border-bottom:1px solid #b8c0c8;border-right:1px solid var(--line2);padding:7px 6px;font-size:12.5px;text-align:left;white-space:nowrap;font-weight:700;color:#3d444d}
 .sht th.pf{text-align:center}
 .sht th input.cn{border:1px dashed #9aa4ae;background:#fff;font-weight:700;font-size:12.5px;padding:2px 5px}
@@ -347,7 +347,7 @@ function noteCell(it,i,p){
 const pw=p=>p==='蝦皮'?104:88;
 function renderSheet(){
   const P=draft.platforms, W=P.length;
-  let h=`<colgroup><col style="width:30px"><col style="width:230px"><col style="width:92px"><col style="width:52px"><col style="width:60px">${P.map(p=>`<col style="width:${pw(p)}px">`).join('')}<col style="width:108px"><col style="width:30px"></colgroup>`;
+  let h=`<colgroup><col style="width:30px"><col><col style="width:92px"><col style="width:52px"><col style="width:60px">${P.map(p=>`<col style="width:${pw(p)}px">`).join('')}<col style="width:108px"><col style="width:30px"></colgroup>`;
   h+=`<thead><tr><th class="c1">#</th><th class="c2">商品</th><th class="c3">規格</th><th class="c4" style="text-align:right">數量</th><th class="c5" style="text-align:right">週期(天)</th>${P.map(p=>p===CUSTOM?`<th class="pf"><input class="cn" maxlength="10" placeholder="✎ 平台名稱" value="${esc(draft.customName)}"></th>`:`<th class="pf"><span style="color:${PF_COLOR[p]}">●</span> ${p}</th>`).join('')}<th>已選購買</th><th></th></tr></thead><tbody>`;
   draft.items.forEach((it,i)=>{
     h+=`<tr data-i="${i}"><td class="idx c1">${i+1}</td>
