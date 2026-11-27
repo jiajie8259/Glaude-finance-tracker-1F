@@ -80,6 +80,8 @@ table.g{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px}
 table.sht{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:13.5px}
 .sht th{position:sticky;top:0;z-index:5;background:var(--head);border-bottom:1px solid #b8c0c8;border-right:1px solid var(--line2);padding:7px 6px;font-size:12.5px;text-align:left;white-space:nowrap;font-weight:700;color:#3d444d}
 .sht th.pf{text-align:center}
+.sht th input.cn{border:1px dashed #9aa4ae;background:#fff;font-weight:700;font-size:12.5px;padding:2px 5px}
+.sht th input.cn:focus{border-style:solid}
 .sht td{border-bottom:1px solid var(--line2);border-right:1px solid var(--line2);padding:4px 5px;vertical-align:top;background:#fff}
 .sht input,.sht select{border:1px solid transparent;border-radius:3px;padding:4px 5px;background:transparent;width:100%;min-width:0;font-size:13.5px}
 .sht input:hover,.sht select:hover{border-color:var(--line)}
@@ -245,7 +247,10 @@ const firebaseConfig = {
 };
 const COL='cprices_orders', COL_DIS='cprices_dismissed', REMIND_DAYS=14;
 const PLATFORMS=['PCHOME','MOMO','家樂福','蝦皮','全聯','康是美','屈臣氏','寶雅'];
-const PF_COLOR={PCHOME:'#2563eb',MOMO:'#be3a7a',家樂福:'#0e7490',蝦皮:'#ea580c',全聯:'#15803d',康是美:'#7c3aed',屈臣氏:'#0d9488',寶雅:'#b45309'};
+const PF_BASE={PCHOME:'#2563eb',MOMO:'#be3a7a',家樂福:'#0e7490',蝦皮:'#ea580c',全聯:'#15803d',康是美:'#7c3aed',屈臣氏:'#0d9488',寶雅:'#b45309',自訂:'#6b7280'};
+const PF_COLOR=new Proxy(PF_BASE,{get:(t,k)=>t[k]||'#6b7280'});
+const CUSTOM='自訂', ALLP=[...PLATFORMS,CUSTOM];
+const plabel=(p,cn)=>p===CUSTOM?(cn||'自訂平台'):p;
 const DISCOUNTS=['優惠券','點數折抵','滿額折','會員價','促銷活動','運費折抵','其他'];
 
 let db=null, orders=[], dismissed={}, draft=null, draftId=null;
@@ -284,9 +289,9 @@ function buildEntries(){
   const out=[];
   orders.forEach(o=>o.items.forEach(it=>{
     if(!it.name) return;
-    const quotes=Object.entries(it.prices||{}).filter(([,v])=>v&&v.unit!=null).map(([p,v])=>({platform:p,note:v.note||'',unit:v.unit}));
-    const buy=it.buy&&it.prices?.[it.buy]?.unit!=null?it.buy:'';
-    let factor=1; if(buy){const s=o.summary?.subtotal?.[buy], pay=o.summary?.payable?.[buy]; if(s>0&&pay!=null) factor=pay/s;}
+    const quotes=Object.entries(it.prices||{}).filter(([,v])=>v&&v.unit!=null).map(([p,v])=>({platform:plabel(p,o.customName),note:v.note||'',unit:v.unit}));
+    const buyKey=it.buy&&it.prices?.[it.buy]?.unit!=null?it.buy:'', buy=buyKey?plabel(buyKey,o.customName):'';
+    let factor=1; if(buyKey){const s=o.summary?.subtotal?.[buyKey], pay=o.summary?.payable?.[buyKey]; if(s>0&&pay!=null) factor=pay/s;}
     out.push({oid:o.id,date:o.date,status:o.status,createdMs:o.createdMs,title:o.title,name:it.name,spec:it.spec||'',key:keyOf(it.name,it.spec),qty:it.qty||1,cycleDays:it.cycleDays||null,quotes,buy,
       buyQuote:buy?quotes.find(q=>q.platform===buy):null,factor});
   }));
@@ -296,9 +301,9 @@ const cmpE=(a,b)=>(a.date<b.date?-1:a.date>b.date?1:0)||((a.createdMs||0)-(b.cre
 
 /* ===== 採購單草稿 ===== */
 const emptyItem=()=>({name:'',spec:'',qty:'1',cycleDays:'',prices:{},buy:''});
-function newDraft(){return {date:todayStr(),title:'',status:'planning',platforms:PLATFORMS.slice(),items:[emptyItem(),emptyItem(),emptyItem()],discounts:[{}]}}
+function newDraft(){return {date:todayStr(),title:'',status:'planning',customName:'',platforms:ALLP.slice(),items:[emptyItem(),emptyItem(),emptyItem()],discounts:[{}]}}
 function draftFromOrder(o){
-  return {date:o.date,title:o.title||'',status:o.status||'planning',platforms:PLATFORMS.filter(p=>o.platforms.includes(p)),
+  return {date:o.date,title:o.title||'',status:o.status||'planning',customName:o.customName||'',platforms:ALLP.filter(p=>o.platforms.includes(p)),
     items:o.items.map(it=>({name:it.name,spec:it.spec||'',qty:String(it.qty??1),cycleDays:it.cycleDays?String(it.cycleDays):'',buy:it.buy||'',
       prices:Object.fromEntries(Object.entries(it.prices||{}).map(([p,v])=>[p,{unit:String(v.unit),note:v.note||''}]))})),
     discounts:(o.discounts&&o.discounts.length?o.discounts:[{}]).map(l=>Object.fromEntries(Object.entries(l).map(([p,v])=>[p,{method:v.method||DISCOUNTS[0],amount:v.amount?String(v.amount):''}])))};
@@ -314,7 +319,7 @@ function openEditor(o,seedItems){
 }
 function closeEditor(){ $('v-edit').style.display='none'; $('v-list').style.display=''; draft=null; draftId=null; renderAll(); }
 function renderChips(){
-  $('e-chips').innerHTML=PLATFORMS.map(p=>`<label class="pchip ${draft.platforms.includes(p)?'on':''}"><input type="checkbox" data-p="${p}" ${draft.platforms.includes(p)?'checked':''}>${p}</label>`).join('');
+  $('e-chips').innerHTML=ALLP.map(p=>`<label class="pchip ${draft.platforms.includes(p)?'on':''}"><input type="checkbox" data-p="${p}" ${draft.platforms.includes(p)?'checked':''}>${p===CUSTOM?'＋自訂平台':p}</label>`).join('');
 }
 
 /* ===== 計算 ===== */
@@ -342,7 +347,7 @@ function noteCell(it,i,p){
 function renderSheet(){
   const P=draft.platforms, W=P.length;
   let h=`<colgroup><col style="width:30px"><col style="width:160px"><col style="width:92px"><col style="width:52px"><col style="width:60px">${P.map(()=>'<col style="width:116px">').join('')}<col style="width:108px"><col style="width:30px"></colgroup>`;
-  h+=`<thead><tr><th class="c1">#</th><th class="c2">商品</th><th class="c3">規格</th><th class="c4" style="text-align:right">數量</th><th class="c5" style="text-align:right">週期(天)</th>${P.map(p=>`<th class="pf"><span style="color:${PF_COLOR[p]}">●</span> ${p}</th>`).join('')}<th>已選購買</th><th></th></tr></thead><tbody>`;
+  h+=`<thead><tr><th class="c1">#</th><th class="c2">商品</th><th class="c3">規格</th><th class="c4" style="text-align:right">數量</th><th class="c5" style="text-align:right">週期(天)</th>${P.map(p=>p===CUSTOM?`<th class="pf"><input class="cn" maxlength="10" placeholder="✎ 自訂平台名稱" value="${esc(draft.customName)}"></th>`:`<th class="pf"><span style="color:${PF_COLOR[p]}">●</span> ${p}</th>`).join('')}<th>已選購買</th><th></th></tr></thead><tbody>`;
   draft.items.forEach((it,i)=>{
     h+=`<tr data-i="${i}"><td class="idx c1">${i+1}</td>
       <td class="c2"><input class="it-name" list="dl-items" placeholder="商品名稱" value="${esc(it.name)}" autocomplete="off"><div class="it-hint"></div></td>
@@ -384,7 +389,7 @@ function recalc(){
       td.classList.toggle('np',!has);
     });
     const r=c.lines[i], sel=tr.querySelector('.sel');
-    if(r.line!=null) sel.innerHTML=`<span class="tag" style="border-color:${PF_COLOR[it.buy]}">${esc(it.buy)}</span> <b class="num">${money(r.line)}</b><div class="sub num">${money(num(it.qty))} × ${money(r.u)}</div>`;
+    if(r.line!=null) sel.innerHTML=`<span class="tag" style="border-color:${PF_COLOR[it.buy]}">${esc(plabel(it.buy,draft.customName))}</span> <b class="num">${money(r.line)}</b><div class="sub num">${money(num(it.qty))} × ${money(r.u)}</div>`;
     else if(it.buy) sel.innerHTML='<span class="warn sub">已選的平台尚未填價格</span>';
     else sel.innerHTML='<span class="sub">—</span>';
   });
@@ -429,6 +434,7 @@ const sht=$('sht');
 function rowOf(el){const tr=el.closest('tbody tr');return tr?+tr.dataset.i:-1}
 sht.addEventListener('input',e=>{
   const el=e.target, i=rowOf(el), c=el.classList;
+  if(c.contains('cn')){draft.customName=el.value;recalc();return}
   if(i>=0){
     const it=draft.items[i];
     if(c.contains('it-name')){it.name=el.value;updateHint(i);}
@@ -476,7 +482,7 @@ $('addItem').addEventListener('click',()=>{draft.items.push(emptyItem());renderS
 $('addDisc').addEventListener('click',()=>{draft.discounts.push({});renderSheetKeep()});
 $('e-chips').addEventListener('change',e=>{
   const p=e.target.dataset.p; if(!p) return;
-  if(e.target.checked){ if(!draft.platforms.includes(p)) draft.platforms=PLATFORMS.filter(x=>draft.platforms.includes(x)||x===p); }
+  if(e.target.checked){ if(!draft.platforms.includes(p)) draft.platforms=ALLP.filter(x=>draft.platforms.includes(x)||x===p); }
   else{
     const used=draft.items.some(it=>(it.prices[p]&&it.prices[p].unit!=='')||it.buy===p)||draft.discounts.some(l=>num(l[p]?.amount)>0);
     if(used){ e.target.checked=true; return toast(`${p} 欄位已有資料，無法隱藏（請先清空）`,true); }
@@ -506,10 +512,11 @@ async function saveOrder(markDone){
     items.push({name:it.name.trim(),spec:it.spec.trim(),qty:num(it.qty),cycleDays:cy>0?cy:null,prices,buy:it.buy||''});
   }
   if(!items.length) return toast('請至少輸入一個商品',true);
+  if(items.some(it=>it.prices[CUSTOM])&&!draft.customName.trim()) return toast('請在表頭輸入自訂平台的名稱',true);
   const c=calc(draft), subtotal={},discount={},payable={};
   draft.platforms.forEach(p=>{ if(c.sub[p]>0||c.disc[p]>0){subtotal[p]=c.sub[p];discount[p]=c.disc[p];payable[p]=c.pay[p]} });
   const discounts=draft.discounts.map(l=>{const o={};draft.platforms.forEach(p=>{const a=num(l[p]?.amount);if(a>0)o[p]={method:l[p].method||DISCOUNTS[0],amount:a}});return o}).filter(o=>Object.keys(o).length);
-  const data={date:draft.date,title:draft.title,status:draft.status,platforms:draft.platforms,items,discounts,summary:{subtotal,discount,payable,total:c.tPay}};
+  const data={date:draft.date,title:draft.title,status:draft.status,customName:draft.customName.trim(),platforms:draft.platforms,items,discounts,summary:{subtotal,discount,payable,total:c.tPay}};
   $('eSave').disabled=$('eDone').disabled=true;
   try{
     if(draftId){ await updateDoc(doc(db,COL,draftId),data); const i=orders.findIndex(o=>o.id===draftId); orders[i]={...orders[i],...data}; }
@@ -536,7 +543,7 @@ function renderList(){
   $('l-sum').textContent=`${rows.length} 張採購單　已採買合計 NT$ ${money(tot)}`;
   if(!rows.length){$('l-body').innerHTML='<tr><td colspan="8" class="empty">還沒有採購單，按「＋ 新增採購單」開始</td></tr>';return}
   $('l-body').innerHTML=rows.map(o=>{
-    const pay=o.summary?.payable||{}, chips=PLATFORMS.filter(p=>pay[p]>0).map(p=>`<span class="chip"><span style="color:${PF_COLOR[p]}">●</span> ${p} <b>${money(pay[p])}</b></span>`).join('');
+    const pay=o.summary?.payable||{}, chips=ALLP.filter(p=>pay[p]>0).map(p=>`<span class="chip"><span style="color:${PF_COLOR[p]}">●</span> ${esc(plabel(p,o.customName))} <b>${money(pay[p])}</b></span>`).join('');
     const names=o.items.map(i=>i.name).join('、');
     const nBuy=o.items.filter(i=>i.buy).length;
     return `<tr class="clk" data-open="${o.id}"><td>${o.date}</td><td><b>${esc(o.title||'（未命名）')}</b></td>
@@ -554,20 +561,20 @@ async function delOrder(id){
 function copyOrder(id){
   const o=orders.find(x=>x.id===id); if(!o) return;
   openEditor(null,o.items.map(i=>({name:i.name,spec:i.spec||'',qty:String(i.qty),cycleDays:i.cycleDays?String(i.cycleDays):''})));
-  draft.platforms=PLATFORMS.filter(p=>o.platforms.includes(p)); $('e-title').value=draft.title=o.title||''; renderChips(); renderSheet();
+  draft.platforms=ALLP.filter(p=>o.platforms.includes(p)); draft.customName=o.customName||''; $('e-title').value=draft.title=o.title||''; renderChips(); renderSheet();
   toast('已複製商品清單，請重新填入價格');
 }
 function exportCsv(){
-  const head=['採購日期','採購單','狀態','商品','規格','數量',...PLATFORMS.map(p=>p+'單價'),'蝦皮註記','購買平台','購買單價','購買小計','使用週期(天)'];
+  const head=['採購日期','採購單','狀態','商品','規格','數量',...PLATFORMS.map(p=>p+'單價'),'自訂平台名稱','自訂平台單價','蝦皮註記','購買平台','購買單價','購買小計','使用週期(天)'];
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
   const L=[head.map(q).join(',')];
   [...orders].sort((a,b)=>cmpO(b,a)).forEach(o=>o.items.forEach(it=>{
     const b=it.buy&&it.prices[it.buy];
-    L.push([o.date,o.title,o.status==='done'?'已採買':'評估中',it.name,it.spec,it.qty,...PLATFORMS.map(p=>it.prices[p]?.unit??''),it.prices['蝦皮']?.note||'',it.buy,b?b.unit:'',b?r2(b.unit*it.qty):'',it.cycleDays??''].map(q).join(','));
+    L.push([o.date,o.title,o.status==='done'?'已採買':'評估中',it.name,it.spec,it.qty,...PLATFORMS.map(p=>it.prices[p]?.unit??''),o.customName||'',it.prices[CUSTOM]?.unit??'',it.prices['蝦皮']?.note||'',plabel(it.buy,o.customName),b?b.unit:'',b?r2(b.unit*it.qty):'',it.cycleDays??''].map(q).join(','));
   }));
   L.push('');
   L.push(['採購日期','採購單','平台','小計','折扣','應付'].map(q).join(','));
-  [...orders].sort((a,b)=>cmpO(b,a)).forEach(o=>PLATFORMS.forEach(p=>{const s=o.summary?.subtotal?.[p]; if(s>0||o.summary?.discount?.[p]>0) L.push([o.date,o.title,p,s,o.summary.discount?.[p]||0,o.summary.payable?.[p]].map(q).join(','))}));
+  [...orders].sort((a,b)=>cmpO(b,a)).forEach(o=>ALLP.forEach(p=>{const s=o.summary?.subtotal?.[p]; if(s>0||o.summary?.discount?.[p]>0) L.push([o.date,o.title,plabel(p,o.customName),s,o.summary.discount?.[p]||0,o.summary.payable?.[p]].map(q).join(','))}));
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+L.join('\r\n')],{type:'text/csv;charset=utf-8'}));
   a.download=`cprices_${todayStr()}.csv`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
@@ -627,7 +634,7 @@ function renderQuery(){
     const pst={}; allq.forEach(x=>{const p=pst[x.q.platform]||(pst[x.q.platform]={n:0,sum:0,min:Infinity,picked:0,lowest:0});p.n++;p.sum+=x.q.unit;p.min=Math.min(p.min,x.q.unit);if(x.buy)p.picked++});
     s.forEach(e=>{ if(e.quotes.length>1){const mn=Math.min(...e.quotes.map(q=>q.unit)); e.quotes.forEach(q=>{if(q.unit===mn)pst[q.platform].lowest++})} });
     const prow=Object.entries(pst).sort((a,b)=>a[1].sum/a[1].n-b[1].sum/b[1].n).map(([p,x])=>`<tr><td><span style="color:${PF_COLOR[p]};font-weight:700">●</span> ${p}</td><td class="num">${x.n}</td><td class="num">${money(r2(x.sum/x.n))}</td><td class="num">${money(x.min)}</td><td class="num">${x.lowest}</td><td class="num">${x.picked}</td></tr>`).join('');
-    const plats=PLATFORMS.filter(p=>pst[p]);
+    const plats=[...PLATFORMS.filter(p=>pst[p]),...Object.keys(pst).filter(p=>!PLATFORMS.includes(p))];
     const mrows=[...s].reverse().map(e=>{
       const mn=Math.min(...e.quotes.map(q=>q.unit));
       const cells=plats.map(p=>{
