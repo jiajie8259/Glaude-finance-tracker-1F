@@ -92,14 +92,14 @@ table.sht{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size
 .sht td.idx{text-align:center;color:var(--muted);font-size:12px;padding-top:9px}
 /* 凍結窗格（桌機） */
 @media(min-width:900px){
-  .sht .c1{position:sticky;left:0;z-index:3}.sht .c2{position:sticky;left:30px;z-index:3}.sht .c3{position:sticky;left:190px;z-index:3}
-  .sht .c4{position:sticky;left:282px;z-index:3}.sht .c5{position:sticky;left:334px;z-index:3;border-right:2px solid #b8c0c8}
+  .sht .c1{position:sticky;left:0;z-index:3}.sht .c2{position:sticky;left:30px;z-index:3}.sht .c3{position:sticky;left:260px;z-index:3}
+  .sht .c4{position:sticky;left:352px;z-index:3}.sht .c5{position:sticky;left:404px;z-index:3;border-right:2px solid #b8c0c8}
   .sht th.c1,.sht th.c2,.sht th.c3,.sht th.c4,.sht th.c5{z-index:7}
   .sht .fzl{position:sticky;left:0;z-index:3;border-right:2px solid #b8c0c8}
 }
 .sht td.pc{padding:3px 4px}
 .pw{display:flex;align-items:center;gap:3px}
-.pw input.pr{width:70px;flex:none}
+.pw input.pr{width:56px;flex:none;padding:4px 3px}
 .sht td.pc.low .pr{color:var(--green);font-weight:700}
 .sht td.pc.np input.bp{opacity:.28}
 .sht td.pc.np input.bp:hover{opacity:1}
@@ -344,10 +344,11 @@ function noteCell(it,i,p){
   const n=it.prices[p]?.note||'';
   return n?`<input class="nt" data-p="蝦皮" maxlength="10" list="dl-shops" value="${esc(n)}" placeholder="直營／店家">`:`<button type="button" class="nb" data-p="蝦皮">✎ 註記</button>`;
 }
+const pw=p=>p==='蝦皮'?104:88;
 function renderSheet(){
   const P=draft.platforms, W=P.length;
-  let h=`<colgroup><col style="width:30px"><col style="width:160px"><col style="width:92px"><col style="width:52px"><col style="width:60px">${P.map(()=>'<col style="width:116px">').join('')}<col style="width:108px"><col style="width:30px"></colgroup>`;
-  h+=`<thead><tr><th class="c1">#</th><th class="c2">商品</th><th class="c3">規格</th><th class="c4" style="text-align:right">數量</th><th class="c5" style="text-align:right">週期(天)</th>${P.map(p=>p===CUSTOM?`<th class="pf"><input class="cn" maxlength="10" placeholder="✎ 自訂平台名稱" value="${esc(draft.customName)}"></th>`:`<th class="pf"><span style="color:${PF_COLOR[p]}">●</span> ${p}</th>`).join('')}<th>已選購買</th><th></th></tr></thead><tbody>`;
+  let h=`<colgroup><col style="width:30px"><col style="width:230px"><col style="width:92px"><col style="width:52px"><col style="width:60px">${P.map(p=>`<col style="width:${pw(p)}px">`).join('')}<col style="width:108px"><col style="width:30px"></colgroup>`;
+  h+=`<thead><tr><th class="c1">#</th><th class="c2">商品</th><th class="c3">規格</th><th class="c4" style="text-align:right">數量</th><th class="c5" style="text-align:right">週期(天)</th>${P.map(p=>p===CUSTOM?`<th class="pf"><input class="cn" maxlength="10" placeholder="✎ 平台名稱" value="${esc(draft.customName)}"></th>`:`<th class="pf"><span style="color:${PF_COLOR[p]}">●</span> ${p}</th>`).join('')}<th>已選購買</th><th></th></tr></thead><tbody>`;
   draft.items.forEach((it,i)=>{
     h+=`<tr data-i="${i}"><td class="idx c1">${i+1}</td>
       <td class="c2"><input class="it-name" list="dl-items" placeholder="商品名稱" value="${esc(it.name)}" autocomplete="off"><div class="it-hint"></div></td>
@@ -371,7 +372,7 @@ function renderSheet(){
   h+=`<tr class="f f-ref"><td class="fl fzl" colspan="5">參考：整張單全買此平台（未折扣）</td>${P.map(p=>`<td class="n" data-ref="${p}"></td>`).join('')}<td></td><td></td></tr>`;
   h+='</tfoot>';
   $('sht').innerHTML=h;
-  $('sht').style.minWidth=(30+160+92+52+60+W*116+108+30)+'px';
+  $('sht').style.minWidth=(30+230+92+52+60+P.reduce((s,p)=>s+pw(p),0)+108+30)+'px';
   draft.items.forEach((_,i)=>updateHint(i));
   recalc();
 }
